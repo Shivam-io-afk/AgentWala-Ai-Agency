@@ -69,12 +69,24 @@ export async function middleware(request: NextRequest) {
   }
 
   const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
-  const isAdminApi = pathname.startsWith("/api/admin/");
+  const isAdminApi = pathname === "/api/admin" || pathname.startsWith("/api/admin/");
 
   if (isAdminPage || isAdminApi) {
     const authSecret = process.env.AUTH_SECRET;
     if (!authSecret && process.env.NODE_ENV === "production") {
-      throw new Error("AUTH_SECRET environment variable is missing in production.");
+      if (isAdminApi) {
+        return NextResponse.json(
+          { error: "Service Unavailable: Admin authentication is unconfigured. Set AUTH_SECRET in production." },
+          { status: 503 }
+        );
+      }
+      return new NextResponse(
+        `<!DOCTYPE html><html><head><title>503 Service Unavailable</title></head><body style="font-family:sans-serif;padding:2rem;text-align:center;"><h1>503 Service Unavailable</h1><p>Admin authentication is unconfigured. Set AUTH_SECRET in production.</p></body></html>`,
+        {
+          status: 503,
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        }
+      );
     }
 
     const secret = authSecret || "agentwala_dev_secret_key_884920492193";
