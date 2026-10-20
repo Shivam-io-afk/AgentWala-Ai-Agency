@@ -1,5 +1,4 @@
-import fs from "fs";
-import path from "path";
+import { loadState, saveState } from "./storage";
 import {
   Client,
   Project,
@@ -39,8 +38,6 @@ import { calculateBill, rupeesToPaise, getPackageWithSettings, formatINR } from 
 import { DEMO_NUMBER, WHATSAPP_NUMBER, EMAIL, CITY, FOUNDER_NAME, SITE_CONFIG } from "@/content/site";
 import { getAppDate, getAppTimeISO, getAppTimeIST } from "./clock";
 
-const DATA_DIR = path.join(process.cwd(), ".data");
-const DB_FILE = path.join(DATA_DIR, "db.json");
 
 interface DatabaseSchema {
   clients: Client[];
@@ -795,34 +792,31 @@ function getInitialSeed(): DatabaseSchema {
   };
 }
 
-// Lossless Data File Ensurer: Migrates existing data without resetting
+// In-Memory Cache with Short TTL (2 seconds)
 let memoryCache: DatabaseSchema | null = null;
-let lastCacheMtime = 0;
+let lastCacheTime = 0;
+const CACHE_TTL_MS = 2000;
 
-function ensureDataFile(): DatabaseSchema {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-
-  if (!fs.existsSync(DB_FILE)) {
-    const initial = getInitialSeed();
-    memoryCache = initial;
-    fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), "utf8");
-    lastCacheMtime = fs.statSync(DB_FILE).mtimeMs;
-    return initial;
-  }
-
-  const stat = fs.statSync(DB_FILE);
-  if (memoryCache && stat.mtimeMs <= lastCacheMtime) {
+async function ensureDataFile(): Promise<DatabaseSchema> {
+  const now = Date.now();
+  if (memoryCache && now - lastCacheTime < CACHE_TTL_MS) {
     return memoryCache;
   }
 
+  let parsed: DatabaseSchema | null = null;
   try {
-    const raw = fs.readFileSync(DB_FILE, "utf8");
-    const parsed = JSON.parse(raw);
-    let changed = false;
-    const seed = getInitialSeed();
+    parsed = await loadState<DatabaseSchema>("db");
+  } catch (e) {
+    console.error("[db] Error loading state from storage:", e);
+  }
 
+  let changed = false;
+  const seed = getInitialSeed();
+
+  if (!parsed) {
+    parsed = seed;
+    changed = true;
+  } else {
     // Ensure all v2 collections exist
     const collections = [
       "projects", "requirements", "scopes", "agreements", "agreement_acceptances",
@@ -883,50 +877,41 @@ function ensureDataFile(): DatabaseSchema {
     if (!parsed.otps) { parsed.otps = []; changed = true; }
     if (!parsed.queued_messages) { parsed.queued_messages = []; changed = true; }
     if (!parsed.idempotency_keys) { parsed.idempotency_keys = []; changed = true; }
-
-    memoryCache = parsed;
-    lastCacheMtime = stat.mtimeMs;
-    if (changed) {
-      writeData(parsed);
-    }
-    return parsed;
-  } catch (err) {
-    const initial = getInitialSeed();
-    memoryCache = initial;
-    fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), "utf8");
-    lastCacheMtime = fs.statSync(DB_FILE).mtimeMs;
-    return initial;
   }
+
+  memoryCache = parsed;
+  lastCacheTime = Date.now();
+  if (changed) {
+    await writeData(parsed);
+  }
+  return parsed;
 }
 
-function writeData(data: DatabaseSchema): void {
+async function writeData(data: DatabaseSchema): Promise<void> {
   memoryCache = data;
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf8");
-  lastCacheMtime = fs.statSync(DB_FILE).mtimeMs;
+  lastCacheTime = Date.now();
+  await saveState("db", data);
 }
 
 export const db = {
   // CLIENTS
   async getClients(): Promise<Client[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return data.clients;
   },
 
   async getClientById(id: string): Promise<Client | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return data.clients.find((c) => c.id === id) || null;
   },
 
   async getClientByToken(token: string): Promise<Client | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return data.clients.find((c) => c.portal_token === token) || null;
   },
 
   async getClientDetailBundle(targetId: string) {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const client = data.clients.find(
       (c) => c.id === targetId || (data.projects || []).some((p) => p.id === targetId && p.client_id === c.id)
     );
@@ -984,7 +969,7 @@ export const db = {
   },
 
   async getClientPortalBundle(token: string) {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const client = data.clients.find(
       (c) => c.portal_token === token || (data.projects || []).some((p) => p.portal_token === token && p.client_id === c.id)
     );
@@ -1027,7 +1012,7 @@ export const db = {
   },
 
   async createClient(clientData: Partial<Client>): Promise<Client> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const id = "c-" + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
     const token = "tok_" + Math.random().toString(36).substring(2, 10);
     const now = new Date().toISOString();
@@ -1082,7 +1067,7 @@ export const db = {
     if (!data.projects) data.projects = [];
     data.projects.unshift(newProject);
 
-    writeData(data);
+    await writeData(data);
 
     await this.logActivity(
       "automation",
@@ -1096,7 +1081,7 @@ export const db = {
   },
 
   async updateClient(id: string, updates: Partial<Client>): Promise<Client | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const index = data.clients.findIndex((c) => c.id === id);
     if (index === -1) return null;
 
@@ -1105,17 +1090,17 @@ export const db = {
       ...updates,
       updated_at: new Date().toISOString(),
     };
-    writeData(data);
+    await writeData(data);
     return data.clients[index];
   },
 
   async deleteClient(id: string): Promise<boolean> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const initialLen = data.clients.length;
     data.clients = data.clients.filter((c) => c.id !== id);
     data.projects = (data.projects || []).filter((p) => p.client_id !== id);
     if (data.clients.length !== initialLen) {
-      writeData(data);
+      await writeData(data);
       await this.logActivity("user", "Client Removed", `Client ${id} was deleted`, id);
       return true;
     }
@@ -1124,27 +1109,27 @@ export const db = {
 
   // PROJECTS (v2 Multi-project pipeline)
   async getProjects(): Promise<Project[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return data.projects || [];
   },
 
   async getProjectsByClientId(clientId: string): Promise<Project[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return (data.projects || []).filter((p) => p.client_id === clientId || p.id === clientId);
   },
 
   async getProjectById(id: string): Promise<Project | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return (data.projects || []).find((p) => p.id === id || p.client_id === id) || null;
   },
 
   async getProjectByToken(token: string): Promise<Project | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return (data.projects || []).find((p) => p.portal_token === token) || null;
   },
 
   async createProject(projectData: Partial<Project>): Promise<Project> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const id = "proj-" + Date.now().toString(36);
     const token = projectData.portal_token || "tok_" + Math.random().toString(36).substring(2, 10);
     const now = new Date().toISOString();
@@ -1171,12 +1156,12 @@ export const db = {
 
     if (!data.projects) data.projects = [];
     data.projects.unshift(newProject);
-    writeData(data);
+    await writeData(data);
     return newProject;
   },
 
   async updateProject(id: string, updates: Partial<Project>): Promise<Project | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.projects) data.projects = [];
     const index = data.projects.findIndex((p) => p.id === id || p.client_id === id);
     if (index === -1) return null;
@@ -1186,7 +1171,7 @@ export const db = {
       ...updates,
       updated_at: new Date().toISOString(),
     };
-    writeData(data);
+    await writeData(data);
     return data.projects[index];
   },
 
@@ -1208,7 +1193,7 @@ export const db = {
       throw new Error(`Key ${key} is founder-only and cannot be ticked by automation`);
     }
 
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const now = getAppTimeISO();
 
     const client = data.clients.find((c) => c.id === targetId);
@@ -1279,7 +1264,7 @@ export const db = {
       project.updated_at = now;
     }
 
-    writeData(data);
+    await writeData(data);
 
     await this.logActivity(
       doneBy,
@@ -1293,19 +1278,19 @@ export const db = {
 
   // REQUIREMENTS (H1)
   async getRequirements(projectId: string): Promise<RequirementRecord | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return (data.requirements || []).find((r) => r.project_id === projectId) || null;
   },
 
   async saveRequirements(reqData: Partial<RequirementRecord> & { project_id: string }): Promise<RequirementRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.requirements) data.requirements = [];
     const index = data.requirements.findIndex((r) => r.project_id === reqData.project_id);
     const now = new Date().toISOString();
 
     if (index >= 0) {
       data.requirements[index] = { ...data.requirements[index], ...reqData, updated_at: now };
-      writeData(data);
+      await writeData(data);
       return data.requirements[index];
     } else {
       const newReq: RequirementRecord = {
@@ -1323,26 +1308,26 @@ export const db = {
         updated_at: now,
       };
       data.requirements.push(newReq);
-      writeData(data);
+      await writeData(data);
       return newReq;
     }
   },
 
   // SCOPE (Annex A)
   async getScope(projectId: string): Promise<ScopeRecord | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return (data.scopes || []).find((s) => s.project_id === projectId) || null;
   },
 
   async saveScope(scopeData: Partial<ScopeRecord> & { project_id: string }): Promise<ScopeRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.scopes) data.scopes = [];
     const index = data.scopes.findIndex((s) => s.project_id === scopeData.project_id);
     const now = new Date().toISOString();
 
     if (index >= 0) {
       data.scopes[index] = { ...data.scopes[index], ...scopeData, updated_at: now };
-      writeData(data);
+      await writeData(data);
       return data.scopes[index];
     } else {
       const newScope: ScopeRecord = {
@@ -1369,14 +1354,14 @@ export const db = {
         updated_at: now,
       };
       data.scopes.push(newScope);
-      writeData(data);
+      await writeData(data);
       return newScope;
     }
   },
 
   // AGREEMENT & OTP ACCEPTANCE (Section 8)
   async getAgreement(projectId: string): Promise<AgreementRecord | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return (data.agreements || []).find((a) => a.project_id === projectId) || null;
   },
 
@@ -1395,14 +1380,14 @@ export const db = {
   },
 
   async saveAgreement(agrData: Partial<AgreementRecord> & { project_id: string }): Promise<AgreementRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.agreements) data.agreements = [];
     const index = data.agreements.findIndex((a) => a.project_id === agrData.project_id);
     const now = new Date().toISOString();
 
     if (index >= 0) {
       data.agreements[index] = { ...data.agreements[index], ...agrData, updated_at: now };
-      writeData(data);
+      await writeData(data);
       return data.agreements[index];
     } else {
       const newAgr: AgreementRecord = {
@@ -1417,13 +1402,13 @@ export const db = {
         updated_at: now,
       };
       data.agreements.push(newAgr);
-      writeData(data);
+      await writeData(data);
       return newAgr;
     }
   },
 
   async recordAgreementAcceptance(record: Omit<AgreementAcceptanceRecord, "id" | "created_at">): Promise<AgreementAcceptanceRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.agreement_acceptances) data.agreement_acceptances = [];
     const newAcc: AgreementAcceptanceRecord = {
       id: "acc-" + Date.now().toString(36),
@@ -1442,13 +1427,13 @@ export const db = {
     // Tick s1 on project and client
     await this.updateCheck(record.project_id, "s1", true, "client");
 
-    writeData(data);
+    await writeData(data);
     return newAcc;
   },
 
   // TASKS & TIME LOGGING (/admin/work)
   async getTasks(projectId?: string): Promise<TaskRecord[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     let tasks = data.tasks || [];
     if (projectId) {
       tasks = tasks.filter((t) => t.project_id === projectId);
@@ -1457,7 +1442,7 @@ export const db = {
   },
 
   async createTask(taskData: Partial<TaskRecord> & { project_id: string; title: string }): Promise<TaskRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.tasks) data.tasks = [];
     const id = "task-" + Date.now().toString(36);
     const now = new Date().toISOString();
@@ -1474,22 +1459,22 @@ export const db = {
       updated_at: now,
     };
     data.tasks.unshift(newTask);
-    writeData(data);
+    await writeData(data);
     return newTask;
   },
 
   async updateTask(id: string, updates: Partial<TaskRecord>): Promise<TaskRecord | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.tasks) return null;
     const index = data.tasks.findIndex((t) => t.id === id);
     if (index === -1) return null;
     data.tasks[index] = { ...data.tasks[index], ...updates, updated_at: new Date().toISOString() };
-    writeData(data);
+    await writeData(data);
     return data.tasks[index];
   },
 
   async getTimeLogs(projectId?: string): Promise<TimeLogRecord[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     let logs = data.time_logs || [];
     if (projectId) {
       logs = logs.filter((l) => l.project_id === projectId);
@@ -1498,7 +1483,7 @@ export const db = {
   },
 
   async logTime(logData: Omit<TimeLogRecord, "id" | "created_at">): Promise<TimeLogRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.time_logs) data.time_logs = [];
     const newLog: TimeLogRecord = {
       id: "time-" + Date.now().toString(36),
@@ -1506,18 +1491,18 @@ export const db = {
       created_at: new Date().toISOString(),
     };
     data.time_logs.unshift(newLog);
-    writeData(data);
+    await writeData(data);
     return newLog;
   },
 
   // DELIVERIES & REVISION ENGINE (Section 7)
   async getDeliveries(projectId: string): Promise<DeliveryRecord[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return (data.deliveries || []).filter((d) => d.project_id === projectId);
   },
 
   async createDelivery(delData: Omit<DeliveryRecord, "id">): Promise<DeliveryRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.deliveries) data.deliveries = [];
     const newDel: DeliveryRecord = {
       id: "del-" + Date.now().toString(36),
@@ -1528,12 +1513,12 @@ export const db = {
     // Ticks w3 (Delivery shared)
     await this.updateCheck(delData.project_id, "w3", true, "user");
 
-    writeData(data);
+    await writeData(data);
     return newDel;
   },
 
   async getRevisionRounds(projectId: string): Promise<RevisionRoundRecord[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return (data.revision_rounds || []).filter((r) => r.project_id === projectId);
   },
 
@@ -1542,7 +1527,7 @@ export const db = {
     roundNumber: number,
     items: { text: string; ai_label: "revision" | "new_feature"; ai_reason: string }[]
   ): Promise<RevisionRoundRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const proj = (data.projects || []).find((p) => p.id === projectId || p.client_id === projectId);
     if (!proj) throw new Error("Project not found");
 
@@ -1587,7 +1572,7 @@ export const db = {
       proj.revisions_used = Math.max(proj.revisions_used || 0, roundNumber);
     }
 
-    writeData(data);
+    await writeData(data);
     return newRound;
   },
 
@@ -1597,7 +1582,7 @@ export const db = {
     label: "revision" | "new_feature",
     quoteHours?: number
   ): Promise<void> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     for (const round of data.revision_rounds || []) {
       const item = round.items.find((i) => i.id === itemId);
       if (item) {
@@ -1625,22 +1610,22 @@ export const db = {
         break;
       }
     }
-    writeData(data);
+    await writeData(data);
   },
 
   async getChangeRequests(projectId: string): Promise<ChangeRequestRecord[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return (data.change_requests || []).filter((c) => c.project_id === projectId);
   },
 
   // PROPOSALS (Backward compatibility)
   async getProposalByClientId(clientId: string): Promise<Proposal | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return (data.proposals || []).find((p) => p.client_id === clientId || p.project_id === clientId) || null;
   },
 
   async createProposal(proposalData: Partial<Proposal>): Promise<Proposal> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const newProposal: Proposal = {
       id: "prop-" + Date.now().toString(36),
       client_id: proposalData.client_id || "",
@@ -1655,35 +1640,35 @@ export const db = {
     };
     if (!data.proposals) data.proposals = [];
     data.proposals.unshift(newProposal);
-    writeData(data);
+    await writeData(data);
     return newProposal;
   },
 
   async updateProposal(id: string, updates: Partial<Proposal>): Promise<Proposal | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.proposals) data.proposals = [];
     const idx = data.proposals.findIndex((p) => p.id === id || p.client_id === id);
     if (idx === -1) return null;
     data.proposals[idx] = { ...data.proposals[idx], ...updates, updated_at: new Date().toISOString() };
-    writeData(data);
+    await writeData(data);
     return data.proposals[idx];
   },
 
   // HANDOVERS (Annex B)
   async getHandover(projectId: string): Promise<HandoverRecord | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return (data.handovers || []).find((h) => h.project_id === projectId) || null;
   },
 
   async saveHandover(handData: Partial<HandoverRecord> & { project_id: string }): Promise<HandoverRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.handovers) data.handovers = [];
     const index = data.handovers.findIndex((h) => h.project_id === handData.project_id);
     const now = new Date().toISOString();
 
     if (index >= 0) {
       data.handovers[index] = { ...data.handovers[index], ...handData, updated_at: now };
-      writeData(data);
+      await writeData(data);
       return data.handovers[index];
     } else {
       const newHand: HandoverRecord = {
@@ -1699,19 +1684,19 @@ export const db = {
         updated_at: now,
       };
       data.handovers.push(newHand);
-      writeData(data);
+      await writeData(data);
       return newHand;
     }
   },
 
   // SPENDING CAPS & USAGE COSTS
   async getUsageCosts(): Promise<UsageCostRecord[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return data.usage_costs || [];
   },
 
   async recordUsageCost(cost: Omit<UsageCostRecord, "id" | "created_at">): Promise<UsageCostRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.usage_costs) data.usage_costs = [];
     const newCost: UsageCostRecord = {
       id: "cost-" + Date.now().toString(36),
@@ -1719,23 +1704,23 @@ export const db = {
       created_at: new Date().toISOString(),
     };
     data.usage_costs.unshift(newCost);
-    writeData(data);
+    await writeData(data);
     return newCost;
   },
 
   // INVOICES (with GST on/off switch awareness)
   async getInvoices(): Promise<Invoice[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return data.invoices;
   },
 
   async getInvoicesByClientId(clientId: string): Promise<Invoice[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return data.invoices.filter((i) => i.client_id === clientId || i.project_id === clientId);
   },
 
   async createInvoice(invoiceData: Partial<Invoice>): Promise<Invoice> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     // Bug 3: Random unguessable invoice IDs
     const id = "inv-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
     const invoiceNumber = `AW/2026-27/${String(data.invoices.length + 1).padStart(4, "0")}`;
@@ -1787,7 +1772,7 @@ export const db = {
     };
 
     data.invoices.unshift(newInvoice);
-    writeData(data);
+    await writeData(data);
 
     await this.logActivity(
       "automation",
@@ -1800,7 +1785,7 @@ export const db = {
   },
 
   async updateInvoice(id: string, updates: Partial<Invoice>): Promise<Invoice | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const index = data.invoices.findIndex((i) => i.id === id);
     if (index === -1) return null;
 
@@ -1809,13 +1794,13 @@ export const db = {
       ...updates,
       updated_at: new Date().toISOString(),
     };
-    writeData(data);
+    await writeData(data);
     return data.invoices[index];
   },
 
   // MESSAGES
   async getMessages(clientId?: string): Promise<MessageRecord[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (clientId) {
       return data.messages.filter((m) => m.client_id === clientId || m.project_id === clientId);
     }
@@ -1823,7 +1808,7 @@ export const db = {
   },
 
   async createMessage(msg: Partial<MessageRecord>): Promise<MessageRecord | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
 
     // Safety Rule 1: Check Global Outbound Kill Switch
     if (msg.direction === "outbound" && data.settings.pause_all_outbound) {
@@ -1875,25 +1860,25 @@ export const db = {
       }
     }
 
-    writeData(data);
+    await writeData(data);
     return newMsg;
   },
 
   // AGENTS
   async getAgentByClientId(clientId: string): Promise<AgentRecord | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return (data.agents || []).find((a) => a.client_id === clientId || a.project_id === clientId) || null;
   },
 
   async saveAgent(agentData: Partial<AgentRecord> & { client_id: string }): Promise<AgentRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.agents) data.agents = [];
     const index = data.agents.findIndex((a) => a.client_id === agentData.client_id);
     const now = new Date().toISOString();
 
     if (index >= 0) {
       data.agents[index] = { ...data.agents[index], ...agentData, updated_at: now };
-      writeData(data);
+      await writeData(data);
       return data.agents[index];
     } else {
       const newAgent: AgentRecord = {
@@ -1909,14 +1894,14 @@ export const db = {
         updated_at: now,
       };
       data.agents.push(newAgent);
-      writeData(data);
+      await writeData(data);
       return newAgent;
     }
   },
 
   // ACTIVITY LOGS
   async getActivityLogs(limit = 30, clientId?: string): Promise<ActivityLogRecord[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     let logs = data.activity_log;
     if (clientId) {
       logs = logs.filter((l) => l.client_id === clientId || l.project_id === clientId);
@@ -1937,7 +1922,7 @@ export const db = {
       shadow?: boolean;
     }
   ): Promise<ActivityLogRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const newLog: ActivityLogRecord = {
       id: "log-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
       client_id: clientId,
@@ -1952,18 +1937,18 @@ export const db = {
       created_at: new Date().toISOString(),
     };
     data.activity_log.unshift(newLog);
-    writeData(data);
+    await writeData(data);
     return newLog;
   },
 
   // JOBS (Queue with Idempotency)
   async getJobs(): Promise<JobRecord[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return data.jobs;
   },
 
   async enqueueJob(job: Partial<JobRecord>): Promise<{ queued: boolean; job: JobRecord }> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
 
     // Safety Rule 3: Idempotency Key check
     if (job.idempotency_key) {
@@ -1998,63 +1983,63 @@ export const db = {
     };
 
     data.jobs.unshift(newJob);
-    writeData(data);
+    await writeData(data);
     return { queued: true, job: newJob };
   },
 
   // AUTOMATIONS
   async getAutomations(): Promise<AutomationSetting[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return data.automations;
   },
 
   async toggleAutomation(id: string, enabled: boolean): Promise<AutomationSetting | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const auto = data.automations.find((a) => a.id === id);
     if (!auto) return null;
     auto.enabled = enabled;
-    writeData(data);
+    await writeData(data);
     await this.logActivity("user", "Automation Toggled", `Automation ${id} set to ${enabled ? "enabled" : "disabled"}`);
     return auto;
   },
 
   async toggleShadowMode(id: string, shadow: boolean): Promise<AutomationSetting | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const auto = data.automations.find((a) => a.id === id);
     if (!auto) return null;
     auto.shadow_mode = shadow;
-    writeData(data);
+    await writeData(data);
     await this.logActivity("user", "Shadow Mode Toggled", `Automation ${id} shadow mode set to ${shadow}`);
     return auto;
   },
 
   async promoteAutomation(id: string): Promise<AutomationSetting | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const auto = data.automations.find((a) => a.id === id);
     if (!auto) return null;
     if (auto.level === 2) {
       auto.level = 1;
       auto.can_promote = false;
-      writeData(data);
+      await writeData(data);
       await this.logActivity("user", "Automation Promoted", `Automation ${id} promoted to Level 1 (Auto)`);
     }
     return auto;
   },
 
   async demoteAutomation(id: string, newLevel: 1 | 2 | 3): Promise<AutomationSetting | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const auto = data.automations.find((a) => a.id === id);
     if (!auto) return null;
     auto.level = newLevel;
     auto.consecutive_no_edit_approvals = 0;
     auto.can_promote = false;
-    writeData(data);
+    await writeData(data);
     await this.logActivity("user", "Automation Demoted", `Automation ${id} demoted to Level ${newLevel}`);
     return auto;
   },
 
   async recordApprovalDecision(id: string, edited: boolean): Promise<void> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const auto = data.automations.find((a) => a.id === id);
     if (auto && auto.level === 2) {
       if (edited) {
@@ -2065,24 +2050,24 @@ export const db = {
           auto.can_promote = true;
         }
       }
-      writeData(data);
+      await writeData(data);
     }
   },
 
   async recordAutomationRun(id: string, success: boolean): Promise<void> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const auto = data.automations.find((a) => a.id === id);
     if (auto) {
       auto.last_run = new Date().toISOString();
       if (success) auto.success_count += 1;
       else auto.failure_count += 1;
-      writeData(data);
+      await writeData(data);
     }
   },
 
   // RECOMMENDATIONS (AI COPILOT)
   async getRecommendations(status = "active"): Promise<Recommendation[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     let recs = data.recommendations || [];
     if (status !== "all") {
       recs = recs.filter((r) => r.status === status);
@@ -2091,7 +2076,7 @@ export const db = {
   },
 
   async createRecommendation(rec: Partial<Recommendation>): Promise<Recommendation> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const id = "rec-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 4);
     const newRec: Recommendation = {
       id,
@@ -2113,7 +2098,7 @@ export const db = {
 
     if (!data.recommendations) data.recommendations = [];
     data.recommendations.unshift(newRec);
-    writeData(data);
+    await writeData(data);
     return newRec;
   },
 
@@ -2121,7 +2106,7 @@ export const db = {
     id: string,
     status: "active" | "snoozed" | "dismissed" | "acted"
   ): Promise<Recommendation | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.recommendations) return null;
     const rec = data.recommendations.find((r) => r.id === id);
     if (!rec) return null;
@@ -2132,18 +2117,18 @@ export const db = {
     } else if (status === "snoozed") {
       rec.snoozed_until = new Date(Date.now() + 86400000).toISOString();
     }
-    writeData(data);
+    await writeData(data);
     return rec;
   },
 
   // SETTINGS & GLOBAL CONTROLS
   async getSettings(): Promise<Settings> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return data.settings;
   },
 
   async updateSettings(updates: Partial<Settings>): Promise<Settings> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
 
     // Bug 5: Block turning GST on without valid GSTIN
     if (updates.gst_registered === true) {
@@ -2156,7 +2141,7 @@ export const db = {
 
     const wasPaused = Boolean(data.settings.pause_all_outbound);
     data.settings = { ...data.settings, ...updates };
-    writeData(data);
+    await writeData(data);
 
     // Bug 7: Send queued once upon resume
     if (wasPaused && updates.pause_all_outbound === false) {
@@ -2168,10 +2153,10 @@ export const db = {
   },
 
   async toggleGlobalKillSwitch(pause: boolean): Promise<boolean> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const wasPaused = Boolean(data.settings.pause_all_outbound);
     data.settings.pause_all_outbound = pause;
-    writeData(data);
+    await writeData(data);
 
     // Bug 7: Send queued once upon resume
     if (wasPaused && !pause) {
@@ -2195,13 +2180,13 @@ export const db = {
 
   // Z3: Templates Library
   async getTemplates(niche?: string): Promise<TemplateRecord[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const list = data.templates_library || [];
     return niche ? list.filter((t) => t.niche === niche) : list;
   },
 
   async saveTemplate(template: Omit<TemplateRecord, "id" | "created_at" | "updated_at">): Promise<TemplateRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.templates_library) data.templates_library = [];
     const now = new Date().toISOString();
     const newTmpl: TemplateRecord = {
@@ -2211,18 +2196,18 @@ export const db = {
       updated_at: now,
     };
     data.templates_library.unshift(newTmpl);
-    writeData(data);
+    await writeData(data);
     return newTmpl;
   },
 
   // Z5: Automated Quality Checks
   async getQualityChecks(projectId: string): Promise<QualityCheckRecord[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return (data.quality_checks || []).filter((q) => q.project_id === projectId);
   },
 
   async recordQualityCheck(qc: Omit<QualityCheckRecord, "id" | "created_at">): Promise<QualityCheckRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.quality_checks) data.quality_checks = [];
     const newQc: QualityCheckRecord = {
       id: "qc-" + Date.now().toString(36),
@@ -2230,18 +2215,18 @@ export const db = {
       created_at: new Date().toISOString(),
     };
     data.quality_checks.unshift(newQc);
-    writeData(data);
+    await writeData(data);
     return newQc;
   },
 
   // Z6: Content Versions & Previews
   async getContentVersions(projectId: string): Promise<ContentVersionRecord[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return (data.content_versions || []).filter((cv) => cv.project_id === projectId);
   },
 
   async saveContentVersion(cv: Omit<ContentVersionRecord, "id" | "created_at">): Promise<ContentVersionRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.content_versions) data.content_versions = [];
     const newCv: ContentVersionRecord = {
       id: "cv-" + Date.now().toString(36),
@@ -2249,19 +2234,19 @@ export const db = {
       created_at: new Date().toISOString(),
     };
     data.content_versions.unshift(newCv);
-    writeData(data);
+    await writeData(data);
     return newCv;
   },
 
   // Z10: Books & GST Ledger
   async getLedgerEntries(projectId?: string): Promise<LedgerEntryRecord[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const list = data.ledger || [];
     return projectId ? list.filter((l) => l.project_id === projectId) : list;
   },
 
   async recordLedgerEntry(entry: Omit<LedgerEntryRecord, "id" | "created_at">): Promise<LedgerEntryRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.ledger) data.ledger = [];
     const newEntry: LedgerEntryRecord = {
       id: "ledg-" + Date.now().toString(36),
@@ -2269,18 +2254,18 @@ export const db = {
       created_at: new Date().toISOString(),
     };
     data.ledger.unshift(newEntry);
-    writeData(data);
+    await writeData(data);
     return newEntry;
   },
 
   // Z11: Freelancer Overflow
   async getFreelancers(): Promise<FreelancerRecord[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     return data.freelancers || [];
   },
 
   async createFreelancer(fData: Omit<FreelancerRecord, "id" | "created_at" | "updated_at">): Promise<FreelancerRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.freelancers) data.freelancers = [];
     const now = new Date().toISOString();
     const newF: FreelancerRecord = {
@@ -2290,23 +2275,23 @@ export const db = {
       updated_at: now,
     };
     data.freelancers.unshift(newF);
-    writeData(data);
+    await writeData(data);
     return newF;
   },
 
   async updateFreelancer(id: string, updates: Partial<FreelancerRecord>): Promise<FreelancerRecord | null> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.freelancers) data.freelancers = [];
     const idx = data.freelancers.findIndex((f) => f.id === id);
     if (idx === -1) return null;
     data.freelancers[idx] = { ...data.freelancers[idx], ...updates, updated_at: new Date().toISOString() };
-    writeData(data);
+    await writeData(data);
     return data.freelancers[idx];
   },
 
   // QA Test Tools: Outbox & Dev Settings
   async getOutbox(projectId?: string): Promise<OutboxItem[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const list = data.outbox || [];
     if (projectId) {
       return list.filter((item) => item.project_id === projectId || item.client_id === projectId);
@@ -2315,7 +2300,7 @@ export const db = {
   },
 
   async recordOutbox(item: Omit<OutboxItem, "id" | "created_at">): Promise<OutboxItem> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.outbox) data.outbox = [];
     const newItem: OutboxItem = {
       id: "out-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -2324,12 +2309,12 @@ export const db = {
       created_at: getAppTimeISO(),
     };
     data.outbox.unshift(newItem);
-    writeData(data);
+    await writeData(data);
     return newItem;
   },
 
   async clearOutbox(projectId?: string): Promise<void> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (projectId) {
       data.outbox = (data.outbox || []).filter(
         (item) => item.project_id !== projectId && item.client_id !== projectId
@@ -2337,12 +2322,12 @@ export const db = {
     } else {
       data.outbox = [];
     }
-    writeData(data);
+    await writeData(data);
   },
 
   // Bug 1: OTP Store & Verification
   async saveOtp(projectId: string, phone: string, clientId?: string): Promise<{ otp: string; record: OtpRecord }> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.otps) data.otps = [];
 
     // Invalidate earlier unused OTPs for this project
@@ -2367,12 +2352,12 @@ export const db = {
       created_at: getAppTimeISO(),
     };
     data.otps.unshift(record);
-    writeData(data);
+    await writeData(data);
     return { otp: code, record };
   },
 
   async verifyOtp(projectId: string, inputCode: string): Promise<{ valid: boolean; error?: string }> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.otps) data.otps = [];
     const record = data.otps.find((o) => (o.project_id === projectId || o.client_id === projectId) && !o.used);
     if (!record) {
@@ -2381,18 +2366,18 @@ export const db = {
     const now = Date.now();
     if (now > record.expires_at) {
       record.used = true;
-      writeData(data);
+      await writeData(data);
       return { valid: false, error: "OTP has expired (valid for 10 minutes). Please request a new code." };
     }
     if (record.attempts >= record.max_attempts) {
       record.used = true;
-      writeData(data);
+      await writeData(data);
       return { valid: false, error: "Maximum verification attempts (5) exceeded. Please request a new code." };
     }
 
     if (record.otp !== inputCode.trim()) {
       record.attempts += 1;
-      writeData(data);
+      await writeData(data);
       const remaining = record.max_attempts - record.attempts;
       return {
         valid: false,
@@ -2401,28 +2386,30 @@ export const db = {
     }
 
     record.used = true;
-    writeData(data);
+    await writeData(data);
     return { valid: true };
   },
 
   // Bug 6: Idempotency Key Management
   hasIdempotencyKey(key: string): boolean {
-    const data = ensureDataFile();
+    const data = memoryCache || getInitialSeed();
     return Boolean(data.idempotency_keys?.includes(key));
   },
 
   recordIdempotencyKey(key: string): void {
-    const data = ensureDataFile();
-    if (!data.idempotency_keys) data.idempotency_keys = [];
-    if (!data.idempotency_keys.includes(key)) {
-      data.idempotency_keys.push(key);
-      writeData(data);
+    if (!memoryCache) {
+      memoryCache = getInitialSeed();
+    }
+    if (!memoryCache.idempotency_keys) memoryCache.idempotency_keys = [];
+    if (!memoryCache.idempotency_keys.includes(key)) {
+      memoryCache.idempotency_keys.push(key);
+      writeData(memoryCache).catch(console.error);
     }
   },
 
   // Bug 7: Flush Queued Messages
   async flushQueuedMessages(): Promise<number> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     let flushedCount = 0;
     if (data.outbox) {
       for (const item of data.outbox) {
@@ -2434,14 +2421,14 @@ export const db = {
       }
     }
     if (flushedCount > 0) {
-      writeData(data);
+      await writeData(data);
       await this.logActivity("system", "Queued Messages Dispatched", `Resumed outbound dispatch: ${flushedCount} queued message(s) sent.`);
     }
     return flushedCount;
   },
 
   async getDevSettings(): Promise<DevSettings> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.dev_settings) {
       data.dev_settings = {
         force_failure: {},
@@ -2453,13 +2440,13 @@ export const db = {
           ai: "mock",
         },
       };
-      writeData(data);
+      await writeData(data);
     }
     return data.dev_settings;
   },
 
   async updateDevSettings(updates: Partial<DevSettings>): Promise<DevSettings> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const current = await this.getDevSettings();
     data.dev_settings = {
       ...current,
@@ -2473,17 +2460,17 @@ export const db = {
         ...(updates.integrations || {}),
       },
     };
-    writeData(data);
+    await writeData(data);
     return data.dev_settings;
   },
 
   async resetDemoData(): Promise<void> {
     const freshSeed = getInitialSeed();
-    writeData(freshSeed);
+    await writeData(freshSeed);
   },
 
   async getAutomationRuns(automationId?: string): Promise<AutomationRunRecord[]> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     const runs = data.automation_runs || [];
     if (automationId) {
       return runs.filter((r) => r.automation_id === automationId).slice(0, 20);
@@ -2492,7 +2479,7 @@ export const db = {
   },
 
   async recordAutomationRunEntry(entry: Omit<AutomationRunRecord, "id" | "created_at" | "run_time" | "run_time_ist">): Promise<AutomationRunRecord> {
-    const data = ensureDataFile();
+    const data = await ensureDataFile();
     if (!data.automation_runs) data.automation_runs = [];
     const nowIso = getAppTimeISO();
     const nowIst = getAppTimeIST();
@@ -2507,7 +2494,7 @@ export const db = {
     if (data.automation_runs.length > 500) {
       data.automation_runs = data.automation_runs.slice(0, 500);
     }
-    writeData(data);
+    await writeData(data);
     return newRun;
   },
 };

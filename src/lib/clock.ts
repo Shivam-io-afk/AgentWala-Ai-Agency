@@ -1,38 +1,51 @@
-import fs from "fs";
-import path from "path";
-
 import { formatDateIST, formatDateTimeIST, formatRupees } from "./formatters";
+import { loadState, saveState } from "./storage";
 export { formatDateIST, formatDateTimeIST, formatRupees };
-
-const DATA_DIR = path.join(process.cwd(), ".data");
-const CLOCK_FILE = path.join(DATA_DIR, "clock.json");
 
 interface ClockData {
   offset_ms: number; // offset relative to real time Date.now()
   frozen_at?: string; // if frozen at a specific timestamp
 }
 
-function getClockData(): ClockData {
+let memoryClock: ClockData = { offset_ms: 0 };
+
+// Eagerly sync clock state from storage in background
+if (typeof window === "undefined") {
+  loadState<ClockData>("clock")
+    .then((data) => {
+      if (data) {
+        memoryClock = data;
+      }
+    })
+    .catch((err) => {
+      console.error("[clock] Initial load error:", err);
+    });
+}
+
+/**
+ * Explicitly refresh clock data from persistent storage (e.g. before returning dev clock API)
+ */
+export async function syncClockFromStorage(): Promise<ClockData> {
   try {
-    if (fs.existsSync(CLOCK_FILE)) {
-      const raw = fs.readFileSync(CLOCK_FILE, "utf8");
-      return JSON.parse(raw);
+    const data = await loadState<ClockData>("clock");
+    if (data) {
+      memoryClock = data;
     }
-  } catch (e) {
-    // fallback
+  } catch (err) {
+    console.error("[clock] Sync error:", err);
   }
-  return { offset_ms: 0 };
+  return memoryClock;
+}
+
+function getClockData(): ClockData {
+  return memoryClock;
 }
 
 function saveClockData(data: ClockData): void {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    fs.writeFileSync(CLOCK_FILE, JSON.stringify(data, null, 2), "utf8");
-  } catch (e) {
-    console.error("Failed to save clock data:", e);
-  }
+  memoryClock = data;
+  saveState("clock", data).catch((e) => {
+    console.error("[clock] Failed to save clock data:", e);
+  });
 }
 
 /**
@@ -105,10 +118,12 @@ export function resetAppTime(): { currentISO: string; currentIST: string; offset
   };
 }
 
-export function getAppISTHour(dateObj?: Date): number {
-  const d = dateObj || getAppDate();
-  const istStr = d.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour: "numeric", hour12: false });
-  return parseInt(istStr, 10);
+/**
+ * Returns current hour (0-23) in Indian Standard Time (IST)
+ */
+export function getAppISTHour(): number {
+  const appDate = getAppDate();
+  const utcHours = appDate.getUTCHours();
+  const utcMinutes = appDate.getUTCMinutes();
+  return (utcHours + 5 + Math.floor((utcMinutes + 30) / 60)) % 24;
 }
-
-

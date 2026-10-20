@@ -10,9 +10,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/login?error=missing_token", req.url));
   }
 
-  // Allow bypass for dev instant login
+  // Allow bypass for dev instant login only in non-production
   let email: string | null = null;
-  if (token === "dev_bypass_token") {
+  if (token === "dev_bypass_token" && process.env.NODE_ENV !== "production") {
     email = "founder@agentwala.in";
   } else {
     email = verifyMagicToken(token);
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     const { token } = await req.json();
 
     let email: string | null = null;
-    if (token === "dev_bypass_token") {
+    if (token === "dev_bypass_token" && process.env.NODE_ENV !== "production") {
       email = "founder@agentwala.in";
     } else {
       email = verifyMagicToken(token);

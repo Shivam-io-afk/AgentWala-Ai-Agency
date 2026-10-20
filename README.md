@@ -181,20 +181,21 @@ export const VERTICALS: Record<string, VerticalContent> = {
 
 ### 1. Database (Supabase)
 1. Create a project at [supabase.com](https://supabase.com).
-2. Go to **SQL Editor** and run the entire script in `supabase/schema.sql`.
-3. In Project Settings, copy your **Project URL**, **Anon Key**, and **Service Role Key**.
+2. Go to **SQL Editor** and run the script in `supabase/app_state.sql` (creates `public.app_state` with Row Level Security).
+3. In Project Settings → API, copy your **Project URL**, **Anon Key**, and **Service Role Key**.
 
 ### 2. Deploy to Vercel
-1. Push code to your GitHub / GitLab repository.
+1. Push code to your GitHub repository (e.g. `https://github.com/Shivam-io-afk/AgentWala-Ai-Agency-`).
 2. In [Vercel](https://vercel.com), import the repository.
 3. In **Settings → Environment Variables**, add:
-   - `NEXT_PUBLIC_SITE_URL`: Your Vercel production URL (e.g. `https://agentwala.in`)
-   - `LEAD_WEBHOOK_URL`: Your Google Apps Script webhook
-   - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase URL
+   - `NEXT_PUBLIC_SITE_URL`: Your Vercel production URL (e.g. `https://agent-wala-ai-agency.vercel.app`)
+   - `AUTH_SECRET`: A secure random string with 32+ characters (e.g. generated via `openssl rand -hex 32`)
+   - `FOUNDER_EMAILS`: Comma-separated allowlist of authorized founder emails (e.g. `founder@agentwala.in`)
+   - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase Project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon key
-   - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key
-   - Optional: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RESEND_API_KEY`, `META_WHATSAPP_TOKEN`, `AI_API_KEY`
-4. Deploy!
+   - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role secret
+   - Optional: `RESEND_API_KEY` (for sending live magic login link emails), `EMAIL_FROM`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `META_WHATSAPP_TOKEN`, `AI_API_KEY`
+4. Deploy! All state (leads, invoices, checklist, dev time travel) will now persist seamlessly across Vercel serverless invocations.
 
 ---
 
@@ -202,16 +203,20 @@ export const VERTICALS: Record<string, VerticalContent> = {
 
 | Variable | Description | Required? |
 |---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | Base public URL of the website | Recommended (`http://localhost:3000`) |
+| `NEXT_PUBLIC_SITE_URL` | Base public URL of the website (e.g. `https://agent-wala-ai-agency.vercel.app`) | Recommended |
+| `AUTH_SECRET` | HMAC secret for session and magic login token signing (32+ chars) | **Required in production** |
+| `FOUNDER_EMAILS` | Comma-separated list of founder emails authorized to log in | **Required in production** |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Recommended (uses ephemeral /tmp on Vercel) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key | Optional |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role secret (bypasses RLS to manage `app_state`) | Recommended for persistence on Vercel |
 | `LEAD_WEBHOOK_URL` | Webhook URL for Google Apps Script / Sheet sync | Optional |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Optional (uses local mock DB if absent) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role secret | Optional |
+| `RESEND_API_KEY` | Resend Email API Key (for live magic link dispatch) | Optional |
+| `EMAIL_FROM` | Sender email address for Resend | Optional (default: `AgentWala <hello@agentwala.in>`) |
 | `RAZORPAY_KEY_ID` | Razorpay Key ID | Optional (uses mock payment URLs if absent) |
 | `RAZORPAY_KEY_SECRET` | Razorpay Secret | Optional |
 | `RAZORPAY_WEBHOOK_SECRET` | Razorpay Webhook verification secret | Optional |
-| `META_WHATSAPP_TOKEN` | WhatsApp Cloud API Bearer Token | Optional (logs messages to activity table) |
+| `META_WHATSAPP_TOKEN` | WhatsApp Cloud API Bearer Token | Optional (logs messages to outbox) |
 | `META_PHONE_NUMBER_ID` | WhatsApp Phone Number ID | Optional |
-| `RESEND_API_KEY` | Resend Email API Key | Optional |
 | `AI_API_KEY` | Gemini or Anthropic Claude API Key | Optional (uses simulation engine if absent) |
 | `AI_PROVIDER` | `gemini` or `anthropic` | Optional (default: `gemini`) |
 

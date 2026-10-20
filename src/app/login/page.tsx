@@ -143,17 +143,19 @@ export default function LoginPage() {
               {loading ? "Generating Link..." : "Send Magic Login Link →"}
             </button>
 
-            {/* Quick dev bypass button */}
-            <div className="pt-2 border-t border-[#ECE6D8]">
-              <button
-                type="button"
-                onClick={handleQuickDevLogin}
-                disabled={loading}
-                className="w-full py-2.5 bg-[#1C1F3A] hover:bg-[#14172C] text-white text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <span>⚡ 1-Click Instant Founder Login (Local QA)</span>
-              </button>
-            </div>
+            {/* Quick dev bypass button (hidden in production) */}
+            {process.env.NODE_ENV !== "production" && (
+              <div className="pt-2 border-t border-[#ECE6D8]">
+                <button
+                  type="button"
+                  onClick={handleQuickDevLogin}
+                  disabled={loading}
+                  className="w-full py-2.5 bg-[#1C1F3A] hover:bg-[#14172C] text-white text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>⚡ 1-Click Instant Founder Login (Local QA)</span>
+                </button>
+              </div>
+            )}
           </form>
         )}
 

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAppDate, getAppTimeISO, getAppTimeIST, advanceAppTime, setAppTime, resetAppTime } from "@/lib/clock";
+import { getAppDate, getAppTimeISO, getAppTimeIST, advanceAppTime, setAppTime, resetAppTime, syncClockFromStorage } from "@/lib/clock";
 import { db } from "@/lib/db";
 
 export async function GET() {
+  await syncClockFromStorage();
   return NextResponse.json({
     success: true,
     currentISO: getAppTimeISO(),
