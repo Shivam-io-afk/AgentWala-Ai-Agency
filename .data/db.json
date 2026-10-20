@@ -1,0 +1,855 @@
+{
+  "clients": [
+    {
+      "id": "c-mvg2xi22xfoz",
+      "name": "Joshi Dental Care",
+      "owner_name": "Dr. Sameer Joshi",
+      "phone": "+91 98201 99887",
+      "email": "",
+      "city": "Mumbai",
+      "niche": "Dental / Healthcare clinic",
+      "package": "growth",
+      "founding_offer": false,
+      "notes": "Lead source: Landing Page Demo Form. AI Diagnosis: Potential missed patient enquiries after 8 PM and during heavy appointment rush hours. Recommend instant call forwarding to 24×7 multilingual receptionist.",
+      "next_step": "20-min demo call via Google Meet: https://meet.google.com/aw-test-call",
+      "next_step_date": "2026-10-25",
+      "status": "active",
+      "portal_token": "tok_5i90rqnn",
+      "consent_at": "2026-10-20T02:44:03.622Z",
+      "source": "website_demo_form",
+      "checks": {
+        "l1": {
+          "key": "l1",
+          "done": true,
+          "done_at": "2026-10-20T02:44:03.622Z",
+          "done_by": "automation"
+        },
+        "l2": {
+          "key": "l2",
+          "done": true,
+          "done_at": "2026-10-20T02:44:03.622Z",
+          "done_by": "automation"
+        },
+        "c1": {
+          "key": "c1",
+          "done": true,
+          "done_at": "2026-10-20T02:44:03.622Z",
+          "done_by": "automation"
+        },
+        "b1": {
+          "key": "b1",
+          "done": true,
+          "done_at": "2026-10-20T02:44:04.373Z",
+          "done_by": "automation"
+        },
+        "b2": {
+          "key": "b2",
+          "done": true,
+          "done_at": "2026-10-20T02:44:04.378Z",
+          "done_by": "automation"
+        }
+      },
+      "created_at": "2026-10-20T02:44:03.626Z",
+      "updated_at": "2026-10-20T02:44:04.378Z"
+    },
+    {
+      "id": "c-ex-1",
+      "name": "Sunrise Dental Clinic",
+      "owner_name": "Dr. Vikram Mehta",
+      "phone": "+91 98200 45678",
+      "email": "vikram@sunrisedental.in",
+      "city": "Mumbai",
+      "niche": "Dental clinic",
+      "package": "growth",
+      "founding_offer": false,
+      "notes": "Owner requested 30-sec demo call on Friday. Needs Google Calendar booking.",
+      "next_step": "Call demo agent with doctor live on Friday",
+      "next_step_date": "2026-10-21",
+      "status": "active",
+      "portal_token": "tok_sunrise_dent_782",
+      "consent_at": "2026-10-19T02:44:03.624Z",
+      "source": "website_demo_form",
+      "is_example": true,
+      "checks": {
+        "l1": {
+          "key": "l1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "l2": {
+          "key": "l2",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "l3": {
+          "key": "l3",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "user"
+        },
+        "c1": {
+          "key": "c1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "c2": {
+          "key": "c2",
+          "done": false,
+          "done_by": "user"
+        }
+      },
+      "created_at": "2026-10-19T02:44:03.624Z",
+      "updated_at": "2026-10-20T02:44:03.624Z"
+    },
+    {
+      "id": "c-ex-2",
+      "name": "Dr. Batra Skin & Hair Care",
+      "owner_name": "Dr. Rohini Batra",
+      "phone": "+91 99301 88221",
+      "email": "dr.rohini@batraskin.com",
+      "city": "Bengaluru",
+      "niche": "Skin & hair clinic",
+      "package": "pro",
+      "founding_offer": true,
+      "notes": "50 real questions ingested. Running AI automated simulation test suite.",
+      "next_step": "Review AI test report with doctor",
+      "next_step_date": "2026-10-27",
+      "status": "active",
+      "portal_token": "tok_batra_skin_419",
+      "consent_at": "2026-10-19T02:44:03.624Z",
+      "source": "referral",
+      "is_example": true,
+      "checks": {
+        "l1": {
+          "key": "l1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "l2": {
+          "key": "l2",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "l3": {
+          "key": "l3",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "user"
+        },
+        "c1": {
+          "key": "c1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "c2": {
+          "key": "c2",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "b1": {
+          "key": "b1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "b2": {
+          "key": "b2",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "b3": {
+          "key": "b3",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "m1": {
+          "key": "m1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "user"
+        },
+        "m2": {
+          "key": "m2",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "user"
+        },
+        "m3": {
+          "key": "m3",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "user"
+        },
+        "m4": {
+          "key": "m4",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "user"
+        },
+        "p1": {
+          "key": "p1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "p2": {
+          "key": "p2",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "w1": {
+          "key": "w1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "w2": {
+          "key": "w2",
+          "done": true,
+          "done_at": "2026-10-20T02:44:04.690Z",
+          "done_by": "automation"
+        },
+        "w3": {
+          "key": "w3",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "d1": {
+          "key": "d1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "d2": {
+          "key": "d2",
+          "done": false,
+          "done_by": "automation"
+        }
+      },
+      "created_at": "2026-10-19T02:44:03.624Z",
+      "updated_at": "2026-10-20T02:44:04.690Z"
+    },
+    {
+      "id": "c-ex-3",
+      "name": "Nova Diagnostics & Imaging",
+      "owner_name": "Amitabh Sen",
+      "phone": "+91 97110 33412",
+      "email": "operations@novadiagnostics.in",
+      "city": "Delhi NCR",
+      "niche": "Diagnostic lab",
+      "package": "growth",
+      "founding_offer": false,
+      "notes": "Live for 3 weeks on WhatsApp & PBX. Over 800 blood test appointments booked.",
+      "next_step": "Review weekly transcript report",
+      "next_step_date": "2026-10-27",
+      "status": "completed",
+      "portal_token": "tok_nova_diag_991",
+      "consent_at": "2026-10-19T02:44:03.624Z",
+      "source": "website_demo_form",
+      "is_example": true,
+      "checks": {
+        "l1": {
+          "key": "l1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "l2": {
+          "key": "l2",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "l3": {
+          "key": "l3",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "user"
+        },
+        "c1": {
+          "key": "c1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "c2": {
+          "key": "c2",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "b1": {
+          "key": "b1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "b2": {
+          "key": "b2",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "b3": {
+          "key": "b3",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "m1": {
+          "key": "m1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "user"
+        },
+        "m2": {
+          "key": "m2",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "user"
+        },
+        "m3": {
+          "key": "m3",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "user"
+        },
+        "m4": {
+          "key": "m4",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "user"
+        },
+        "p1": {
+          "key": "p1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "p2": {
+          "key": "p2",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "w1": {
+          "key": "w1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "w2": {
+          "key": "w2",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "w3": {
+          "key": "w3",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "d1": {
+          "key": "d1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "d2": {
+          "key": "d2",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "d3": {
+          "key": "d3",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "v1": {
+          "key": "v1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "user"
+        },
+        "v2": {
+          "key": "v2",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "user"
+        },
+        "v3": {
+          "key": "v3",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "f1": {
+          "key": "f1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "q1": {
+          "key": "q1",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        },
+        "q2": {
+          "key": "q2",
+          "done": true,
+          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_by": "automation"
+        }
+      },
+      "created_at": "2026-10-19T02:44:03.624Z",
+      "updated_at": "2026-10-20T02:44:03.624Z"
+    }
+  ],
+  "invoices": [
+    {
+      "id": "inv-2-adv",
+      "client_id": "c-ex-2",
+      "invoice_number": "AW/2026-27/0001",
+      "type": "advance",
+      "subtotal_paise": 1875000,
+      "gst_paise": 337500,
+      "total_paise": 2212500,
+      "status": "paid",
+      "due_date": "2026-10-19",
+      "paid_at": "2026-10-20T02:44:04.686Z",
+      "razorpay_payment_link_id": "plink_mock_adv_441",
+      "razorpay_payment_url": "https://rzp.io/i/mock_adv_441",
+      "pdf_url": "/api/invoices/inv-2-adv/pdf",
+      "created_at": "2026-10-19T02:44:03.624Z",
+      "updated_at": "2026-10-20T02:44:04.687Z"
+    },
+    {
+      "id": "inv-3-adv",
+      "client_id": "c-ex-3",
+      "invoice_number": "AW/2026-27/0002",
+      "type": "advance",
+      "subtotal_paise": 1750000,
+      "gst_paise": 315000,
+      "total_paise": 2065000,
+      "status": "paid",
+      "due_date": "2026-10-19",
+      "paid_at": "2026-10-19T02:44:03.624Z",
+      "razorpay_payment_url": "https://rzp.io/i/mock_adv_442",
+      "pdf_url": "/api/invoices/inv-3-adv/pdf",
+      "created_at": "2026-10-19T02:44:03.624Z",
+      "updated_at": "2026-10-19T02:44:03.624Z"
+    },
+    {
+      "id": "inv-3-fin",
+      "client_id": "c-ex-3",
+      "invoice_number": "AW/2026-27/0003",
+      "type": "final",
+      "subtotal_paise": 3749900,
+      "gst_paise": 674982,
+      "total_paise": 4424900,
+      "status": "paid",
+      "due_date": "2026-10-19",
+      "paid_at": "2026-10-19T02:44:03.624Z",
+      "razorpay_payment_url": "https://rzp.io/i/mock_fin_443",
+      "pdf_url": "/api/invoices/inv-3-fin/pdf",
+      "created_at": "2026-10-19T02:44:03.624Z",
+      "updated_at": "2026-10-19T02:44:03.624Z"
+    }
+  ],
+  "proposals": [
+    {
+      "id": "prop-1",
+      "client_id": "c-ex-1",
+      "version": 1,
+      "package_id": "growth",
+      "setup_paise": 3500000,
+      "monthly_paise": 1999900,
+      "gst_paise": 990000,
+      "total_first_bill_paise": 6489900,
+      "advance_paise": 2065000,
+      "scope_bullets": [
+        "AI Receptionist answering in Hindi & English",
+        "WhatsApp booking agent 24×7",
+        "Google Calendar slot integration"
+      ],
+      "status": "draft",
+      "created_at": "2026-10-19T02:44:03.624Z",
+      "updated_at": "2026-10-20T02:44:03.624Z"
+    },
+    {
+      "id": "prop-2",
+      "client_id": "c-ex-2",
+      "version": 1,
+      "package_id": "pro",
+      "setup_paise": 3750000,
+      "monthly_paise": 4999900,
+      "gst_paise": 1575000,
+      "total_first_bill_paise": 10324900,
+      "advance_paise": 2212500,
+      "scope_bullets": [
+        "Multi-doctor queue routing",
+        "Skin analysis intake forms on WhatsApp",
+        "Founding 50% setup discount applied"
+      ],
+      "status": "accepted",
+      "accepted_at": "2026-10-19T02:44:03.624Z",
+      "accepted_name": "Dr. Rohini Batra",
+      "created_at": "2026-10-19T02:44:03.624Z",
+      "updated_at": "2026-10-20T02:44:03.624Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg-mvg2xivo",
+      "client_id": "c-ex-2",
+      "direction": "outbound",
+      "channel": "whatsapp",
+      "template": "onboarding_request",
+      "body": "Payment received! Please fill your clinic intake form here: http://localhost:3000/p/tok_batra_skin_419",
+      "status": "sent",
+      "created_at": "2026-10-20T02:44:04.692Z"
+    },
+    {
+      "id": "msg-mvg2xi26",
+      "client_id": "c-mvg2xi22xfoz",
+      "direction": "outbound",
+      "channel": "whatsapp",
+      "template": "welcome_demo_v1",
+      "body": "Namaste Dr. Sameer Joshi! Thank you for requesting a demo for Joshi Dental Care. Our founder Samar will share a demo agent trained on your business in 48 hours.",
+      "status": "delivered",
+      "created_at": "2026-10-20T02:44:03.630Z"
+    },
+    {
+      "id": "msg-1",
+      "client_id": "c-ex-1",
+      "direction": "outbound",
+      "channel": "whatsapp",
+      "body": "Hello Dr. Vikram! Welcome to AgentWala. Test our demo receptionist at +91 80 4736 1234 or pick a 20-min slot.",
+      "status": "delivered",
+      "created_at": "2026-10-19T02:44:03.624Z"
+    },
+    {
+      "id": "msg-2",
+      "client_id": "c-ex-2",
+      "direction": "outbound",
+      "channel": "whatsapp",
+      "body": "Your customized AI receptionist build is underway. Here is your test phone line.",
+      "status": "delivered",
+      "created_at": "2026-10-19T02:44:03.624Z"
+    }
+  ],
+  "agents": [
+    {
+      "id": "ag-2",
+      "client_id": "c-ex-2",
+      "niche": "Skin & hair clinic",
+      "prompt": "You are the AI receptionist for Dr. Batra Skin & Hair Care. Be polite, warm, and helpful in Hindi and English.",
+      "knowledge_base": "Timings: Mon-Sat 10 AM - 8 PM. Doctor consultation: ₹800. Location: Indiranagar 100ft road.",
+      "status": "testing",
+      "created_at": "2026-10-19T02:44:03.624Z",
+      "updated_at": "2026-10-20T02:44:03.624Z"
+    }
+  ],
+  "jobs": [],
+  "activity_log": [
+    {
+      "id": "log-mvg2xivp7ze",
+      "client_id": "c-ex-2",
+      "actor": "automation",
+      "action": "Advance Payment Received (Razorpay A9)",
+      "detail": "Razorpay payment confirmed for AW/2026-27/0001. Ticked w2. Onboarding requested.",
+      "created_at": "2026-10-20T02:44:04.693Z"
+    },
+    {
+      "id": "log-mvg2xivns72",
+      "client_id": "c-ex-2",
+      "actor": "automation",
+      "action": "Checklist w2 completed",
+      "detail": "Automation marked w2 as done for Dr. Batra Skin & Hair Care",
+      "created_at": "2026-10-20T02:44:04.691Z"
+    },
+    {
+      "id": "log-mvg2xin0csd",
+      "client_id": "c-mvg2xi22xfoz",
+      "actor": "automation",
+      "action": "Meeting Booked (Cal.com Webhook - A5 & A6)",
+      "detail": "Meeting confirmed for 2026-10-25. Demo agent cloned & personalised. Ticked b1 and b2.",
+      "created_at": "2026-10-20T02:44:04.380Z"
+    },
+    {
+      "id": "log-mvg2ximz6uv",
+      "client_id": "c-mvg2xi22xfoz",
+      "actor": "automation",
+      "action": "Checklist b2 completed",
+      "detail": "Automation marked b2 as done for Joshi Dental Care",
+      "created_at": "2026-10-20T02:44:04.379Z"
+    },
+    {
+      "id": "log-mvg2ximv4x1",
+      "client_id": "c-mvg2xi22xfoz",
+      "actor": "automation",
+      "action": "Checklist b1 completed",
+      "detail": "Automation marked b1 as done for Joshi Dental Care",
+      "created_at": "2026-10-20T02:44:04.375Z"
+    },
+    {
+      "id": "log-mvg2xi27oxi",
+      "client_id": "c-mvg2xi22xfoz",
+      "actor": "automation",
+      "action": "Mock Webhook Executed",
+      "detail": "[MOCK] Lead data prepared for Google Sheet sync: Dr. Sameer Joshi (Joshi Dental Care, +91 98201 99887)",
+      "created_at": "2026-10-20T02:44:03.631Z"
+    },
+    {
+      "id": "log-mvg2xi257d4",
+      "client_id": "c-mvg2xi22xfoz",
+      "actor": "automation",
+      "action": "Lead Created",
+      "detail": "New lead registered for Joshi Dental Care (+91 98201 99887)",
+      "created_at": "2026-10-20T02:44:03.629Z"
+    },
+    {
+      "id": "log-1",
+      "client_id": "c-ex-3",
+      "actor": "automation",
+      "action": "Final payment confirmed",
+      "detail": "Razorpay webhook paid final invoice AW/2026-27/0003. Ticked q1.",
+      "created_at": "2026-10-19T02:44:03.624Z"
+    },
+    {
+      "id": "log-2",
+      "client_id": "c-ex-2",
+      "actor": "automation",
+      "action": "Advance payment received",
+      "detail": "Advance ₹20,650 paid. Onboarding link sent to Dr. Rohini. Ticked w2.",
+      "created_at": "2026-10-19T02:44:03.624Z"
+    },
+    {
+      "id": "log-3",
+      "client_id": "c-ex-2",
+      "actor": "client",
+      "action": "Proposal accepted",
+      "detail": "Dr. Rohini Batra accepted Pro Proposal v1 via Client Portal. Ticked w1.",
+      "created_at": "2026-10-19T02:44:03.624Z"
+    },
+    {
+      "id": "log-4",
+      "client_id": "c-ex-1",
+      "actor": "automation",
+      "action": "Lead created",
+      "detail": "Submitted demo form from landing page. AI extracted pain points. Ticked l1, l2.",
+      "created_at": "2026-10-19T02:44:03.624Z"
+    },
+    {
+      "id": "log-5",
+      "client_id": "c-ex-1",
+      "actor": "automation",
+      "action": "Welcome WhatsApp sent",
+      "detail": "Template sent with demo number +91 80 4736 1234. Ticked c1.",
+      "created_at": "2026-10-19T02:44:03.624Z"
+    }
+  ],
+  "automations": [
+    {
+      "id": "A1",
+      "name": "New lead from website form",
+      "description": "Creates client, ticks l1 & l2, runs AI pain summary, notifies founder",
+      "enabled": true,
+      "success_count": 14,
+      "failure_count": 0
+    },
+    {
+      "id": "A2",
+      "name": "Welcome message",
+      "description": "Within 2 min sends WhatsApp template with demo number and booking link → ticks c1",
+      "enabled": true,
+      "success_count": 14,
+      "failure_count": 0
+    },
+    {
+      "id": "A3",
+      "name": "Reply detection",
+      "description": "Inbound WhatsApp webhook ticks c2 and logs to messages tab",
+      "enabled": true,
+      "success_count": 11,
+      "failure_count": 0
+    },
+    {
+      "id": "A4",
+      "name": "Lead nurture",
+      "description": "Follow-ups at 24h & 72h; marks cold if 3 messages unresponded",
+      "enabled": true,
+      "success_count": 9,
+      "failure_count": 0
+    },
+    {
+      "id": "A5",
+      "name": "Meeting booked",
+      "description": "Cal.com webhook ticks b1, schedules Meet URL, sets next step date",
+      "enabled": true,
+      "success_count": 7,
+      "failure_count": 0
+    },
+    {
+      "id": "A6",
+      "name": "Demo agent prep",
+      "description": "Clones demo agent for client niche & personalises with business name → ticks b2",
+      "enabled": true,
+      "success_count": 7,
+      "failure_count": 0
+    },
+    {
+      "id": "A7",
+      "name": "Meeting reminders",
+      "description": "WhatsApp reminders 24h and 1h before meeting → ticks b3",
+      "enabled": true,
+      "success_count": 6,
+      "failure_count": 0
+    },
+    {
+      "id": "A8",
+      "name": "Proposal follow-up",
+      "description": "Nudge after 48h and 5d if proposal unaccepted → ticks p2",
+      "enabled": true,
+      "success_count": 5,
+      "failure_count": 0
+    },
+    {
+      "id": "A9",
+      "name": "Accept and advance",
+      "description": "Portal accept ticks w1 → creates Razorpay link → on payment ticks w2",
+      "enabled": true,
+      "success_count": 4,
+      "failure_count": 0
+    },
+    {
+      "id": "A10",
+      "name": "Onboarding collection",
+      "description": "Sends onboarding form link after advance → on submission ticks w3",
+      "enabled": true,
+      "success_count": 4,
+      "failure_count": 0
+    },
+    {
+      "id": "A11",
+      "name": "Agent build draft",
+      "description": "AI generates system prompt & knowledge base from onboarding answers → ticks d1",
+      "enabled": true,
+      "success_count": 4,
+      "failure_count": 0
+    },
+    {
+      "id": "A12",
+      "name": "Automated testing",
+      "description": "Generates 50 questions, grades answers, checks ≥90% pass rate → ticks d2",
+      "enabled": true,
+      "success_count": 3,
+      "failure_count": 0
+    },
+    {
+      "id": "A13",
+      "name": "Client test approval",
+      "description": "Sends test phone link, client approves in portal → ticks d3",
+      "enabled": true,
+      "success_count": 3,
+      "failure_count": 0
+    },
+    {
+      "id": "A14",
+      "name": "Final bill",
+      "description": "When v1 & v2 ticked, generates GST invoice for final bill → ticks f1",
+      "enabled": true,
+      "success_count": 2,
+      "failure_count": 0
+    },
+    {
+      "id": "A15",
+      "name": "Payment received",
+      "description": "Razorpay webhook on final bill → ticks q1 → starts monthly subscription",
+      "enabled": true,
+      "success_count": 2,
+      "failure_count": 0
+    },
+    {
+      "id": "A16",
+      "name": "Review request",
+      "description": "3 days after final payment sends Google review request → ticks q2",
+      "enabled": true,
+      "success_count": 2,
+      "failure_count": 0
+    },
+    {
+      "id": "A17",
+      "name": "Weekly transcript review",
+      "description": "Monday AI review of volume, bookings & missed queries → ticks v3 on 1st run",
+      "enabled": true,
+      "success_count": 2,
+      "failure_count": 0
+    },
+    {
+      "id": "A18",
+      "name": "Monthly client report",
+      "description": "1st of month emails PDF report of calls, bookings, hours saved",
+      "enabled": true,
+      "success_count": 2,
+      "failure_count": 0
+    },
+    {
+      "id": "A19",
+      "name": "Monthly invoices & dunning",
+      "description": "Retainer invoices + reminders at +3, +7 and +14 days",
+      "enabled": true,
+      "success_count": 1,
+      "failure_count": 0
+    },
+    {
+      "id": "A20",
+      "name": "Founder daily digest",
+      "description": "9:00 AM IST WhatsApp summary of meetings, overdue steps, revenue",
+      "enabled": true,
+      "success_count": 14,
+      "failure_count": 0
+    }
+  ],
+  "settings": {
+    "name": "AgentWala",
+    "tagline": "AI receptionists & autonomous agents for Indian businesses",
+    "DEMO_NUMBER": "+91 80 4736 1234",
+    "DEMO_NUMBER_RAW": "+918047361234",
+    "WHATSAPP_NUMBER": "+91 98200 12345",
+    "WHATSAPP_NUMBER_RAW": "+919820012345",
+    "EMAIL": "hello@agentwala.in",
+    "CITY": "Mumbai",
+    "FOUNDER_NAME": "Samar",
+    "FOUNDER_PHOTO": "/founder.jpg",
+    "GSTIN": "27AABCU9603R1ZM",
+    "LEGAL_NAME": "AgentWala Technologies Private Limited",
+    "PAN": "AABCU9603R",
+    "ADDRESS": "402, Lotus Grandeur, Veera Desai Road, Andheri West, Mumbai, Maharashtra 400053",
+    "BOOKING_LINK": "https://cal.com/agentwala/20min",
+    "BANK_NAME": "HDFC Bank",
+    "ACCOUNT_NUMBER": "50200083921029",
+    "IFSC_CODE": "HDFC0000083",
+    "UPI_ID": "agentwala@okhdfcbank",
+    "razorpay_status": "mock",
+    "whatsapp_status": "mock",
+    "email_status": "mock",
+    "cal_status": "mock",
+    "ai_status": "mock"
+  }
+}

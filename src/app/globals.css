@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #F6F5FB;
+  --surface: #FFFFFF;
+  --ink: #1B1F3B;
+  --muted: #585D7A;
+  --line: #E2E0EE;
+  --accent: #FDB91F;
+  --accent-ink: #1B1F3B;
+  --brand: #1C1F3A;
+  --brand-ink: #FFFFFF;
+  --track: #E7E5F1;
+  --done: #2E7D5B;
+  --warn: #B4540A;
+  --warn-bg: #FDF0E1;
+  --good-bg: #E4F3EB;
+}
+
+[data-theme="dark"] {
+  --bg: #12142A;
+  --surface: #1C1F3A;
+  --ink: #ECEBF7;
+  --muted: #A6A9C6;
+  --line: #2F3356;
+  --accent: #FFB81C;
+  --accent-ink: #1B1F3B;
+  --brand: #ECEBF7;
+  --brand-ink: #12142A;
+  --track: #2B2F52;
+  --done: #5FCB98;
+  --warn: #F2A15A;
+  --warn-bg: #3A2A1C;
+  --good-bg: #183428;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #FFFFFF;
+  color: #1C1F3A;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

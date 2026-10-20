@@ -1,0 +1,353 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>AgentWala Client Pipeline</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a funnel + money strip on top, then one row per client with a 10-step progress track; rows expand into phase checklists. */
+:root{
+  --bg:#F6F5FB; --surface:#FFFFFF; --ink:#1B1F3B; --muted:#585D7A; --line:#E2E0EE;
+  --accent:#F2A40C; --accent-ink:#1B1F3B; --brand:#1B1F3B; --brand-ink:#FFFFFF;
+  --track:#E7E5F1; --done:#2E7D5B; --warn:#B4540A; --warn-bg:#FDF0E1; --good-bg:#E4F3EB;
+  --font-display:'Bricolage Grotesque', 'Segoe UI', sans-serif;
+  --font-body:'Figtree', system-ui, sans-serif;
+  --font-num:'IBM Plex Mono', ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12142A; --surface:#1C1F3A; --ink:#ECEBF7; --muted:#A6A9C6; --line:#2F3356;
+  --accent:#FFB81C; --accent-ink:#1B1F3B; --brand:#ECEBF7; --brand-ink:#12142A;
+  --track:#2B2F52; --done:#5FCB98; --warn:#F2A15A; --warn-bg:#3A2A1C; --good-bg:#183428; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12142A; --surface:#1C1F3A; --ink:#ECEBF7; --muted:#A6A9C6; --line:#2F3356;
+  --accent:#FFB81C; --accent-ink:#1B1F3B; --brand:#ECEBF7; --brand-ink:#12142A;
+  --track:#2B2F52; --done:#5FCB98; --warn:#F2A15A; --warn-bg:#3A2A1C; --good-bg:#183428; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.45}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px;display:flex;flex-direction:column;gap:24px}
+h1,h2,h3{font-family:var(--font-display);margin:0;text-wrap:balance}
+h1{font-size:30px;font-weight:800;letter-spacing:-.02em}
+h2{font-size:18px;font-weight:600}
+.num{font-family:var(--font-num);font-variant-numeric:tabular-nums}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.sub{color:var(--muted);margin:4px 0 0}
+.status{font-size:13px;color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.summary{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px}
+@media (max-width:760px){.summary{grid-template-columns:minmax(0,1fr)}}
+.funnel{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.frow{display:grid;grid-template-columns:120px minmax(0,1fr) 92px;align-items:center;gap:10px;font-size:14px}
+.fbar{height:22px;background:var(--track);border-radius:6px;overflow:hidden}
+.fbar span{display:block;height:100%;background:var(--accent);border-radius:6px;min-width:2px}
+.frate{color:var(--muted);font-size:12.5px;text-align:right}
+.money{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:14px}
+.money div{display:flex;flex-direction:column;gap:2px}
+.money .label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.money .val{font-size:22px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 12px;border-radius:999px;cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;cursor:pointer;min-height:44px}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.btn-danger{background:transparent;color:var(--warn);border:1px solid var(--warn)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+form.add{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end}
+label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600;color:var(--muted)}
+input,select,textarea{font:inherit;font-size:14.5px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-height:40px;box-sizing:border-box;width:100%}
+.check-inline{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-weight:500;font-size:14px}
+.check-inline input{width:18px;min-height:18px;height:18px}
+.list{display:flex;flex-direction:column;gap:10px}
+.client{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.client>summary{list-style:none;cursor:pointer;padding:16px 18px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr) auto;gap:16px;align-items:center}
+.client>summary::-webkit-details-marker{display:none}
+@media (max-width:700px){.client>summary{grid-template-columns:minmax(0,1fr)}}
+.cname{font-weight:700;font-size:16px}
+.cmeta{color:var(--muted);font-size:13px}
+.track{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px}
+.track i{height:10px;border-radius:3px;background:var(--track)}
+.track i.on{background:var(--done)}
+.track i.cur{background:var(--accent)}
+.stageline{display:flex;justify-content:space-between;gap:8px;font-size:13px;margin-top:6px}
+.pill{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.pill.due{background:var(--warn-bg);color:var(--warn)}
+.pill.ok{background:var(--good-bg);color:var(--done)}
+.pill.ex{background:var(--track);color:var(--muted)}
+.right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+@media (max-width:700px){.right{align-items:flex-start;flex-direction:row;flex-wrap:wrap}}
+.body{border-top:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:18px}
+.phases{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.phase h3{font-size:14px;font-weight:600;font-family:var(--font-body);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;justify-content:space-between}
+.stage{margin-top:10px}
+.stage b{font-size:14px}
+.stage ul{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+.stage li label{flex-direction:row;align-items:flex-start;gap:8px;color:var(--ink);font-weight:400;font-size:13.5px;cursor:pointer;padding:3px 0}
+.stage li input{width:17px;height:17px;min-height:17px;margin-top:2px;flex:none;accent-color:var(--done)}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.bill{background:var(--bg);border-radius:10px;padding:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;font-size:13px}
+.bill div{display:flex;flex-direction:column}
+.bill span:first-child{color:var(--muted)}
+.bill .tot{font-weight:700}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}
+.empty{text-align:center;color:var(--muted);padding:32px 16px}
+.note{font-size:12.5px;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Client Pipeline</h1>
+      <p class="sub">Every client moves through 10 steps, from first lead to final bill paid. Tick the checklist and the stage moves on its own.</p>
+    </div>
+    <span class="status" id="status" role="status">Connecting…</span>
+  </div>
+
+  <section class="summary" aria-label="Summary">
+    <div class="panel">
+      <h2>Funnel</h2>
+      <div class="funnel" id="funnel"></div>
+    </div>
+    <div class="panel">
+      <h2>Money (incl. 18% GST)</h2>
+      <div class="money" id="money"></div>
+      <p class="note" style="margin:12px 0 0">Advance = 50% of setup, collected when the client says yes. Final bill = balance setup + month 1.</p>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="add-title">
+    <h2 id="add-title" style="margin-bottom:12px">Add a lead</h2>
+    <form class="add" id="addForm">
+      <label for="a-name">Business name<input id="a-name" required placeholder="Sunrise Dental Clinic"></label>
+      <label for="a-owner">Owner / contact<input id="a-owner" placeholder="Dr. Mehta, 98xxxxxx10"></label>
+      <label for="a-niche">Niche<select id="a-niche">
+        <option>Local business</option><option>Content creator</option><option>Startup / SMB</option><option>E-commerce</option>
+      </select></label>
+      <label for="a-pkg">Likely package<select id="a-pkg">
+        <option value="starter">Starter ₹7,999/mo</option><option value="growth" selected>Growth ₹19,999/mo</option><option value="pro">Pro ₹49,999/mo</option><option value="creator">Creator Engine ₹14,999/mo</option>
+      </select></label>
+      <button class="btn btn-primary" type="submit">Add lead</button>
+    </form>
+  </section>
+
+  <section aria-label="Clients" style="display:flex;flex-direction:column;gap:12px">
+    <div class="toolbar">
+      <div class="chips" id="filters" role="group" aria-label="Filter by phase"></div>
+    </div>
+    <div class="list" id="list">
+      <div class="empty">Your clients will appear here. Add your first lead above.</div>
+    </div>
+  </section>
+</div>
+
+<script>
+const PKG = {
+  starter:{name:'Starter', setup:15000, monthly:7999},
+  growth:{name:'Growth', setup:35000, monthly:19999},
+  pro:{name:'Pro', setup:75000, monthly:49999},
+  creator:{name:'Creator Engine', setup:0, monthly:14999}
+};
+const PHASES = [
+  {name:'Find', stages:[
+    {name:'Lead', items:[['l1','Business and owner name noted'],['l2','Phone / WhatsApp saved'],['l3','Pain spotted (missed calls, slow replies, no follow-up)']]},
+    {name:'Contacted', items:[['c1','First message, call or walk-in done'],['c2','Owner replied or showed interest']]}
+  ]},
+  {name:'Meet', stages:[
+    {name:'Meeting booked', items:[['b1','Date and time confirmed'],['b2','Demo agent set up for their business type'],['b3','Reminder sent the day before']]},
+    {name:'Meeting done', items:[['m1','Owner called the demo agent live'],['m2','Asked: calls per day, after-hours enquiries, current cost'],['m3','Recommended one package with price'],['m4','Next step agreed with a date']]}
+  ]},
+  {name:'Win', stages:[
+    {name:'Proposal sent', items:[['p1','Proposal with package and ₹ price sent'],['p2','Followed up within 48 hours']]},
+    {name:'Won', items:[['w1','Client said yes'],['w2','50% setup advance received'],['w3','FAQs, prices and timings collected']]}
+  ]},
+  {name:'Deliver', stages:[
+    {name:'Building', items:[['d1','Agent built from template'],['d2','Tested on 50 real questions'],['d3','Client approved a test call']]},
+    {name:'Live', items:[['v1','Connected to their number / WhatsApp'],['v2','Client team trained on human handoff'],['v3','First-week transcript review done']]}
+  ]},
+  {name:'Bill', stages:[
+    {name:'Final bill sent', items:[['f1','Final invoice sent (balance setup + month 1, with GST)']]},
+    {name:'Paid', items:[['q1','Payment received'],['q2','Testimonial or Google review asked']]}
+  ]}
+];
+const STAGES = PHASES.flatMap((p,pi)=>p.stages.map(s=>({...s, phase:pi})));
+const TOTAL_ITEMS = STAGES.reduce((n,s)=>n+s.items.length,0);
+
+let db = null, clients = [], filter = 'all', open = new Set(), pendingRender = false;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const today = () => new Date().toISOString().slice(0,10);
+
+function stageIndex(c){
+  const ch = c.checks || {};
+  for (let i=0;i<STAGES.length;i++){ if (!STAGES[i].items.every(([k])=>ch[k])) return i; }
+  return STAGES.length; // all done
+}
+function ticked(c){ const ch=c.checks||{}; return STAGES.reduce((n,s)=>n+s.items.filter(([k])=>ch[k]).length,0); }
+function bill(c){
+  const p = PKG[c.pkg] || PKG.growth;
+  const setup = p.setup * (c.founding ? 0.5 : 1);
+  const sub = setup + p.monthly, gst = sub*0.18, total = sub + gst;
+  const advance = setup*0.5*1.18;
+  return {p, setup, monthly:p.monthly, sub, gst, total, advance, final: total - advance};
+}
+
+function renderSummary(){
+  const idx = clients.map(stageIndex);
+  const steps = [
+    ['Leads', idx.length],
+    ['Meetings done', idx.filter(i=>i>=4).length],
+    ['Won', idx.filter(i=>i>=6).length],
+    ['Live', idx.filter(i=>i>=8).length],
+    ['Paid', idx.filter(i=>i>=10).length]
+  ];
+  const max = Math.max(1, steps[0][1]);
+  $('funnel').innerHTML = steps.map(([n,v],i)=>{
+    const prev = i ? steps[i-1][1] : null;
+    const rate = i===0 ? '' : (prev ? Math.round(v/prev*100)+'% of above' : '—');
+    return `<div class="frow"><span>${n} <b class="num">${v}</b></span><div class="fbar" aria-hidden="true"><span style="width:${v/max*100}%"></span></div><span class="frate">${rate}</span></div>`;
+  }).join('');
+  let collected=0, toCollect=0, mrr=0, pipeline=0;
+  clients.forEach((c,k)=>{
+    const i = idx[k], b = bill(c);
+    if (i>=6) collected += b.advance;
+    if (i>=10) collected += b.final;
+    if (i>=6 && i<10) toCollect += b.final;
+    if (i>=8) mrr += b.monthly;
+    if (i<6) pipeline += b.total;
+  });
+  $('money').innerHTML = [
+    ['Collected', collected], ['Still to collect', toCollect],
+    ['Monthly retainers live', mrr], ['Open deals (first bill)', pipeline]
+  ].map(([l,v])=>`<div><span class="label">${l}</span><span class="val num">${inr(v)}</span></div>`).join('');
+}
+
+function renderFilters(){
+  const idx = clients.map(stageIndex);
+  const opts = [['all','All',clients.length], ...PHASES.map((p,pi)=>[String(pi), p.name, idx.filter(i=>i<10 && STAGES[i].phase===pi).length]), ['done','Completed', idx.filter(i=>i>=10).length]];
+  $('filters').innerHTML = opts.map(([v,l,n])=>`<button type="button" class="chip" data-f="${v}" aria-pressed="${filter===v}">${l} <span class="num">${n}</span></button>`).join('');
+}
+
+function renderList(){
+  const list = $('list');
+  if (list.contains(document.activeElement) && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) && document.activeElement.type !== 'checkbox'){ pendingRender = true; return; }
+  pendingRender = false;
+  const rows = clients.map(c=>({c, i:stageIndex(c)})).filter(({i})=>{
+    if (filter==='all') return true;
+    if (filter==='done') return i>=10;
+    return i<10 && STAGES[i].phase===Number(filter);
+  }).sort((a,b)=> (a.c.next||'9999') < (b.c.next||'9999') ? -1 : 1);
+  if (!rows.length){
+    list.innerHTML = `<div class="empty">${clients.length ? 'No clients in this phase right now.' : 'Your clients will appear here. Add your first lead above.'}</div>`;
+    return;
+  }
+  list.innerHTML = rows.map(({c,i})=>{
+    const b = bill(c), ch = c.checks||{};
+    const stageName = i>=10 ? 'Completed — paid' : STAGES[i].name;
+    const phaseName = i>=10 ? 'Done' : PHASES[STAGES[i].phase].name;
+    const pct = Math.round(ticked(c)/TOTAL_ITEMS*100);
+    const overdue = c.next && c.next < today() && i<10;
+    const pill = c.example ? '<span class="pill ex">Example</span>' : i>=10 ? '<span class="pill ok">Paid</span>' : overdue ? `<span class="pill due">Overdue ${esc(c.next)}</span>` : c.next ? `<span class="pill ok">Next ${esc(c.next)}</span>` : '';
+    const track = STAGES.map((s,k)=>`<i class="${k<i?'on':k===i?'cur':''}" title="${esc(s.name)}"></i>`).join('');
+    const phases = PHASES.map((p,pi)=>{
+      const its = p.stages.flatMap(s=>s.items), done = its.filter(([k])=>ch[k]).length;
+      return `<div class="phase"><h3><span>${p.name}</span><span class="num">${done}/${its.length}</span></h3>${p.stages.map(s=>`<div class="stage"><b>${esc(s.name)}</b><ul>${s.items.map(([k,t])=>`<li><label><input type="checkbox" data-id="${c.id}" data-k="${k}" ${ch[k]?'checked':''}>${esc(t)}</label></li>`).join('')}</ul></div>`).join('')}</div>`;
+    }).join('');
+    return `<details class="client" data-id="${c.id}" ${open.has(c.id)?'open':''}>
+      <summary>
+        <div><div class="cname">${esc(c.name)}</div><div class="cmeta">${esc(c.owner||'')}${c.owner?' · ':''}${esc(c.niche||'')} · ${esc(b.p.name)}</div></div>
+        <div><div class="track" aria-hidden="true">${track}</div><div class="stageline"><span><b>${esc(stageName)}</b> <span class="cmeta">· ${phaseName}</span></span><span class="num cmeta">${pct}%</span></div></div>
+        <div class="right">${pill}<span class="num cmeta">${inr(b.total)} first bill</span></div>
+      </summary>
+      <div class="body">
+        <div class="phases">${phases}</div>
+        <div class="fields">
+          <label for="pkg-${c.id}">Package<select id="pkg-${c.id}" data-id="${c.id}" data-field="pkg">${Object.entries(PKG).map(([k,p])=>`<option value="${k}" ${c.pkg===k?'selected':''}>${p.name}</option>`).join('')}</select></label>
+          <label for="next-${c.id}">Next step date<input type="date" id="next-${c.id}" data-id="${c.id}" data-field="next" value="${esc(c.next||'')}"></label>
+          <label for="nt-${c.id}">Next step / notes<input id="nt-${c.id}" data-id="${c.id}" data-field="notes" value="${esc(c.notes||'')}" placeholder="Send proposal after Friday call"></label>
+          <label class="check-inline" for="fd-${c.id}"><input type="checkbox" id="fd-${c.id}" data-id="${c.id}" data-field="founding" ${c.founding?'checked':''}>Founding offer (50% off setup)</label>
+        </div>
+        <div class="bill" aria-label="Bill">
+          <div><span>Setup</span><span class="num">${inr(b.setup)}</span></div>
+          <div><span>Month 1</span><span class="num">${inr(b.monthly)}</span></div>
+          <div><span>GST 18%</span><span class="num">${inr(b.gst)}</span></div>
+          <div><span>First bill total</span><span class="num tot">${inr(b.total)}</span></div>
+          <div><span>Advance (on Won)</span><span class="num">${inr(b.advance)}</span></div>
+          <div><span>Final bill</span><span class="num tot">${inr(b.final)}</span></div>
+        </div>
+        <div class="actions">
+          <span class="note">Then ${inr(b.monthly)} + GST every month while live.</span>
+          <span data-del="${c.id}"><button type="button" class="btn btn-ghost" data-act="ask">Remove client</button></span>
+        </div>
+      </div>
+    </details>`;
+  }).join('');
+}
+
+function renderAll(){ renderSummary(); renderFilters(); renderList(); }
+
+async function write(id, data){
+  const c = clients.find(x=>x.id===id); if (!c) return;
+  Object.assign(c, data.checks ? {checks:{...(c.checks||{}), ...data.checks}} : data);
+  renderAll();
+  if (!db) return;
+  try { await db.collection('clients').doc(id).update(data); $('status').textContent = 'Saved'; }
+  catch(e){ $('status').textContent = e.code==='quota_exceeded' ? 'Storage full: remove old clients' : 'Could not save. Check your connection and try again.'; }
+}
+
+$('addForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const name = $('a-name').value.trim(); if (!name) return;
+  const doc = {name, owner:$('a-owner').value.trim(), niche:$('a-niche').value, pkg:$('a-pkg').value, founding:false, checks:{l1:true}, notes:'', next:'', created:Date.now()};
+  $('addForm').reset(); $('a-pkg').value='growth';
+  if (db){
+    try { await db.collection('clients').add(doc); $('status').textContent = 'Lead added'; }
+    catch(err){ $('status').textContent = err.code==='quota_exceeded' ? 'Storage full: remove old clients' : 'Could not add. Try again.'; }
+  } else {
+    clients.push({id:'local'+Date.now(), ...doc}); renderAll();
+  }
+});
+
+$('filters').addEventListener('click', e=>{
+  const b = e.target.closest('[data-f]'); if (!b) return;
+  filter = b.dataset.f; renderFilters(); renderList();
+});
+
+$('list').addEventListener('toggle', e=>{
+  const d = e.target; if (!d.matches('details.client')) return;
+  d.open ? open.add(d.dataset.id) : open.delete(d.dataset.id);
+}, true);
+
+$('list').addEventListener('change', e=>{
+  const t = e.target, id = t.dataset.id; if (!id) return;
+  if (t.dataset.k) write(id, {checks:{[t.dataset.k]: t.checked}});
+  else if (t.dataset.field==='founding') write(id, {founding:t.checked});
+  else if (t.dataset.field) write(id, {[t.dataset.field]: t.value});
+});
+$('list').addEventListener('focusout', ()=>{ setTimeout(()=>{ if (pendingRender) renderList(); }, 0); });
+
+$('list').addEventListener('click', async e=>{
+  const holder = e.target.closest('[data-del]'); if (!holder) return;
+  const act = e.target.closest('[data-act]')?.dataset.act, id = holder.dataset.del;
+  if (act==='ask') holder.innerHTML = '<span class="note">Remove for good?</span> <button type="button" class="btn btn-danger" data-act="yes">Remove</button> <button type="button" class="btn btn-ghost" data-act="no">Keep</button>';
+  if (act==='no') holder.innerHTML = '<button type="button" class="btn btn-ghost" data-act="ask">Remove client</button>';
+  if (act==='yes'){
+    open.delete(id);
+    if (db){ try { await db.collection('clients').doc(id).delete(); $('status').textContent='Removed'; } catch(err){ $('status').textContent='Could not remove. Try again.'; } }
+    else { clients = clients.filter(c=>c.id!==id); renderAll(); }
+  }
+});
+
+renderAll();
+(async ()=>{
+  db = window.claude ? await window.claude.use('db') : null;
+  if (!db){ $('status').textContent = 'Saving is off in this view: changes stay until you reload.'; return; }
+  $('status').textContent = 'Synced';
+  db.collection('clients').orderBy('created','asc').onSnapshot(snap=>{
+    clients = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderAll();
+    $('status').textContent = snap.metadata.hasPendingWrites ? 'Saving…' : 'Synced';
+  }, err=>{ $('status').textContent = 'Live sync stopped. Reload the page.'; });
+})();
+</script>
+
+</body></html>
