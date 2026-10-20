@@ -795,17 +795,21 @@ function getInitialSeed(): DatabaseSchema {
 // In-Memory Cache with Short TTL (2 seconds)
 let memoryCache: DatabaseSchema | null = null;
 let lastCacheTime = 0;
+let currentDbVersion = 0;
 const CACHE_TTL_MS = 2000;
 
-async function ensureDataFile(): Promise<DatabaseSchema> {
+async function fetchFreshData(bypassCache = false): Promise<{ data: DatabaseSchema; version: number }> {
   const now = Date.now();
-  if (memoryCache && now - lastCacheTime < CACHE_TTL_MS) {
-    return memoryCache;
+  if (!bypassCache && memoryCache && now - lastCacheTime < CACHE_TTL_MS) {
+    return { data: memoryCache, version: currentDbVersion };
   }
 
   let parsed: DatabaseSchema | null = null;
+  let version = 0;
   try {
-    parsed = await loadState<DatabaseSchema>("db");
+    const res = await loadState<DatabaseSchema>("db");
+    parsed = res?.data ?? null;
+    version = res?.version ?? 0;
   } catch (e) {
     console.error("[db] Error loading state from storage:", e);
   }
@@ -881,16 +885,62 @@ async function ensureDataFile(): Promise<DatabaseSchema> {
 
   memoryCache = parsed;
   lastCacheTime = Date.now();
+  currentDbVersion = version;
+
   if (changed) {
-    await writeData(parsed);
+    const saveRes = await saveState("db", parsed, currentDbVersion);
+    if (saveRes.newVersion != null) {
+      currentDbVersion = saveRes.newVersion;
+    }
   }
-  return parsed;
+
+  return { data: parsed, version: currentDbVersion };
+}
+
+async function ensureDataFile(): Promise<DatabaseSchema> {
+  const { data } = await fetchFreshData(false);
+  return data;
+}
+
+/**
+ * Optimistic concurrency mutate helper:
+ * Bypasses 2s cache, applies mutation, saves with expected version,
+ * and retries up to 3 times on version conflict.
+ */
+async function mutate<T>(fn: (data: DatabaseSchema) => T | Promise<T>): Promise<T> {
+  const maxRetries = 3;
+  let attempt = 0;
+
+  while (attempt < maxRetries) {
+    attempt++;
+    const { data, version } = await fetchFreshData(true);
+    const result = await fn(data);
+    const saveRes = await saveState("db", data, version);
+
+    if (saveRes.success) {
+      memoryCache = data;
+      lastCacheTime = Date.now();
+      if (saveRes.newVersion != null) {
+        currentDbVersion = saveRes.newVersion;
+      }
+      return result;
+    }
+
+    console.warn(`[db] Version conflict on attempt ${attempt}/${maxRetries} (expected v${version}). Retrying mutation...`);
+    memoryCache = null;
+    await new Promise((r) => setTimeout(r, 25 * attempt));
+  }
+
+  throw new Error("[db] Mutate failed: exceeded maximum retries due to concurrent write conflicts.");
 }
 
 async function writeData(data: DatabaseSchema): Promise<void> {
+  const saveRes = await saveState("db", data, currentDbVersion);
+  if (saveRes.newVersion != null) {
+    currentDbVersion = saveRes.newVersion;
+  }
   memoryCache = data;
   lastCacheTime = Date.now();
-  await saveState("db", data);
 }
 
 export const db = {
@@ -1012,62 +1062,63 @@ export const db = {
   },
 
   async createClient(clientData: Partial<Client>): Promise<Client> {
-    const data = await ensureDataFile();
-    const id = "c-" + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
-    const token = "tok_" + Math.random().toString(36).substring(2, 10);
-    const now = new Date().toISOString();
+    const newClient = await mutate((data) => {
+      const id = "c-" + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+      const token = "tok_" + Math.random().toString(36).substring(2, 10);
+      const now = new Date().toISOString();
 
-    const newClient: Client = {
-      id,
-      name: clientData.name || "Untitled Lead",
-      owner_name: clientData.owner_name || "",
-      phone: clientData.phone || "",
-      email: clientData.email || "",
-      city: clientData.city || CITY,
-      state: clientData.state || "Karnataka",
-      niche: clientData.niche || "Local business",
-      package: clientData.package || "growth",
-      founding_offer: Boolean(clientData.founding_offer),
-      notes: clientData.notes || "",
-      next_step: clientData.next_step || "",
-      next_step_date: clientData.next_step_date || "",
-      status: "active",
-      portal_token: token,
-      consent_at: clientData.consent_at || now,
-      source: clientData.source || "website_enquiry_form",
-      outbound_count: 0,
-      checks: clientData.checks || {},
-      qualifying_answers: clientData.qualifying_answers,
-      created_at: now,
-      updated_at: now,
-    };
+      const createdClient: Client = {
+        id,
+        name: clientData.name || "Untitled Lead",
+        owner_name: clientData.owner_name || "",
+        phone: clientData.phone || "",
+        email: clientData.email || "",
+        city: clientData.city || CITY,
+        state: clientData.state || "Karnataka",
+        niche: clientData.niche || "Local business",
+        package: clientData.package || "growth",
+        founding_offer: Boolean(clientData.founding_offer),
+        notes: clientData.notes || "",
+        next_step: clientData.next_step || "",
+        next_step_date: clientData.next_step_date || "",
+        status: "active",
+        portal_token: token,
+        consent_at: clientData.consent_at || now,
+        source: clientData.source || "website_demo_form",
+        outbound_count: 0,
+        checks: clientData.checks || {},
+        qualifying_answers: clientData.qualifying_answers,
+        created_at: now,
+        updated_at: now,
+      };
 
-    data.clients.unshift(newClient);
+      data.clients.unshift(createdClient);
 
-    // Also auto-create a matching Project for this client in v2
-    const pkg = getPackageWithSettings(newClient.package, (data.settings as any)?.package_prices);
-    const newProject: Project = {
-      id: "proj-" + Date.now().toString(36),
-      client_id: newClient.id,
-      name: `${newClient.name} Project`,
-      service_type: (newClient.qualifying_answers?.service_needed?.toLowerCase().includes("web") ? "website" : newClient.qualifying_answers?.service_needed?.toLowerCase().includes("app") ? "app" : "ai_agent"),
-      package_id: newClient.package,
-      price_paise: pkg.setupPaise || 3500000,
-      monthly_paise: pkg.monthlyPaise || 0,
-      founding_offer: newClient.founding_offer,
-      milestone_plan: "50_50",
-      revision_rounds_included: 2,
-      revisions_used: 0,
-      portal_token: token,
-      status: "active",
-      checks: newClient.checks,
-      created_at: now,
-      updated_at: now,
-    };
-    if (!data.projects) data.projects = [];
-    data.projects.unshift(newProject);
+      // Also auto-create a matching Project for this client in v2
+      const pkg = getPackageWithSettings(createdClient.package, (data.settings as any)?.package_prices);
+      const newProject: Project = {
+        id: "proj-" + Date.now().toString(36),
+        client_id: createdClient.id,
+        name: `${createdClient.name} Project`,
+        service_type: (createdClient.qualifying_answers?.service_needed?.toLowerCase().includes("web") ? "website" : createdClient.qualifying_answers?.service_needed?.toLowerCase().includes("app") ? "app" : "ai_agent"),
+        package_id: createdClient.package,
+        price_paise: pkg.setupPaise || 3500000,
+        monthly_paise: pkg.monthlyPaise || 0,
+        founding_offer: createdClient.founding_offer,
+        milestone_plan: "50_50",
+        revision_rounds_included: 2,
+        revisions_used: 0,
+        portal_token: token,
+        status: "active",
+        checks: createdClient.checks,
+        created_at: now,
+        updated_at: now,
+      };
+      if (!data.projects) data.projects = [];
+      data.projects.unshift(newProject);
 
-    await writeData(data);
+      return createdClient;
+    });
 
     await this.logActivity(
       "automation",
@@ -1081,7 +1132,7 @@ export const db = {
   },
 
   async updateClient(id: string, updates: Partial<Client>): Promise<Client | null> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     const index = data.clients.findIndex((c) => c.id === id);
     if (index === -1) return null;
 
@@ -1090,17 +1141,18 @@ export const db = {
       ...updates,
       updated_at: new Date().toISOString(),
     };
-    await writeData(data);
     return data.clients[index];
+    });
   },
 
   async deleteClient(id: string): Promise<boolean> {
-    const data = await ensureDataFile();
-    const initialLen = data.clients.length;
-    data.clients = data.clients.filter((c) => c.id !== id);
-    data.projects = (data.projects || []).filter((p) => p.client_id !== id);
-    if (data.clients.length !== initialLen) {
-      await writeData(data);
+    const deleted = await mutate((data) => {
+      const initialLen = data.clients.length;
+      data.clients = data.clients.filter((c) => c.id !== id);
+      data.projects = (data.projects || []).filter((p) => p.client_id !== id);
+      return data.clients.length !== initialLen;
+    });
+    if (deleted) {
       await this.logActivity("user", "Client Removed", `Client ${id} was deleted`, id);
       return true;
     }
@@ -1129,7 +1181,7 @@ export const db = {
   },
 
   async createProject(projectData: Partial<Project>): Promise<Project> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     const id = "proj-" + Date.now().toString(36);
     const token = projectData.portal_token || "tok_" + Math.random().toString(36).substring(2, 10);
     const now = new Date().toISOString();
@@ -1156,12 +1208,12 @@ export const db = {
 
     if (!data.projects) data.projects = [];
     data.projects.unshift(newProject);
-    await writeData(data);
     return newProject;
+    });
   },
 
   async updateProject(id: string, updates: Partial<Project>): Promise<Project | null> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.projects) data.projects = [];
     const index = data.projects.findIndex((p) => p.id === id || p.client_id === id);
     if (index === -1) return null;
@@ -1171,8 +1223,8 @@ export const db = {
       ...updates,
       updated_at: new Date().toISOString(),
     };
-    await writeData(data);
     return data.projects[index];
+    });
   },
 
   // CHECKLIST TICKS (v2 27-key derivation)
@@ -1193,87 +1245,88 @@ export const db = {
       throw new Error(`Key ${key} is founder-only and cannot be ticked by automation`);
     }
 
-    const data = await ensureDataFile();
-    const now = getAppTimeISO();
+    const updated = await mutate((data) => {
+      const now = getAppTimeISO();
 
-    const client = data.clients.find((c) => c.id === targetId);
-    const project = (data.projects || []).find((p) => p.id === targetId || p.client_id === targetId);
+      const client = data.clients.find((c) => c.id === targetId);
+      const project = (data.projects || []).find((p) => p.id === targetId || p.client_id === targetId);
 
-    // Bug 9: Server stage gates
-    if (done) {
-      const existingChecks = {
-        ...(client?.checks || {}),
-        ...(project?.checks || {}),
-      };
+      // Bug 9: Server stage gates
+      if (done) {
+        const existingChecks = {
+          ...(client?.checks || {}),
+          ...(project?.checks || {}),
+        };
 
-      if (key === "w1") {
-        if (!existingChecks.s1?.done || !existingChecks.s2?.done) {
-          throw new Error("Stage gate violation: Stage w1 requires s1 (agreement accepted) and s2 (advance paid).");
+        if (key === "w1") {
+          if (!existingChecks.s1?.done || !existingChecks.s2?.done) {
+            throw new Error("Stage gate violation: Stage w1 requires s1 (agreement accepted) and s2 (advance paid).");
+          }
+        }
+
+        if (key === "v1") {
+          if (!existingChecks.w3?.done) {
+            throw new Error("Stage gate violation: Stage v1 requires w3 (initial delivery completed & shared).");
+          }
+        }
+
+        if (key === "v3") {
+          const hasDelivery = (data.deliveries || []).some(
+            (d) => d.project_id === targetId || (project && d.project_id === project.id)
+          );
+          if (!hasDelivery && !existingChecks.w3?.done) {
+            throw new Error("Stage gate violation: Stage v3 requires delivery to have been completed.");
+          }
+        }
+
+        if (key === "f2") {
+          if (!existingChecks.f1?.done) {
+            throw new Error("Stage gate violation: Stage f2 requires f1 (final invoice issued).");
+          }
+          const finalPaid = (data.invoices || []).some(
+            (i) =>
+              (i.project_id === targetId ||
+                (project && i.project_id === project.id) ||
+                i.client_id === targetId ||
+                (client && i.client_id === client.id)) &&
+              i.type === "final" &&
+              i.status === "paid"
+          );
+          if (!finalPaid) {
+            throw new Error("Stage gate violation: Stage f2 requires a real final invoice to exist and be paid.");
+          }
+        }
+
+        if (key === "h1" || key === "h2" || key === "h3") {
+          if (!existingChecks.f2?.done) {
+            throw new Error("Stage gate violation: Handover stages (h1, h2, h3) require f2 (final invoice paid).");
+          }
         }
       }
 
-      if (key === "v1") {
-        if (!existingChecks.w3?.done) {
-          throw new Error("Stage gate violation: Stage v1 requires w3 (initial delivery completed & shared).");
-        }
+      if (client) {
+        if (!client.checks) client.checks = {};
+        client.checks[key] = { key, done, done_at: done ? now : undefined, done_by: doneBy };
+        client.updated_at = now;
       }
 
-      if (key === "v3") {
-        const hasDelivery = (data.deliveries || []).some(
-          (d) => d.project_id === targetId || (project && d.project_id === project.id)
-        );
-        if (!hasDelivery && !existingChecks.w3?.done) {
-          throw new Error("Stage gate violation: Stage v3 requires delivery to have been completed.");
-        }
+      if (project) {
+        if (!project.checks) project.checks = {};
+        project.checks[key] = { key, done, done_at: done ? now : undefined, done_by: doneBy };
+        project.updated_at = now;
       }
 
-      if (key === "f2") {
-        if (!existingChecks.f1?.done) {
-          throw new Error("Stage gate violation: Stage f2 requires f1 (final invoice issued).");
-        }
-        const finalPaid = (data.invoices || []).some(
-          (i) =>
-            (i.project_id === targetId ||
-              (project && i.project_id === project.id) ||
-              i.client_id === targetId ||
-              (client && i.client_id === client.id)) &&
-            i.type === "final" &&
-            i.status === "paid"
-        );
-        if (!finalPaid) {
-          throw new Error("Stage gate violation: Stage f2 requires a real final invoice to exist and be paid.");
-        }
-      }
-
-      if (key === "h1" || key === "h2" || key === "h3") {
-        if (!existingChecks.f2?.done) {
-          throw new Error("Stage gate violation: Handover stages (h1, h2, h3) require f2 (final invoice paid).");
-        }
-      }
-    }
-
-    if (client) {
-      if (!client.checks) client.checks = {};
-      client.checks[key] = { key, done, done_at: done ? now : undefined, done_by: doneBy };
-      client.updated_at = now;
-    }
-
-    if (project) {
-      if (!project.checks) project.checks = {};
-      project.checks[key] = { key, done, done_at: done ? now : undefined, done_by: doneBy };
-      project.updated_at = now;
-    }
-
-    await writeData(data);
+      return { client: client ? { ...client } : undefined, project: project ? { ...project } : undefined };
+    });
 
     await this.logActivity(
       doneBy,
       `Checklist ${key} ${done ? "completed" : "unmarked"}`,
       `${doneBy === "automation" ? "Automation" : doneBy === "client" ? "Client Portal" : "Founder"} marked ${key} as ${done ? "done" : "incomplete"}`,
-      client?.id || project?.client_id
+      updated?.client?.id || updated?.project?.client_id
     );
 
-    return { client: client || undefined, project: project || undefined };
+    return updated;
   },
 
   // REQUIREMENTS (H1)
@@ -1283,14 +1336,13 @@ export const db = {
   },
 
   async saveRequirements(reqData: Partial<RequirementRecord> & { project_id: string }): Promise<RequirementRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.requirements) data.requirements = [];
     const index = data.requirements.findIndex((r) => r.project_id === reqData.project_id);
     const now = new Date().toISOString();
 
     if (index >= 0) {
       data.requirements[index] = { ...data.requirements[index], ...reqData, updated_at: now };
-      await writeData(data);
       return data.requirements[index];
     } else {
       const newReq: RequirementRecord = {
@@ -1308,9 +1360,9 @@ export const db = {
         updated_at: now,
       };
       data.requirements.push(newReq);
-      await writeData(data);
       return newReq;
     }
+    });
   },
 
   // SCOPE (Annex A)
@@ -1320,14 +1372,13 @@ export const db = {
   },
 
   async saveScope(scopeData: Partial<ScopeRecord> & { project_id: string }): Promise<ScopeRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.scopes) data.scopes = [];
     const index = data.scopes.findIndex((s) => s.project_id === scopeData.project_id);
     const now = new Date().toISOString();
 
     if (index >= 0) {
       data.scopes[index] = { ...data.scopes[index], ...scopeData, updated_at: now };
-      await writeData(data);
       return data.scopes[index];
     } else {
       const newScope: ScopeRecord = {
@@ -1354,9 +1405,9 @@ export const db = {
         updated_at: now,
       };
       data.scopes.push(newScope);
-      await writeData(data);
       return newScope;
     }
+    });
   },
 
   // AGREEMENT & OTP ACCEPTANCE (Section 8)
@@ -1380,14 +1431,13 @@ export const db = {
   },
 
   async saveAgreement(agrData: Partial<AgreementRecord> & { project_id: string }): Promise<AgreementRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.agreements) data.agreements = [];
     const index = data.agreements.findIndex((a) => a.project_id === agrData.project_id);
     const now = new Date().toISOString();
 
     if (index >= 0) {
       data.agreements[index] = { ...data.agreements[index], ...agrData, updated_at: now };
-      await writeData(data);
       return data.agreements[index];
     } else {
       const newAgr: AgreementRecord = {
@@ -1402,13 +1452,13 @@ export const db = {
         updated_at: now,
       };
       data.agreements.push(newAgr);
-      await writeData(data);
       return newAgr;
     }
+    });
   },
 
   async recordAgreementAcceptance(record: Omit<AgreementAcceptanceRecord, "id" | "created_at">): Promise<AgreementAcceptanceRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.agreement_acceptances) data.agreement_acceptances = [];
     const newAcc: AgreementAcceptanceRecord = {
       id: "acc-" + Date.now().toString(36),
@@ -1426,9 +1476,8 @@ export const db = {
 
     // Tick s1 on project and client
     await this.updateCheck(record.project_id, "s1", true, "client");
-
-    await writeData(data);
     return newAcc;
+    });
   },
 
   // TASKS & TIME LOGGING (/admin/work)
@@ -1442,7 +1491,7 @@ export const db = {
   },
 
   async createTask(taskData: Partial<TaskRecord> & { project_id: string; title: string }): Promise<TaskRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.tasks) data.tasks = [];
     const id = "task-" + Date.now().toString(36);
     const now = new Date().toISOString();
@@ -1459,18 +1508,18 @@ export const db = {
       updated_at: now,
     };
     data.tasks.unshift(newTask);
-    await writeData(data);
     return newTask;
+    });
   },
 
   async updateTask(id: string, updates: Partial<TaskRecord>): Promise<TaskRecord | null> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.tasks) return null;
     const index = data.tasks.findIndex((t) => t.id === id);
     if (index === -1) return null;
     data.tasks[index] = { ...data.tasks[index], ...updates, updated_at: new Date().toISOString() };
-    await writeData(data);
     return data.tasks[index];
+    });
   },
 
   async getTimeLogs(projectId?: string): Promise<TimeLogRecord[]> {
@@ -1483,7 +1532,7 @@ export const db = {
   },
 
   async logTime(logData: Omit<TimeLogRecord, "id" | "created_at">): Promise<TimeLogRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.time_logs) data.time_logs = [];
     const newLog: TimeLogRecord = {
       id: "time-" + Date.now().toString(36),
@@ -1491,8 +1540,8 @@ export const db = {
       created_at: new Date().toISOString(),
     };
     data.time_logs.unshift(newLog);
-    await writeData(data);
     return newLog;
+    });
   },
 
   // DELIVERIES & REVISION ENGINE (Section 7)
@@ -1502,7 +1551,7 @@ export const db = {
   },
 
   async createDelivery(delData: Omit<DeliveryRecord, "id">): Promise<DeliveryRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.deliveries) data.deliveries = [];
     const newDel: DeliveryRecord = {
       id: "del-" + Date.now().toString(36),
@@ -1512,9 +1561,8 @@ export const db = {
 
     // Ticks w3 (Delivery shared)
     await this.updateCheck(delData.project_id, "w3", true, "user");
-
-    await writeData(data);
     return newDel;
+    });
   },
 
   async getRevisionRounds(projectId: string): Promise<RevisionRoundRecord[]> {
@@ -1527,7 +1575,7 @@ export const db = {
     roundNumber: number,
     items: { text: string; ai_label: "revision" | "new_feature"; ai_reason: string }[]
   ): Promise<RevisionRoundRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     const proj = (data.projects || []).find((p) => p.id === projectId || p.client_id === projectId);
     if (!proj) throw new Error("Project not found");
 
@@ -1571,9 +1619,8 @@ export const db = {
     if (proj) {
       proj.revisions_used = Math.max(proj.revisions_used || 0, roundNumber);
     }
-
-    await writeData(data);
     return newRound;
+    });
   },
 
   async confirmRevisionItem(
@@ -1582,7 +1629,7 @@ export const db = {
     label: "revision" | "new_feature",
     quoteHours?: number
   ): Promise<void> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     for (const round of data.revision_rounds || []) {
       const item = round.items.find((i) => i.id === itemId);
       if (item) {
@@ -1610,7 +1657,7 @@ export const db = {
         break;
       }
     }
-    await writeData(data);
+    });
   },
 
   async getChangeRequests(projectId: string): Promise<ChangeRequestRecord[]> {
@@ -1625,7 +1672,7 @@ export const db = {
   },
 
   async createProposal(proposalData: Partial<Proposal>): Promise<Proposal> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     const newProposal: Proposal = {
       id: "prop-" + Date.now().toString(36),
       client_id: proposalData.client_id || "",
@@ -1640,18 +1687,18 @@ export const db = {
     };
     if (!data.proposals) data.proposals = [];
     data.proposals.unshift(newProposal);
-    await writeData(data);
     return newProposal;
+    });
   },
 
   async updateProposal(id: string, updates: Partial<Proposal>): Promise<Proposal | null> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.proposals) data.proposals = [];
     const idx = data.proposals.findIndex((p) => p.id === id || p.client_id === id);
     if (idx === -1) return null;
     data.proposals[idx] = { ...data.proposals[idx], ...updates, updated_at: new Date().toISOString() };
-    await writeData(data);
     return data.proposals[idx];
+    });
   },
 
   // HANDOVERS (Annex B)
@@ -1661,14 +1708,13 @@ export const db = {
   },
 
   async saveHandover(handData: Partial<HandoverRecord> & { project_id: string }): Promise<HandoverRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.handovers) data.handovers = [];
     const index = data.handovers.findIndex((h) => h.project_id === handData.project_id);
     const now = new Date().toISOString();
 
     if (index >= 0) {
       data.handovers[index] = { ...data.handovers[index], ...handData, updated_at: now };
-      await writeData(data);
       return data.handovers[index];
     } else {
       const newHand: HandoverRecord = {
@@ -1684,9 +1730,9 @@ export const db = {
         updated_at: now,
       };
       data.handovers.push(newHand);
-      await writeData(data);
       return newHand;
     }
+    });
   },
 
   // SPENDING CAPS & USAGE COSTS
@@ -1696,7 +1742,7 @@ export const db = {
   },
 
   async recordUsageCost(cost: Omit<UsageCostRecord, "id" | "created_at">): Promise<UsageCostRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.usage_costs) data.usage_costs = [];
     const newCost: UsageCostRecord = {
       id: "cost-" + Date.now().toString(36),
@@ -1704,8 +1750,8 @@ export const db = {
       created_at: new Date().toISOString(),
     };
     data.usage_costs.unshift(newCost);
-    await writeData(data);
     return newCost;
+    });
   },
 
   // INVOICES (with GST on/off switch awareness)
@@ -1720,7 +1766,7 @@ export const db = {
   },
 
   async createInvoice(invoiceData: Partial<Invoice>): Promise<Invoice> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     // Bug 3: Random unguessable invoice IDs
     const id = "inv-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
     const invoiceNumber = `AW/2026-27/${String(data.invoices.length + 1).padStart(4, "0")}`;
@@ -1772,7 +1818,6 @@ export const db = {
     };
 
     data.invoices.unshift(newInvoice);
-    await writeData(data);
 
     await this.logActivity(
       "automation",
@@ -1782,10 +1827,11 @@ export const db = {
     );
 
     return newInvoice;
+    });
   },
 
   async updateInvoice(id: string, updates: Partial<Invoice>): Promise<Invoice | null> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     const index = data.invoices.findIndex((i) => i.id === id);
     if (index === -1) return null;
 
@@ -1794,8 +1840,8 @@ export const db = {
       ...updates,
       updated_at: new Date().toISOString(),
     };
-    await writeData(data);
     return data.invoices[index];
+    });
   },
 
   // MESSAGES
@@ -1808,7 +1854,7 @@ export const db = {
   },
 
   async createMessage(msg: Partial<MessageRecord>): Promise<MessageRecord | null> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
 
     // Safety Rule 1: Check Global Outbound Kill Switch
     if (msg.direction === "outbound" && data.settings.pause_all_outbound) {
@@ -1859,9 +1905,8 @@ export const db = {
         client.outbound_count = (client.outbound_count || 0) + 1;
       }
     }
-
-    await writeData(data);
     return newMsg;
+    });
   },
 
   // AGENTS
@@ -1871,14 +1916,13 @@ export const db = {
   },
 
   async saveAgent(agentData: Partial<AgentRecord> & { client_id: string }): Promise<AgentRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.agents) data.agents = [];
     const index = data.agents.findIndex((a) => a.client_id === agentData.client_id);
     const now = new Date().toISOString();
 
     if (index >= 0) {
       data.agents[index] = { ...data.agents[index], ...agentData, updated_at: now };
-      await writeData(data);
       return data.agents[index];
     } else {
       const newAgent: AgentRecord = {
@@ -1894,9 +1938,9 @@ export const db = {
         updated_at: now,
       };
       data.agents.push(newAgent);
-      await writeData(data);
       return newAgent;
     }
+    });
   },
 
   // ACTIVITY LOGS
@@ -1922,7 +1966,7 @@ export const db = {
       shadow?: boolean;
     }
   ): Promise<ActivityLogRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     const newLog: ActivityLogRecord = {
       id: "log-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
       client_id: clientId,
@@ -1937,8 +1981,8 @@ export const db = {
       created_at: new Date().toISOString(),
     };
     data.activity_log.unshift(newLog);
-    await writeData(data);
     return newLog;
+    });
   },
 
   // JOBS (Queue with Idempotency)
@@ -1983,7 +2027,6 @@ export const db = {
     };
 
     data.jobs.unshift(newJob);
-    await writeData(data);
     return { queued: true, job: newJob };
   },
 
@@ -1994,52 +2037,52 @@ export const db = {
   },
 
   async toggleAutomation(id: string, enabled: boolean): Promise<AutomationSetting | null> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     const auto = data.automations.find((a) => a.id === id);
     if (!auto) return null;
     auto.enabled = enabled;
-    await writeData(data);
     await this.logActivity("user", "Automation Toggled", `Automation ${id} set to ${enabled ? "enabled" : "disabled"}`);
     return auto;
+    });
   },
 
   async toggleShadowMode(id: string, shadow: boolean): Promise<AutomationSetting | null> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     const auto = data.automations.find((a) => a.id === id);
     if (!auto) return null;
     auto.shadow_mode = shadow;
-    await writeData(data);
     await this.logActivity("user", "Shadow Mode Toggled", `Automation ${id} shadow mode set to ${shadow}`);
     return auto;
+    });
   },
 
   async promoteAutomation(id: string): Promise<AutomationSetting | null> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     const auto = data.automations.find((a) => a.id === id);
     if (!auto) return null;
     if (auto.level === 2) {
       auto.level = 1;
       auto.can_promote = false;
-      await writeData(data);
       await this.logActivity("user", "Automation Promoted", `Automation ${id} promoted to Level 1 (Auto)`);
     }
     return auto;
+    });
   },
 
   async demoteAutomation(id: string, newLevel: 1 | 2 | 3): Promise<AutomationSetting | null> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     const auto = data.automations.find((a) => a.id === id);
     if (!auto) return null;
     auto.level = newLevel;
     auto.consecutive_no_edit_approvals = 0;
     auto.can_promote = false;
-    await writeData(data);
     await this.logActivity("user", "Automation Demoted", `Automation ${id} demoted to Level ${newLevel}`);
     return auto;
+    });
   },
 
   async recordApprovalDecision(id: string, edited: boolean): Promise<void> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     const auto = data.automations.find((a) => a.id === id);
     if (auto && auto.level === 2) {
       if (edited) {
@@ -2050,19 +2093,19 @@ export const db = {
           auto.can_promote = true;
         }
       }
-      await writeData(data);
     }
+    });
   },
 
   async recordAutomationRun(id: string, success: boolean): Promise<void> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     const auto = data.automations.find((a) => a.id === id);
     if (auto) {
       auto.last_run = new Date().toISOString();
       if (success) auto.success_count += 1;
       else auto.failure_count += 1;
-      await writeData(data);
     }
+    });
   },
 
   // RECOMMENDATIONS (AI COPILOT)
@@ -2076,7 +2119,7 @@ export const db = {
   },
 
   async createRecommendation(rec: Partial<Recommendation>): Promise<Recommendation> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     const id = "rec-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 4);
     const newRec: Recommendation = {
       id,
@@ -2098,15 +2141,15 @@ export const db = {
 
     if (!data.recommendations) data.recommendations = [];
     data.recommendations.unshift(newRec);
-    await writeData(data);
     return newRec;
+    });
   },
 
   async updateRecommendationStatus(
     id: string,
     status: "active" | "snoozed" | "dismissed" | "acted"
   ): Promise<Recommendation | null> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.recommendations) return null;
     const rec = data.recommendations.find((r) => r.id === id);
     if (!rec) return null;
@@ -2117,8 +2160,8 @@ export const db = {
     } else if (status === "snoozed") {
       rec.snoozed_until = new Date(Date.now() + 86400000).toISOString();
     }
-    await writeData(data);
     return rec;
+    });
   },
 
   // SETTINGS & GLOBAL CONTROLS
@@ -2128,7 +2171,7 @@ export const db = {
   },
 
   async updateSettings(updates: Partial<Settings>): Promise<Settings> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
 
     // Bug 5: Block turning GST on without valid GSTIN
     if (updates.gst_registered === true) {
@@ -2141,7 +2184,6 @@ export const db = {
 
     const wasPaused = Boolean(data.settings.pause_all_outbound);
     data.settings = { ...data.settings, ...updates };
-    await writeData(data);
 
     // Bug 7: Send queued once upon resume
     if (wasPaused && updates.pause_all_outbound === false) {
@@ -2150,13 +2192,13 @@ export const db = {
 
     await this.logActivity("user", "Settings Updated", "Business settings and GST configuration updated");
     return data.settings;
+    });
   },
 
   async toggleGlobalKillSwitch(pause: boolean): Promise<boolean> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     const wasPaused = Boolean(data.settings.pause_all_outbound);
     data.settings.pause_all_outbound = pause;
-    await writeData(data);
 
     // Bug 7: Send queued once upon resume
     if (wasPaused && !pause) {
@@ -2171,6 +2213,7 @@ export const db = {
         : "Outbound messaging resumed."
     );
     return pause;
+    });
   },
 
   // ==========================================
@@ -2186,7 +2229,7 @@ export const db = {
   },
 
   async saveTemplate(template: Omit<TemplateRecord, "id" | "created_at" | "updated_at">): Promise<TemplateRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.templates_library) data.templates_library = [];
     const now = new Date().toISOString();
     const newTmpl: TemplateRecord = {
@@ -2196,8 +2239,8 @@ export const db = {
       updated_at: now,
     };
     data.templates_library.unshift(newTmpl);
-    await writeData(data);
     return newTmpl;
+    });
   },
 
   // Z5: Automated Quality Checks
@@ -2207,7 +2250,7 @@ export const db = {
   },
 
   async recordQualityCheck(qc: Omit<QualityCheckRecord, "id" | "created_at">): Promise<QualityCheckRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.quality_checks) data.quality_checks = [];
     const newQc: QualityCheckRecord = {
       id: "qc-" + Date.now().toString(36),
@@ -2215,8 +2258,8 @@ export const db = {
       created_at: new Date().toISOString(),
     };
     data.quality_checks.unshift(newQc);
-    await writeData(data);
     return newQc;
+    });
   },
 
   // Z6: Content Versions & Previews
@@ -2226,7 +2269,7 @@ export const db = {
   },
 
   async saveContentVersion(cv: Omit<ContentVersionRecord, "id" | "created_at">): Promise<ContentVersionRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.content_versions) data.content_versions = [];
     const newCv: ContentVersionRecord = {
       id: "cv-" + Date.now().toString(36),
@@ -2234,8 +2277,8 @@ export const db = {
       created_at: new Date().toISOString(),
     };
     data.content_versions.unshift(newCv);
-    await writeData(data);
     return newCv;
+    });
   },
 
   // Z10: Books & GST Ledger
@@ -2246,7 +2289,7 @@ export const db = {
   },
 
   async recordLedgerEntry(entry: Omit<LedgerEntryRecord, "id" | "created_at">): Promise<LedgerEntryRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.ledger) data.ledger = [];
     const newEntry: LedgerEntryRecord = {
       id: "ledg-" + Date.now().toString(36),
@@ -2254,8 +2297,8 @@ export const db = {
       created_at: new Date().toISOString(),
     };
     data.ledger.unshift(newEntry);
-    await writeData(data);
     return newEntry;
+    });
   },
 
   // Z11: Freelancer Overflow
@@ -2265,7 +2308,7 @@ export const db = {
   },
 
   async createFreelancer(fData: Omit<FreelancerRecord, "id" | "created_at" | "updated_at">): Promise<FreelancerRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.freelancers) data.freelancers = [];
     const now = new Date().toISOString();
     const newF: FreelancerRecord = {
@@ -2275,18 +2318,18 @@ export const db = {
       updated_at: now,
     };
     data.freelancers.unshift(newF);
-    await writeData(data);
     return newF;
+    });
   },
 
   async updateFreelancer(id: string, updates: Partial<FreelancerRecord>): Promise<FreelancerRecord | null> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.freelancers) data.freelancers = [];
     const idx = data.freelancers.findIndex((f) => f.id === id);
     if (idx === -1) return null;
     data.freelancers[idx] = { ...data.freelancers[idx], ...updates, updated_at: new Date().toISOString() };
-    await writeData(data);
     return data.freelancers[idx];
+    });
   },
 
   // QA Test Tools: Outbox & Dev Settings
@@ -2300,7 +2343,7 @@ export const db = {
   },
 
   async recordOutbox(item: Omit<OutboxItem, "id" | "created_at">): Promise<OutboxItem> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.outbox) data.outbox = [];
     const newItem: OutboxItem = {
       id: "out-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -2309,12 +2352,12 @@ export const db = {
       created_at: getAppTimeISO(),
     };
     data.outbox.unshift(newItem);
-    await writeData(data);
     return newItem;
+    });
   },
 
   async clearOutbox(projectId?: string): Promise<void> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (projectId) {
       data.outbox = (data.outbox || []).filter(
         (item) => item.project_id !== projectId && item.client_id !== projectId
@@ -2322,7 +2365,7 @@ export const db = {
     } else {
       data.outbox = [];
     }
-    await writeData(data);
+    });
   },
 
   // Bug 1: OTP Store & Verification
@@ -2352,7 +2395,6 @@ export const db = {
       created_at: getAppTimeISO(),
     };
     data.otps.unshift(record);
-    await writeData(data);
     return { otp: code, record };
   },
 
@@ -2366,18 +2408,15 @@ export const db = {
     const now = Date.now();
     if (now > record.expires_at) {
       record.used = true;
-      await writeData(data);
       return { valid: false, error: "OTP has expired (valid for 10 minutes). Please request a new code." };
     }
     if (record.attempts >= record.max_attempts) {
       record.used = true;
-      await writeData(data);
       return { valid: false, error: "Maximum verification attempts (5) exceeded. Please request a new code." };
     }
 
     if (record.otp !== inputCode.trim()) {
       record.attempts += 1;
-      await writeData(data);
       const remaining = record.max_attempts - record.attempts;
       return {
         valid: false,
@@ -2386,7 +2425,6 @@ export const db = {
     }
 
     record.used = true;
-    await writeData(data);
     return { valid: true };
   },
 
@@ -2409,26 +2447,27 @@ export const db = {
 
   // Bug 7: Flush Queued Messages
   async flushQueuedMessages(): Promise<number> {
-    const data = await ensureDataFile();
-    let flushedCount = 0;
-    if (data.outbox) {
-      for (const item of data.outbox) {
-        if (item.status === "queued") {
-          item.status = "sent";
-          item.created_at = getAppTimeISO();
-          flushedCount++;
+    const flushedCount = await mutate((data) => {
+      let count = 0;
+      if (data.outbox) {
+        for (const item of data.outbox) {
+          if (item.status === "queued") {
+            item.status = "sent";
+            item.created_at = getAppTimeISO();
+            count++;
+          }
         }
       }
-    }
+      return count;
+    });
     if (flushedCount > 0) {
-      await writeData(data);
       await this.logActivity("system", "Queued Messages Dispatched", `Resumed outbound dispatch: ${flushedCount} queued message(s) sent.`);
     }
     return flushedCount;
   },
 
   async getDevSettings(): Promise<DevSettings> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.dev_settings) {
       data.dev_settings = {
         force_failure: {},
@@ -2440,13 +2479,13 @@ export const db = {
           ai: "mock",
         },
       };
-      await writeData(data);
     }
     return data.dev_settings;
+    });
   },
 
   async updateDevSettings(updates: Partial<DevSettings>): Promise<DevSettings> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     const current = await this.getDevSettings();
     data.dev_settings = {
       ...current,
@@ -2460,13 +2499,17 @@ export const db = {
         ...(updates.integrations || {}),
       },
     };
-    await writeData(data);
     return data.dev_settings;
+    });
   },
 
   async resetDemoData(): Promise<void> {
-    const freshSeed = getInitialSeed();
-    await writeData(freshSeed);
+    return mutate((data) => {
+      const freshSeed = getInitialSeed();
+      for (const key of Object.keys(freshSeed) as (keyof DatabaseSchema)[]) {
+        (data as any)[key] = freshSeed[key];
+      }
+    });
   },
 
   async getAutomationRuns(automationId?: string): Promise<AutomationRunRecord[]> {
@@ -2479,7 +2522,7 @@ export const db = {
   },
 
   async recordAutomationRunEntry(entry: Omit<AutomationRunRecord, "id" | "created_at" | "run_time" | "run_time_ist">): Promise<AutomationRunRecord> {
-    const data = await ensureDataFile();
+    return mutate(async (data) => {
     if (!data.automation_runs) data.automation_runs = [];
     const nowIso = getAppTimeISO();
     const nowIst = getAppTimeIST();
@@ -2494,7 +2537,7 @@ export const db = {
     if (data.automation_runs.length > 500) {
       data.automation_runs = data.automation_runs.slice(0, 500);
     }
-    await writeData(data);
     return newRun;
+    });
   },
 };

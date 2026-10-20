@@ -43,68 +43,102 @@ function getLocalFilePath(key: string): string {
   return path.join(process.cwd(), ".data", `${key}.json`);
 }
 
+export type StorageResult<T = any> = { data: T | null; version: number } & (T extends object ? T : {});
+
 /**
- * Load state for a given key from Supabase (or local fallback)
+ * Load state for a given key from Supabase (or local fallback).
+ * Returns { data, version } with optimistic concurrency tracking.
  */
-export async function loadState<T = any>(key: string): Promise<T | null> {
+export async function loadState<T = any>(key: string): Promise<StorageResult<T>> {
   const supabase = getSupabaseClient();
 
   if (supabase) {
     try {
       const { data, error } = await supabase
         .from("app_state")
-        .select("data")
+        .select("data, version")
         .eq("key", key)
         .maybeSingle();
 
       if (error) {
         console.error(`[storage] Supabase load error for key "${key}":`, error.message);
-        return null;
+        return { data: null, version: 0 } as StorageResult<T>;
       }
-      return (data?.data as T) ?? null;
+
+      const parsed = (data?.data as T) ?? null;
+      const version = data?.version != null ? Number(data.version) : 0;
+      const result: any = { data: parsed, version };
+
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        Object.assign(result, parsed);
+      }
+      return result as StorageResult<T>;
     } catch (err: any) {
       console.error(`[storage] Unexpected error loading key "${key}" from Supabase:`, err);
-      return null;
+      return { data: null, version: 0 } as StorageResult<T>;
     }
   }
 
   // Local dev or Vercel ephemeral fallback
   const filePath = getLocalFilePath(key);
   if (!fs.existsSync(filePath)) {
-    return null;
+    return { data: null, version: 0 } as StorageResult<T>;
   }
 
   try {
     const raw = fs.readFileSync(filePath, "utf8");
-    return JSON.parse(raw) as T;
+    const parsed = JSON.parse(raw) as T;
+    const result: any = { data: parsed, version: 0 };
+
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      Object.assign(result, parsed);
+    }
+    return result as StorageResult<T>;
   } catch (err: any) {
     console.error(`[storage] Error reading file for key "${key}":`, err.message);
-    return null;
+    return { data: null, version: 0 } as StorageResult<T>;
   }
 }
 
 /**
- * Save state for a given key to Supabase (or local fallback)
+ * Save state for a given key using optimistic concurrency control RPC.
+ * Returns { success, newVersion } - success is false if version conflict occurred.
  */
-export async function saveState(key: string, data: any): Promise<void> {
+export async function saveState(
+  key: string,
+  data: any,
+  expectedVersion?: number | null
+): Promise<{ success: boolean; newVersion: number | null }> {
   const supabase = getSupabaseClient();
 
   if (supabase) {
     try {
-      const { error } = await supabase.from("app_state").upsert(
-        {
-          key,
-          data,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "key" }
-      );
+      const { data: rpcRes, error } = await supabase.rpc("save_app_state", {
+        p_key: key,
+        p_data: data,
+        p_expected_version: expectedVersion != null ? expectedVersion : null,
+      });
 
       if (error) {
-        console.error(`[storage] Supabase save error for key "${key}":`, error.message);
-        throw error;
+        // Fallback to direct upsert if save_app_state RPC is not yet registered
+        console.warn(`[storage] RPC save_app_state fallback for "${key}": ${error.message}`);
+        const { error: upsertErr } = await supabase.from("app_state").upsert(
+          {
+            key,
+            data,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "key" }
+        );
+        if (upsertErr) throw upsertErr;
+        return { success: true, newVersion: (expectedVersion || 0) + 1 };
       }
-      return;
+
+      if (rpcRes === null) {
+        return { success: false, newVersion: null };
+      }
+
+      return { success: true, newVersion: Number(rpcRes) };
     } catch (err: any) {
       console.error(`[storage] Unexpected error saving key "${key}" to Supabase:`, err);
       throw err;
@@ -120,4 +154,5 @@ export async function saveState(key: string, data: any): Promise<void> {
   }
 
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");
+  return { success: true, newVersion: (expectedVersion || 0) + 1 };
 }
