@@ -40,6 +40,52 @@ interface LoginAttemptsData {
   [ip: string]: { count: number; reset_at: number };
 }
 
+interface UsedTokensData {
+  tokens: { [hash: string]: number };
+}
+
+function getTokenExpiry(token: string): number {
+  try {
+    const raw = token.startsWith("mag_") ? token.slice(4) : token;
+    const [b64] = raw.split(".");
+    const json = Buffer.from(b64, "base64url").toString("utf8");
+    const payload = JSON.parse(json);
+    if (typeof payload.expires_at === "number") {
+      return payload.expires_at;
+    }
+  } catch {
+    // fallback
+  }
+  return Date.now() + 15 * 60 * 1000;
+}
+
+async function isTokenUsed(tokenHash: string): Promise<boolean> {
+  const result = await loadState<UsedTokensData>("used_tokens");
+  const tokens = result?.data?.tokens || {};
+  const expiresAt = tokens[tokenHash];
+  if (expiresAt && expiresAt > Date.now()) {
+    return true;
+  }
+  return false;
+}
+
+async function markTokenUsed(tokenHash: string, expiresAt: number): Promise<void> {
+  const result = await loadState<UsedTokensData>("used_tokens");
+  const currentTokens = result?.data?.tokens || {};
+  const tokens: { [hash: string]: number } = {};
+  const now = Date.now();
+
+  // Prune expired hashes on write to keep the object small
+  for (const [h, exp] of Object.entries(currentTokens)) {
+    if (exp > now) {
+      tokens[h] = exp;
+    }
+  }
+
+  tokens[tokenHash] = expiresAt;
+  await saveState("used_tokens", { tokens }, result?.version);
+}
+
 async function checkRateLimit(ip: string): Promise<boolean> {
   const result = await loadState<LoginAttemptsData>("login_attempts");
   const attempts: LoginAttemptsData = result?.data || {};
@@ -101,6 +147,16 @@ export async function GET(req: NextRequest) {
 
   if (!email) {
     return NextResponse.redirect(new URL("/login?error=invalid_or_expired_token", req.url));
+  }
+
+  // Single-use enforcement for magic tokens (bypass only dev_bypass_token in development)
+  if (token !== "dev_bypass_token") {
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    const isUsed = await isTokenUsed(tokenHash);
+    if (isUsed) {
+      return NextResponse.redirect(new URL("/login?error=used_token", req.url));
+    }
+    await markTokenUsed(tokenHash, getTokenExpiry(token));
   }
 
   const sessionToken = createSessionToken(email);
@@ -189,8 +245,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Invalid or expired token" }, { status: 401 });
     }
 
+    // Single-use enforcement for magic tokens (bypass only dev_bypass_token in development)
+    if (token !== "dev_bypass_token") {
+      const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+      const isUsed = await isTokenUsed(tokenHash);
+      if (isUsed) {
+        return NextResponse.json(
+          { success: false, error: "This magic link has already been used. Please request a new one." },
+          { status: 401 }
+        );
+      }
+      await markTokenUsed(tokenHash, getTokenExpiry(token));
+    }
+
     const sessionToken = createSessionToken(authEmail);
-    const response = NextResponse.json({ success: true, email: authEmail });
+    const response = NextResponse.json({ success: true, email: authEmail, redirect: "/admin" });
 
     response.cookies.set(COOKIE_NAME, sessionToken, {
       httpOnly: true,
