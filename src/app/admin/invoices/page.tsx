@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Invoice, Client } from "@/lib/types";
 import { formatINR } from "@/lib/pricing";
+import { RealtimeLoadingScreen } from "@/components/network-loading-indicator";
 
 export default function AdminInvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -52,6 +53,18 @@ export default function AdminInvoicesPage() {
     if (filter === "all") return true;
     return inv.status === filter;
   });
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <RealtimeLoadingScreen
+          title="Loading Invoices &amp; Tax Registers"
+          subtext="Fetching milestone invoices, payment links, and GST breakdowns..."
+          fullScreen={false}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -147,7 +160,7 @@ export default function AdminInvoicesPage() {
                         {formatINR(inv.subtotal_paise / 100)}
                       </td>
                       <td className="py-3.5 px-4 text-right font-mono text-[#585D7A] dark:text-[#A6A9C6]">
-                        {formatINR(inv.gst_paise / 100)}
+                        {formatINR(((inv.cgst_paise || 0) + (inv.sgst_paise || 0) + (inv.igst_paise || 0) + (inv.gst_paise || 0)) / 100)}
                       </td>
                       <td className="py-3.5 px-4 text-right font-mono font-bold text-[#1B1F3B] dark:text-white">
                         {formatINR(inv.total_paise / 100)}

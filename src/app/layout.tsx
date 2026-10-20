@@ -67,6 +67,9 @@ export const metadata: Metadata = {
   },
 };
 
+import { NetworkLoadingProvider } from "@/components/network-loading-indicator";
+import { DevToolbar } from "@/components/dev-toolbar";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -78,7 +81,10 @@ export default function RootLayout({
       className={`${bricolage.variable} ${inter.variable} ${mono.variable}`}
     >
       <body className="font-sans antialiased text-[#1C1F3A] bg-white">
-        {children}
+        <NetworkLoadingProvider>
+          {children}
+          <DevToolbar />
+        </NetworkLoadingProvider>
       </body>
     </html>
   );

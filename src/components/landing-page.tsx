@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { VerticalContent } from "@/content/clinics";
 import {
@@ -11,13 +11,11 @@ import {
   ClockIcon,
   ShieldCheckIcon,
   ArrowRightIcon,
-  ContentEngineIcon,
-  OrderAgentIcon,
 } from "./icons";
 import { ChatMockup } from "./chat-mockup";
 import { FAQAccordion } from "./faq-accordion";
 import { DemoForm } from "./demo-form";
-import { PACKAGES, formatINR } from "@/lib/pricing";
+import { PACKAGES, CARE_PLANS, formatINR, getAllPackagesWithSettings } from "@/lib/pricing";
 import {
   DEMO_NUMBER,
   DEMO_NUMBER_RAW,
@@ -31,12 +29,27 @@ import { verticalExists } from "@/content";
 
 interface LandingPageProps {
   content: VerticalContent;
+  initialSettings?: any;
 }
 
-export function LandingPage({ content }: LandingPageProps) {
-  const scrollToForm = (planId?: string) => {
-    if (planId && typeof (window as any).selectDemoPlan === "function") {
-      (window as any).selectDemoPlan(planId);
+export function LandingPage({ content, initialSettings }: LandingPageProps) {
+  const [settings, setSettings] = useState(initialSettings);
+  const [pricingTab, setPricingTab] = useState<"ai" | "web_app">("ai");
+
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && d.settings) setSettings(d.settings);
+      })
+      .catch(() => {});
+  }, []);
+
+  const packages = getAllPackagesWithSettings(settings?.package_prices);
+
+  const scrollToForm = (serviceKey?: string) => {
+    if (serviceKey && typeof (window as any).selectServiceNeed === "function") {
+      (window as any).selectServiceNeed(serviceKey);
     } else {
       const el = document.getElementById("demo-form");
       if (el) el.scrollIntoView({ behavior: "smooth" });
@@ -86,10 +99,10 @@ export function LandingPage({ content }: LandingPageProps) {
             </Link>
             <button
               type="button"
-              onClick={() => scrollToForm("growth")}
+              onClick={() => scrollToForm("ai_agent")}
               className="bg-[#1C1F3A] hover:bg-[#14172C] active:scale-[0.98] text-white text-[14.5px] font-semibold px-5 py-3 rounded-xl transition-all shadow-sm min-h-[48px] flex items-center justify-center cursor-pointer focus-visible:outline-2 focus-visible:outline-[#FDB91F]"
             >
-              Book free demo
+              Start Project
             </button>
           </div>
         </div>
@@ -98,75 +111,67 @@ export function LandingPage({ content }: LandingPageProps) {
       {/* 2. Hero Section (Cream Background) */}
       <section className="bg-[#FBF7EE] pt-12 sm:pt-20 pb-16 sm:pb-24 px-4 sm:px-6 border-b border-[#ECE6D8]">
         <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
-          {/* Left Column: Headline and Call to Actions */}
+          {/* Left Column */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF0D7] border border-[#EEDB9F] text-[#9A6400] text-xs font-bold tracking-wide uppercase">
-              <span className="w-2 h-2 rounded-full bg-[#FDB91F]"></span>
-              <span>{content.badge}</span>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF0D7] text-[#9A6400] text-xs sm:text-[13px] font-bold tracking-wide">
+              <span>{(content as any).heroPill || content.badge}</span>
             </div>
 
-            <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-[58px] leading-[1.08] text-[#1C1F3A] tracking-tight text-balance">
+            <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-[54px] leading-[1.08] tracking-tight text-[#1C1F3A] text-balance">
               {content.heroH1}
             </h1>
 
-            <p className="text-base sm:text-lg text-[#4A4F66] leading-relaxed max-w-xl font-normal">
-              {content.heroSubtitle}
+            <p className="text-base sm:text-lg text-[#4A4F66] leading-relaxed max-w-xl text-balance">
+              {(content as any).heroSubtext || content.heroSubtitle}
             </p>
 
-            {/* Hero Buttons */}
-            <div className="pt-2 flex flex-col sm:flex-row gap-3.5 items-stretch sm:items-center">
+            {/* CTAs */}
+            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5">
               <a
                 href={`tel:${DEMO_NUMBER_RAW}`}
-                className="bg-[#FDB91F] hover:bg-[#E5A413] text-[#1C1F3A] font-bold text-base px-6 py-3.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2.5 min-h-[48px] focus-visible:outline-2 focus-visible:outline-[#1C1F3A]"
+                className="bg-[#FDB91F] hover:bg-[#E5A413] active:scale-[0.98] text-[#1C1F3A] font-bold text-base px-6 py-3.5 rounded-xl transition-all shadow-sm min-h-[48px] flex items-center justify-center gap-2.5 cursor-pointer text-center"
               >
                 <PhoneIcon className="w-5 h-5 text-[#1C1F3A]" />
-                <span>{content.heroCtaPrimary}</span>
+                <span>Call demo receptionist</span>
               </a>
 
               <button
                 type="button"
-                onClick={() => scrollToForm("growth")}
-                className="bg-[#1C1F3A] hover:bg-[#14172C] text-white font-semibold text-base px-6 py-3.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 min-h-[48px] cursor-pointer focus-visible:outline-2 focus-visible:outline-[#FDB91F]"
+                onClick={() => scrollToForm("ai_agent")}
+                className="bg-[#1C1F3A] hover:bg-[#14172C] active:scale-[0.98] text-white font-bold text-base px-6 py-3.5 rounded-xl transition-all shadow-sm min-h-[48px] flex items-center justify-center cursor-pointer text-center"
               >
-                <span>{content.heroCtaSecondary}</span>
-                <ArrowRightIcon className="w-4 h-4 text-[#FDB91F]" />
+                Get a quote for my business
               </button>
             </div>
 
-            {/* Small demo phone line callout */}
-            <div className="pt-1 text-xs sm:text-[13.5px] text-[#727791] flex items-center gap-1.5 flex-wrap">
-              <span className="font-semibold text-[#1C1F3A]">Demo line: {DEMO_NUMBER}</span>
-              <span>·</span>
-              <span>Ask for an appointment in Hindi or English — it takes 30 seconds.</span>
+            <div className="pt-1 flex items-center gap-2 text-xs sm:text-[13px] text-[#727791]">
+              <span className="w-2 h-2 rounded-full bg-[#1F7A3A] animate-pulse"></span>
+              <span>
+                Demo line: <b>{DEMO_NUMBER}</b> · Ask for an appointment in Hindi or English (30 sec demo)
+              </span>
             </div>
           </div>
 
-          {/* Right Column: WhatsApp Chat Mockup */}
-          <div className="lg:col-span-5 flex justify-center">
-            <ChatMockup
-              avatarTitle={content.chatMockup.avatarTitle}
-              avatarInitials={content.chatMockup.avatarInitials}
-              statusText={content.chatMockup.statusText}
-              messages={content.chatMockup.messages}
-              confirmationChip={content.chatMockup.confirmationChip}
-            />
+          {/* Right Column: Animated WhatsApp Chat Mockup */}
+          <div className="lg:col-span-5 flex justify-center lg:justify-end">
+            <ChatMockup {...content.chatMockup} />
           </div>
         </div>
       </section>
 
       {/* 3. Built For Strip */}
-      <section className="bg-white py-8 border-b border-[#ECE6D8] px-4 sm:px-6 overflow-hidden">
-        <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#727791] flex-shrink-0">
-            {content.builtForTitle}
-          </span>
-          <div className="flex flex-wrap items-center justify-center md:justify-end gap-x-6 gap-y-2 text-sm font-semibold text-[#1C1F3A]">
-            {content.builtForItems.map((item, idx) => (
-              <span key={idx} className="flex items-center gap-2">
-                <span>{item}</span>
-                {idx !== content.builtForItems.length - 1 && (
-                  <span className="text-[#D8D2C2] hidden sm:inline">/</span>
-                )}
+      <section className="bg-white py-10 px-4 sm:px-6 border-b border-[#ECE6D8]">
+        <div className="max-w-[1200px] mx-auto space-y-4">
+          <div className="text-xs font-bold uppercase tracking-wider text-[#727791] text-center">
+            {(content as any).builtForLabel || (content as any).builtForTitle || "Built For Small Businesses"}
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+            {((content as any).builtForTags || (content as any).builtForItems || []).map((tag: string, idx: number) => (
+              <span
+                key={idx}
+                className="px-4 py-2 rounded-full bg-[#FBF7EE] border border-[#ECE6D8] text-xs sm:text-[13px] font-semibold text-[#1C1F3A]"
+              >
+                {tag}
               </span>
             ))}
           </div>
@@ -174,31 +179,37 @@ export function LandingPage({ content }: LandingPageProps) {
       </section>
 
       {/* 4. Problem Section */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6 bg-white">
-        <div className="max-w-[1200px] mx-auto space-y-14">
-          <div className="max-w-2xl">
-            <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-[#1C1F3A] leading-tight text-balance">
+      <section className="bg-white py-20 sm:py-28 px-4 sm:px-6">
+        <div className="max-w-[1200px] mx-auto space-y-12">
+          <div className="max-w-2xl space-y-3">
+            <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-[#1C1F3A] text-balance">
               {content.problemH2}
             </h2>
+            <p className="text-[#4A4F66] text-base leading-relaxed">
+              {(content as any).problemSubtitle || ""}
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            {content.problemCards.map((card, idx) => (
+            {content.problemCards.map((card: any, idx: number) => (
               <div
                 key={idx}
-                className="bg-[#FBF7EE] border border-[#ECE6D8] rounded-[18px] p-7 sm:p-8 flex flex-col justify-between space-y-6 hover:border-[#DECDB2] transition-colors"
+                className="bg-[#FBF7EE] border border-[#ECE6D8] rounded-[18px] p-7 sm:p-8 flex flex-col justify-between space-y-6 hover:border-[#1C1F3A] transition-colors"
               >
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-display font-bold text-xl sm:text-2xl text-[#1C1F3A]">
-                      {card.title}
-                    </h3>
-                    {card.statBadge && (
-                      <span className="text-xs font-mono font-bold bg-[#FAF0D7] text-[#9A6400] px-2.5 py-1 rounded-md">
-                        {card.statBadge}
-                      </span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#9A6400] bg-[#FAF0D7] px-2.5 py-1 rounded-full">
+                      {card.timeTag || card.statBadge || "Impact"}
+                    </span>
+                    {card.icon === "clock" ? (
+                      <ClockIcon className="w-5 h-5 text-[#9A6400]" />
+                    ) : (
+                      <PhoneIcon className="w-5 h-5 text-[#9A6400]" />
                     )}
                   </div>
+                  <h3 className="font-display font-bold text-xl sm:text-2xl text-[#1C1F3A]">
+                    {card.title}
+                  </h3>
                   <p className="text-[14.5px] text-[#4A4F66] leading-relaxed">
                     {card.description}
                   </p>
@@ -210,126 +221,254 @@ export function LandingPage({ content }: LandingPageProps) {
         </div>
       </section>
 
-      {/* 5. What You Get / Services (Navy Background) */}
+      {/* 5. Services Section (Navy Background with 2 Groups) */}
       <section id="services" className="bg-[#1C1F3A] text-white py-20 sm:py-28 px-4 sm:px-6">
-        <div className="max-w-[1200px] mx-auto space-y-12">
+        <div className="max-w-[1200px] mx-auto space-y-16">
           <div className="space-y-3 max-w-2xl">
             <div className="text-xs font-bold uppercase tracking-wider text-[#FDB91F]">
-              Services
+              What We Build
             </div>
             <h2 className="font-display font-extrabold text-3xl sm:text-4xl lg:text-[42px] leading-tight text-balance text-white">
-              {content.servicesH2}
+              AI agents, WhatsApp bots, websites and mobile apps.
             </h2>
-            {content.servicesSubtitle && (
-              <p className="text-[#A6ABC8] text-base leading-relaxed">
-                {content.servicesSubtitle}
-              </p>
-            )}
+            <p className="text-[#A6ABC8] text-base leading-relaxed">
+              Every deliverable is production-ready, custom-built for your business, and comes with full code and account ownership.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {content.serviceCards.map((service, idx) => (
-              <div
-                key={idx}
-                className="bg-[#252A4A] border border-[#343B66] rounded-[18px] p-8 flex flex-col justify-between space-y-6"
-              >
-                <div className="space-y-4">
-                  <div className="w-12 h-12 rounded-xl bg-[#FDB91F] text-[#1C1F3A] flex items-center justify-center">
-                    {service.icon === "phone" ? (
-                      <PhoneIcon className="w-6 h-6 text-[#1C1F3A]" />
-                    ) : (
-                      <WhatsAppIcon className="w-6 h-6 text-[#1C1F3A]" />
-                    )}
-                  </div>
-                  <h3 className="font-display font-bold text-2xl text-white">
-                    {service.title}
-                  </h3>
-                  <p className="text-[#C4C8E0] text-[15px] leading-relaxed">
-                    {service.description}
-                  </p>
-
-                  {service.bullets && (
-                    <ul className="space-y-2 pt-2 border-t border-[#343B66]">
-                      {service.bullets.map((b, bIdx) => (
-                        <li key={bIdx} className="flex items-center gap-2.5 text-xs sm:text-sm text-[#A6ABC8]">
-                          <CheckIcon className="w-4 h-4 text-[#FDB91F] flex-shrink-0" />
-                          <span>{b}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                {service.bestFor && (
-                  <div className="text-xs font-semibold text-[#878EB3] pt-3 border-t border-[#343B66]">
-                    {service.bestFor}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Cross sell strip */}
-          {showCrossSell && (
-            <div className="pt-4 text-center">
-              <span className="text-sm text-[#A6ABC8] mr-2">
-                {content.crossSell?.text}
-              </span>
-              <Link
-                href={`/${content.crossSell?.targetVertical}`}
-                className="text-sm font-bold text-[#FDB91F] hover:underline inline-flex items-center gap-1"
-              >
-                <span>{content.crossSell?.linkText}</span>
-                <ArrowRightIcon className="w-3.5 h-3.5" />
-              </Link>
+          {/* Group 1: AI Agents & WhatsApp Bots */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <span className="w-3 h-3 rounded-full bg-[#FDB91F]"></span>
+              <h3 className="font-display font-extrabold text-xl sm:text-2xl text-white">
+                Group 1: AI Agents &amp; WhatsApp Bots
+              </h3>
             </div>
-          )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                PACKAGES.starter,
+                PACKAGES.growth,
+                PACKAGES.pro,
+                PACKAGES.creator,
+              ].map((service) => (
+                <div
+                  key={service.id}
+                  className="bg-[#252A4A] border border-[#343B66] rounded-[18px] p-6 flex flex-col justify-between space-y-5"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#FDB91F]/20 text-[#FDB91F]">
+                        {service.badge || "AI Service"}
+                      </span>
+                      <span className="font-mono text-xs text-[#A6ABC8]">
+                        Setup: {formatINR(service.setupRupees)}
+                      </span>
+                    </div>
+
+                    <h4 className="font-display font-bold text-xl text-white">
+                      {service.name}
+                    </h4>
+                    <p className="text-xs text-[#C4C8E0] leading-relaxed">
+                      {service.description}
+                    </p>
+
+                    <div className="pt-2 border-t border-[#343B66] space-y-1.5">
+                      <span className="text-[11px] font-mono text-[#FDB91F] font-bold block">
+                        {formatINR(service.monthlyRupees)}/month
+                      </span>
+                      <ul className="space-y-1">
+                        {service.features.slice(0, 3).map((f, i) => (
+                          <li key={i} className="text-[11px] text-[#A6ABC8] flex items-center gap-1.5">
+                            <CheckIcon className="w-3 h-3 text-[#FDB91F] flex-shrink-0" />
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => scrollToForm(service.id)}
+                    className="w-full py-2.5 rounded-xl bg-[#FDB91F] hover:bg-[#E5A413] text-[#1C1F3A] font-bold text-xs transition-colors cursor-pointer"
+                  >
+                    Select {service.name}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Group 2: Websites and Mobile Apps */}
+          <div className="space-y-6 pt-4 border-t border-[#343B66]">
+            <div className="flex items-center gap-3">
+              <span className="w-3 h-3 rounded-full bg-[#5FCB98]"></span>
+              <h3 className="font-display font-extrabold text-xl sm:text-2xl text-white">
+                Group 2: Websites &amp; Mobile Apps
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                PACKAGES.website_launch,
+                PACKAGES.business_website,
+                PACKAGES.ecommerce_store,
+                PACKAGES.app_mvp,
+              ].map((project) => (
+                <div
+                  key={project.id}
+                  className="bg-[#252A4A] border border-[#343B66] rounded-[18px] p-6 flex flex-col justify-between space-y-5"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#5FCB98]/20 text-[#5FCB98]">
+                        {project.badge || "Project"}
+                      </span>
+                      <span className="font-mono text-xs text-[#A6ABC8]">
+                        2 Revision Rounds
+                      </span>
+                    </div>
+
+                    <h4 className="font-display font-bold text-xl text-white">
+                      {project.name}
+                    </h4>
+                    <p className="text-xs text-[#C4C8E0] leading-relaxed">
+                      {project.description}
+                    </p>
+
+                    <div className="pt-2 border-t border-[#343B66] space-y-1.5">
+                      <span className="text-sm font-mono text-white font-bold block">
+                        {formatINR(project.setupRupees)}
+                      </span>
+                      <ul className="space-y-1">
+                        {project.features.slice(0, 3).map((f, i) => (
+                          <li key={i} className="text-[11px] text-[#A6ABC8] flex items-center gap-1.5">
+                            <CheckIcon className="w-3 h-3 text-[#5FCB98] flex-shrink-0" />
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => scrollToForm(project.id)}
+                    className="w-full py-2.5 rounded-xl bg-white hover:bg-[#FBF7EE] text-[#1C1F3A] font-bold text-xs transition-colors cursor-pointer"
+                  >
+                    Build {project.name}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* 6. How It Works */}
-      <section id="how-it-works" className="py-20 sm:py-28 px-4 sm:px-6 bg-white">
+      {/* 6. How We Work (5-Step Agency Strip - Section 4) */}
+      <section id="how-it-works" className="py-20 sm:py-28 px-4 sm:px-6 bg-white border-b border-[#ECE6D8]">
         <div className="max-w-[1200px] mx-auto space-y-14">
           <div className="text-center max-w-2xl mx-auto space-y-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#9A6400] bg-[#FAF0D7] px-3 py-1 rounded-full">
+              The Process
+            </span>
             <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-[#1C1F3A]">
-              {content.howItWorksH2}
+              How We Work
             </h2>
-            <p className="text-[#4A4F66] text-base">
-              No complex setup or engineering needed. Up and running on your current number in 7 days.
+            <p className="text-[#4A4F66] text-base leading-relaxed">
+              From first lead to final paid handover with complete transparency and zero guesswork.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {content.steps.map((step) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            {[
+              {
+                step: "01",
+                title: "Free Call",
+                desc: "We understand your business, volume, and exact feature requirements on a 20-min consult.",
+              },
+              {
+                step: "02",
+                title: "Proposal & Agreement",
+                desc: "Detailed Annex A scope, transparent quote, and binding agreement signed with 1-tap OTP.",
+              },
+              {
+                step: "03",
+                title: "The Build",
+                desc: "We build your project with weekly Friday progress notes and live staging access.",
+              },
+              {
+                step: "04",
+                title: "2 Revision Rounds",
+                desc: "Submit consolidated change lists in your portal. Extra features handled as paid change requests.",
+              },
+              {
+                step: "05",
+                title: "Handover & Ownership",
+                desc: "Full code and account transfer (Annex B kit), 30-day warranty, and optional monthly care plans.",
+              },
+            ].map((item, idx) => (
               <div
-                key={step.number}
-                className="bg-[#FBF7EE] border border-[#ECE6D8] rounded-[18px] p-8 space-y-5"
+                key={idx}
+                className="bg-[#FBF7EE] border border-[#ECE6D8] rounded-[18px] p-6 space-y-4 flex flex-col justify-between"
               >
-                <div className="w-10 h-10 rounded-full bg-[#FDB91F] text-[#1C1F3A] font-display font-extrabold text-base flex items-center justify-center">
-                  {step.number}
+                <div className="space-y-3">
+                  <span className="font-mono text-xs font-extrabold text-[#9A6400] bg-[#FAF0D7] px-2.5 py-1 rounded-md inline-block">
+                    Step {item.step}
+                  </span>
+                  <h3 className="font-display font-bold text-lg text-[#1C1F3A]">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs text-[#4A4F66] leading-relaxed">
+                    {item.desc}
+                  </p>
                 </div>
-                <h3 className="font-display font-bold text-xl text-[#1C1F3A]">
-                  {step.title}
-                </h3>
-                <p className="text-[14.5px] text-[#4A4F66] leading-relaxed">
-                  {step.description}
-                </p>
+                <div className="w-8 h-1 bg-[#FDB91F] rounded-full"></div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 7. Pricing (Cream Background) */}
-      <section id="pricing" className="bg-[#FBF7EE] py-20 sm:py-28 px-4 sm:px-6 border-y border-[#ECE6D8]">
+      {/* 7. Pricing Section with Tabs (AI Agents | Websites & Apps) */}
+      <section id="pricing" className="bg-[#FBF7EE] py-20 sm:py-28 px-4 sm:px-6 border-b border-[#ECE6D8]">
         <div className="max-w-[1200px] mx-auto space-y-12">
-          <div className="max-w-3xl space-y-3">
-            <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-[#1C1F3A]">
-              {content.pricingH2}
-            </h2>
-            <p className="text-[#4A4F66] text-[15px] leading-relaxed">
-              {content.pricingSubtext}
-            </p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="max-w-2xl space-y-3">
+              <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-[#1C1F3A]">
+                Transparent Pricing. No Surprises.
+              </h2>
+              <p className="text-[#4A4F66] text-base leading-relaxed">
+                Choose between turnkey AI agents with monthly retainers or fixed-scope web &amp; mobile app projects.
+              </p>
+            </div>
+
+            {/* Pricing Tabs */}
+            <div className="inline-flex p-1.5 rounded-xl bg-white border border-[#ECE6D8] shadow-xs text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setPricingTab("ai")}
+                className={`px-5 py-2.5 rounded-lg transition-all cursor-pointer ${
+                  pricingTab === "ai"
+                    ? "bg-[#1C1F3A] text-white shadow-xs"
+                    : "text-[#4A4F66] hover:text-[#1C1F3A]"
+                }`}
+              >
+                AI Agents &amp; Bots
+              </button>
+              <button
+                type="button"
+                onClick={() => setPricingTab("web_app")}
+                className={`px-5 py-2.5 rounded-lg transition-all cursor-pointer ${
+                  pricingTab === "web_app"
+                    ? "bg-[#1C1F3A] text-white shadow-xs"
+                    : "text-[#4A4F66] hover:text-[#1C1F3A]"
+                }`}
+              >
+                Websites &amp; Mobile Apps
+              </button>
+            </div>
           </div>
 
           {/* Founding Offer Banner */}
@@ -337,7 +476,7 @@ export function LandingPage({ content }: LandingPageProps) {
             <div className="flex items-center gap-3">
               <span className="w-3 h-3 rounded-full bg-[#FDB91F] animate-pulse flex-shrink-0"></span>
               <p className="text-sm sm:text-base font-semibold text-white">
-                {content.foundingBanner}
+                Founding Offer: 50% discount on setup/project fee for our first 5 clients.
               </p>
             </div>
             <button
@@ -349,88 +488,188 @@ export function LandingPage({ content }: LandingPageProps) {
             </button>
           </div>
 
-          {/* Pricing Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch">
-            {content.plans.map((plan) => {
-              const basePkg = PACKAGES[plan.packageId] || PACKAGES.growth;
-              const monthlyPrice = plan.priceOverrideMonthly ?? basePkg.monthlyRupees;
-              const isDark = Boolean(plan.isPrimary);
-
-              return (
-                <div
-                  key={plan.packageId}
-                  className={`rounded-[18px] p-7 sm:p-8 flex flex-col justify-between transition-transform duration-200 ${
-                    isDark
-                      ? "bg-[#1C1F3A] text-white shadow-xl ring-2 ring-[#FDB91F] md:-translate-y-2"
-                      : "bg-white text-[#1C1F3A] border border-[#ECE6D8] shadow-card"
-                  }`}
-                >
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className={`font-display font-bold text-2xl ${isDark ? "text-white" : "text-[#1C1F3A]"}`}>
-                        {plan.displayName}
-                      </h3>
-                      {plan.badge && (
-                        <span
-                          className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                            isDark
-                              ? "bg-[#FDB91F] text-[#1C1F3A]"
-                              : "bg-[#FAF0D7] text-[#9A6400]"
-                          }`}
-                        >
-                          {plan.badge}
-                        </span>
-                      )}
-                    </div>
-
-                    <div>
-                      <div className="flex items-baseline gap-1">
-                        <span className={`font-mono text-3xl sm:text-4xl font-extrabold ${isDark ? "text-white" : "text-[#1C1F3A]"}`}>
-                          {formatINR(monthlyPrice)}
-                        </span>
-                        <span className={`text-sm ${isDark ? "text-[#A6ABC8]" : "text-[#727791]"}`}>
-                          /month
-                        </span>
-                      </div>
-                      <p className={`text-xs mt-1 ${isDark ? "text-[#A6ABC8]" : "text-[#727791]"}`}>
-                        {plan.setupNote}
-                      </p>
-                    </div>
-
-                    {/* Features list */}
-                    <ul className="space-y-3 pt-4 border-t border-[#ECE6D8]/20">
-                      {plan.features.map((feat, fIdx) => (
-                        <li key={fIdx} className="flex items-start gap-2.5 text-xs sm:text-[13.5px] leading-snug">
-                          <CheckIcon
-                            className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
-                              isDark ? "text-[#FDB91F]" : "text-[#2E7D5B]"
+          {/* Tab 1: AI Agents Cards */}
+          {pricingTab === "ai" && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch animate-fade-in">
+              {[packages.starter, packages.growth, packages.pro].map((plan) => {
+                const isPrimary = plan.id === "growth";
+                return (
+                  <div
+                    key={plan.id}
+                    className={`rounded-[18px] p-7 sm:p-8 flex flex-col justify-between transition-transform duration-200 ${
+                      isPrimary
+                        ? "bg-[#1C1F3A] text-white shadow-xl ring-2 ring-[#FDB91F] md:-translate-y-2"
+                        : "bg-white text-[#1C1F3A] border border-[#ECE6D8] shadow-card"
+                    }`}
+                  >
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className={`font-display font-bold text-2xl ${isPrimary ? "text-white" : "text-[#1C1F3A]"}`}>
+                          {plan.name}
+                        </h3>
+                        {plan.badge && (
+                          <span
+                            className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                              isPrimary
+                                ? "bg-[#FDB91F] text-[#1C1F3A]"
+                                : "bg-[#FAF0D7] text-[#9A6400]"
                             }`}
-                          />
-                          <span className={isDark ? "text-[#ECEBF7]" : "text-[#4A4F66]"}>
-                            {feat}
+                          >
+                            {plan.badge}
                           </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                        )}
+                      </div>
 
-                  <div className="pt-8">
-                    <button
-                      type="button"
-                      onClick={() => scrollToForm(plan.packageId)}
-                      className={`w-full min-h-[48px] rounded-xl font-semibold text-sm sm:text-base transition-all flex items-center justify-center cursor-pointer shadow-xs ${
-                        isDark
-                          ? "bg-[#FDB91F] hover:bg-[#E5A413] text-[#1C1F3A] font-bold"
-                          : "bg-white hover:bg-[#FBF7EE] text-[#1C1F3A] border-2 border-[#1C1F3A]"
+                      <div>
+                        <div className="flex items-baseline gap-1">
+                          <span className={`font-mono text-3xl sm:text-4xl font-extrabold ${isPrimary ? "text-white" : "text-[#1C1F3A]"}`}>
+                            {formatINR(plan.monthlyRupees)}
+                          </span>
+                          <span className={`text-sm ${isPrimary ? "text-[#A6ABC8]" : "text-[#727791]"}`}>
+                            /month
+                          </span>
+                        </div>
+                        <p className={`text-xs mt-1 ${isPrimary ? "text-[#A6ABC8]" : "text-[#727791]"}`}>
+                          One-time setup: {formatINR(plan.setupRupees)} (50% off with founding offer)
+                        </p>
+                      </div>
+
+                      <ul className="space-y-3 pt-4 border-t border-[#ECE6D8]/20">
+                        {plan.features.map((feat, fIdx) => (
+                          <li key={fIdx} className="flex items-start gap-2.5 text-xs sm:text-[13.5px] leading-snug">
+                            <CheckIcon
+                              className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                                isPrimary ? "text-[#FDB91F]" : "text-[#2E7D5B]"
+                              }`}
+                            />
+                            <span className={isPrimary ? "text-[#ECEBF7]" : "text-[#4A4F66]"}>
+                              {feat}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="pt-8">
+                      <button
+                        type="button"
+                        onClick={() => scrollToForm(plan.id)}
+                        className={`w-full min-h-[48px] rounded-xl font-semibold text-sm sm:text-base transition-all flex items-center justify-center cursor-pointer shadow-xs ${
+                          isPrimary
+                            ? "bg-[#FDB91F] hover:bg-[#E5A413] text-[#1C1F3A] font-bold"
+                            : "bg-white hover:bg-[#FBF7EE] text-[#1C1F3A] border-2 border-[#1C1F3A]"
+                        }`}
+                      >
+                        {plan.ctaText}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Tab 2: Websites & Mobile Apps Cards */}
+          {pricingTab === "web_app" && (
+            <div className="space-y-8 animate-fade-in">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-stretch">
+                {[
+                  packages.website_launch,
+                  packages.business_website,
+                  packages.ecommerce_store,
+                  packages.app_mvp,
+                ].map((plan) => {
+                  const isPrimary = plan.id === "business_website";
+                  return (
+                    <div
+                      key={plan.id}
+                      className={`rounded-[18px] p-6 flex flex-col justify-between transition-transform duration-200 ${
+                        isPrimary
+                          ? "bg-[#1C1F3A] text-white shadow-xl ring-2 ring-[#FDB91F] md:-translate-y-1"
+                          : "bg-white text-[#1C1F3A] border border-[#ECE6D8] shadow-card"
                       }`}
                     >
-                      {plan.ctaText}
-                    </button>
-                  </div>
+                      <div className="space-y-5">
+                        <div className="flex items-center justify-between gap-1">
+                          <h3 className={`font-display font-bold text-xl ${isPrimary ? "text-white" : "text-[#1C1F3A]"}`}>
+                            {plan.name}
+                          </h3>
+                          {plan.badge && (
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                isPrimary
+                                  ? "bg-[#FDB91F] text-[#1C1F3A]"
+                                  : "bg-[#FAF0D7] text-[#9A6400]"
+                              }`}
+                            >
+                              {plan.badge}
+                            </span>
+                          )}
+                        </div>
+
+                        <div>
+                          <span className={`font-mono text-2xl sm:text-3xl font-extrabold ${isPrimary ? "text-white" : "text-[#1C1F3A]"}`}>
+                            {formatINR(plan.setupRupees)}
+                          </span>
+                          <p className={`text-xs mt-1 ${isPrimary ? "text-[#A6ABC8]" : "text-[#727791]"}`}>
+                            One-time project fee · 2 revision rounds
+                          </p>
+                        </div>
+
+                        <ul className="space-y-2.5 pt-3 border-t border-[#ECE6D8]/20">
+                          {plan.features.map((feat, fIdx) => (
+                            <li key={fIdx} className="flex items-start gap-2 text-xs leading-snug">
+                              <CheckIcon
+                                className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${
+                                  isPrimary ? "text-[#FDB91F]" : "text-[#2E7D5B]"
+                                }`}
+                              />
+                              <span className={isPrimary ? "text-[#ECEBF7]" : "text-[#4A4F66]"}>
+                                {feat}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="pt-6">
+                        <button
+                          type="button"
+                          onClick={() => scrollToForm(plan.id)}
+                          className={`w-full min-h-[44px] rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center cursor-pointer shadow-xs ${
+                            isPrimary
+                              ? "bg-[#FDB91F] hover:bg-[#E5A413] text-[#1C1F3A]"
+                              : "bg-white hover:bg-[#FBF7EE] text-[#1C1F3A] border-2 border-[#1C1F3A]"
+                          }`}
+                        >
+                          {plan.ctaText}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Optional Care Plans Strip */}
+              <div className="p-6 rounded-2xl bg-white border border-[#ECE6D8] flex flex-col md:flex-row items-center justify-between gap-6 shadow-xs">
+                <div className="space-y-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#9A6400] bg-[#FAF0D7] px-2.5 py-0.5 rounded">
+                    Optional Support
+                  </span>
+                  <h4 className="font-display font-bold text-lg text-[#1C1F3A]">
+                    Monthly Care Plans (Post-Warranty)
+                  </h4>
+                  <p className="text-xs text-[#4A4F66]">
+                    Website Care: <b>₹1,999/month</b> (updates, backups, 2h edits) · App Care: <b>₹4,999/month</b> (bug fixes, OS updates, 4h edits)
+                  </p>
                 </div>
-              );
-            })}
-          </div>
+
+                <div className="text-xs text-[#727791] text-right">
+                  <span>Additional changes outside scope: <b>₹1,000/hour</b></span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -456,10 +695,10 @@ export function LandingPage({ content }: LandingPageProps) {
         <div className="max-w-[1200px] mx-auto space-y-12">
           <div className="text-center max-w-xl mx-auto space-y-2">
             <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-[#1C1F3A]">
-              Questions owners ask us
+              Frequently Asked Questions
             </h2>
             <p className="text-[#4A4F66] text-sm sm:text-base">
-              Everything you need to know about setting up your AI receptionist.
+              Everything you need to know about our scope, revision engine, payment milestones, and deliverables.
             </p>
           </div>
 
@@ -467,17 +706,8 @@ export function LandingPage({ content }: LandingPageProps) {
         </div>
       </section>
 
-      {/* 10. Demo Form Section */}
-      <DemoForm
-        h2={content.formH2}
-        subtitle={content.formSubtitle}
-        namePlaceholder={content.formNamePlaceholder}
-        businessPlaceholder={content.formBusinessPlaceholder}
-        businessLabel={content.formBusinessLabel}
-        buttonText={content.formButtonText}
-        successMessage={content.formSuccessMessage}
-        verticalSlug={content.slug}
-      />
+      {/* 10. Project Enquiry Form Section (Section 4) */}
+      <DemoForm />
 
       {/* 11. Footer (Navy) */}
       <footer className="bg-[#1C1F3A] text-[#A6ABC8] py-14 px-4 sm:px-6 border-t border-[#2A2E50]">
@@ -517,22 +747,6 @@ export function LandingPage({ content }: LandingPageProps) {
           </div>
         </div>
       </footer>
-
-      {/* 12. Floating Green WhatsApp Button */}
-      <aside aria-label="WhatsApp quick chat" className="fixed bottom-6 right-6 z-50">
-        <a
-          href={`https://wa.me/${WHATSAPP_NUMBER_RAW.replace(/\+/g, "")}?text=${encodeURIComponent(
-            content.formWhatsAppPrefill
-          )}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Chat with us on WhatsApp"
-          className="w-14 h-14 bg-[#1F7A3A] hover:bg-[#18632F] text-white rounded-full flex items-center justify-center shadow-float hover:scale-105 active:scale-95 transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F7A3A]"
-        >
-          <WhatsAppIcon className="w-7 h-7 text-white" />
-        </a>
-      </aside>
     </div>
   );
 }
-

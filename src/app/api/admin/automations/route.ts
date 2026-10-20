@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const automationId = searchParams.get("automation_id") || undefined;
+    const fetchLogs = searchParams.get("logs") === "true";
+
+    if (fetchLogs || automationId) {
+      const runs = await db.getAutomationRuns(automationId);
+      return NextResponse.json({ success: true, runs });
+    }
+
     const automations = await db.getAutomations();
     return NextResponse.json({ success: true, automations });
   } catch (err: any) {
@@ -36,6 +45,14 @@ export async function POST(req: NextRequest) {
 
     if (action === "retry") {
       await db.recordAutomationRun(id, true);
+      await db.recordAutomationRunEntry({
+        automation_id: id,
+        trigger: "manual",
+        project_name: "Manual Run",
+        result: "success",
+        output_or_error: `Manual trigger executed for automation ${id}. State updated.`,
+        retries: "0/3",
+      });
       await db.logActivity("user", "Automation Retried", `Manually retried job for automation ${id}`);
       return NextResponse.json({ success: true, message: `Automation ${id} re-executed successfully` });
     }

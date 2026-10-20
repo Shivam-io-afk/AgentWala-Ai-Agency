@@ -2,6 +2,19 @@ import fs from "fs";
 import path from "path";
 import {
   Client,
+  Project,
+  RequirementRecord,
+  ScopeRecord,
+  AgreementRecord,
+  AgreementAcceptanceRecord,
+  TaskRecord,
+  TimeLogRecord,
+  DeliveryRecord,
+  RevisionRoundRecord,
+  RevisionItemRecord,
+  ChangeRequestRecord,
+  HandoverRecord,
+  UsageCostRecord,
   Invoice,
   Proposal,
   MessageRecord,
@@ -10,16 +23,39 @@ import {
   ActivityLogRecord,
   AutomationSetting,
   Recommendation,
+  Settings,
   StageKey,
+  TemplateRecord,
+  QualityCheckRecord,
+  ContentVersionRecord,
+  LedgerEntryRecord,
+  FreelancerRecord,
+  OutboxItem,
+  DevSettings,
+  AutomationRunRecord,
+  OtpRecord,
 } from "./types";
-import { calculateBill, rupeesToPaise } from "./pricing";
+import { calculateBill, rupeesToPaise, getPackageWithSettings, formatINR } from "./pricing";
 import { DEMO_NUMBER, WHATSAPP_NUMBER, EMAIL, CITY, FOUNDER_NAME, SITE_CONFIG } from "@/content/site";
+import { getAppDate, getAppTimeISO, getAppTimeIST } from "./clock";
 
 const DATA_DIR = path.join(process.cwd(), ".data");
 const DB_FILE = path.join(DATA_DIR, "db.json");
 
 interface DatabaseSchema {
   clients: Client[];
+  projects: Project[];
+  requirements: RequirementRecord[];
+  scopes: ScopeRecord[];
+  agreements: AgreementRecord[];
+  agreement_acceptances: AgreementAcceptanceRecord[];
+  tasks: TaskRecord[];
+  time_logs: TimeLogRecord[];
+  deliveries: DeliveryRecord[];
+  revision_rounds: RevisionRoundRecord[];
+  change_requests: ChangeRequestRecord[];
+  handovers: HandoverRecord[];
+  usage_costs: UsageCostRecord[];
   invoices: Invoice[];
   proposals: Proposal[];
   messages: MessageRecord[];
@@ -28,24 +64,38 @@ interface DatabaseSchema {
   activity_log: ActivityLogRecord[];
   automations: AutomationSetting[];
   recommendations: Recommendation[];
-  settings: Record<string, any>;
+  settings: Settings;
+  // Section 15 Zero-touch collections (Phases 10-12)
+  templates_library?: TemplateRecord[];
+  quality_checks?: QualityCheckRecord[];
+  content_versions?: ContentVersionRecord[];
+  ledger?: LedgerEntryRecord[];
+  freelancers?: FreelancerRecord[];
+  // QA Dev Toolbar Outbox & Settings
+  outbox?: OutboxItem[];
+  dev_settings?: DevSettings;
+  automation_runs?: AutomationRunRecord[];
+  otps?: OtpRecord[];
+  queued_messages?: OutboxItem[];
+  idempotency_keys?: string[];
 }
 
-// Initial Seed Data
+// Initial Seed Data for v2 (One AI agent, one website, one app at different stages)
 function getInitialSeed(): DatabaseSchema {
   const now = new Date().toISOString();
   const yesterday = new Date(Date.now() - 86400000).toISOString();
   const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
   const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
 
-  // Client 1: Lead / Contacted
+  // Client 1: Sunrise Dental Clinic (AI Voice & WhatsApp Receptionist)
   const client1: Client = {
     id: "c-ex-1",
-    name: "Sunrise Dental Clinic",
+    name: "Example — Sunrise Dental Clinic",
     owner_name: "Dr. Vikram Mehta",
     phone: "+91 98200 45678",
     email: "vikram@sunrisedental.in",
     city: "Mumbai",
+    state: "Maharashtra",
     niche: "Dental clinic",
     package: "growth",
     founding_offer: false,
@@ -59,35 +109,36 @@ function getInitialSeed(): DatabaseSchema {
     is_example: true,
     outbound_count: 1,
     qualifying_answers: {
+      service_needed: "AI agent",
+      budget_range: "₹35,000 setup + ₹19,999/mo",
+      timeline: "Within 1 week",
       calls_per_day: "35 calls/day",
       after_hours: "12 calls after 8 PM",
       current_cost: "₹16,000/month front desk",
       preferred_time: "Evenings after 6 PM",
+      description: "Needs 24/7 Hindi and English call answering and WhatsApp appointment scheduler.",
     },
     checks: {
       l1: { key: "l1", done: true, done_at: yesterday, done_by: "automation" },
-      l2: { key: "l2", done: true, done_at: yesterday, done_by: "automation" },
-      l3: { key: "l3", done: true, done_at: yesterday, done_by: "user" },
-      c1: { key: "c1", done: true, done_at: yesterday, done_by: "automation" },
-      c2: { key: "c2", done: false, done_by: "user" },
     },
     created_at: yesterday,
     updated_at: now,
   };
 
-  // Client 2: Won / Building stage
+  // Client 2: Dr. Batra Skin & Hair (Custom Business Website)
   const client2: Client = {
     id: "c-ex-2",
-    name: "Dr. Batra Skin & Hair Care",
+    name: "Example — Dr. Batra Skin & Hair Care",
     owner_name: "Dr. Rohini Batra",
     phone: "+91 99301 88221",
     email: "dr.rohini@batraskin.com",
     city: "Bengaluru",
+    state: "Karnataka",
     niche: "Skin & hair clinic",
-    package: "pro",
-    founding_offer: true,
-    notes: "50 real questions ingested. Running AI automated simulation test suite.",
-    next_step: "Review AI test report with doctor",
+    package: "business_website",
+    founding_offer: false,
+    notes: "Proposal and Annex A sent to client portal. Waiting for client agreement OTP signature.",
+    next_step: "Follow up with Dr. Batra on proposal review",
     next_step_date: nextWeek,
     status: "active",
     portal_token: "tok_batra_skin_419",
@@ -96,132 +147,410 @@ function getInitialSeed(): DatabaseSchema {
     is_example: true,
     outbound_count: 2,
     qualifying_answers: {
+      service_needed: "Website",
+      budget_range: "₹59,999 (Founding 50% applied: ₹29,999)",
+      timeline: "2 weeks",
       calls_per_day: "65 calls/day (2 doctors)",
       after_hours: "22 calls after hours & Sunday",
       current_cost: "₹28,000/month (2 receptionists)",
       preferred_time: "Morning 11 AM",
+      description: "Up to 15 pages with CMS, treatment bookings, doctor bios, and integrated AI chat.",
     },
     checks: {
       l1: { key: "l1", done: true, done_at: yesterday, done_by: "automation" },
       l2: { key: "l2", done: true, done_at: yesterday, done_by: "automation" },
-      l3: { key: "l3", done: true, done_at: yesterday, done_by: "user" },
+      l3: { key: "l3", done: true, done_at: yesterday, done_by: "automation" },
       c1: { key: "c1", done: true, done_at: yesterday, done_by: "automation" },
       c2: { key: "c2", done: true, done_at: yesterday, done_by: "automation" },
       b1: { key: "b1", done: true, done_at: yesterday, done_by: "automation" },
       b2: { key: "b2", done: true, done_at: yesterday, done_by: "automation" },
       b3: { key: "b3", done: true, done_at: yesterday, done_by: "automation" },
-      m1: { key: "m1", done: true, done_at: yesterday, done_by: "user" },
-      m2: { key: "m2", done: true, done_at: yesterday, done_by: "user" },
-      m3: { key: "m3", done: true, done_at: yesterday, done_by: "user" },
-      m4: { key: "m4", done: true, done_at: yesterday, done_by: "user" },
+      r1: { key: "r1", done: true, done_at: yesterday, done_by: "user" },
+      r2: { key: "r2", done: true, done_at: yesterday, done_by: "user" },
+      r3: { key: "r3", done: true, done_at: yesterday, done_by: "user" },
       p1: { key: "p1", done: true, done_at: yesterday, done_by: "automation" },
       p2: { key: "p2", done: true, done_at: yesterday, done_by: "automation" },
-      w1: { key: "w1", done: true, done_at: yesterday, done_by: "automation" },
-      w2: { key: "w2", done: true, done_at: yesterday, done_by: "automation" },
-      w3: { key: "w3", done: true, done_at: yesterday, done_by: "automation" },
-      d1: { key: "d1", done: true, done_at: yesterday, done_by: "automation" },
-      d2: { key: "d2", done: false, done_by: "automation" },
+      p3: { key: "p3", done: true, done_at: yesterday, done_by: "automation" },
     },
     created_at: yesterday,
     updated_at: now,
   };
 
-  // Client 3: Completed / Paid stage
+  // Client 3: Nova Diagnostics (Cross-Platform Mobile App MVP)
   const client3: Client = {
     id: "c-ex-3",
-    name: "Nova Diagnostics & Imaging",
+    name: "Example — Nova Diagnostics & Imaging",
     owner_name: "Amitabh Sen",
     phone: "+91 97110 33412",
     email: "operations@novadiagnostics.in",
     city: "Delhi NCR",
+    state: "Delhi",
     niche: "Diagnostic lab",
-    package: "growth",
+    package: "app_mvp",
     founding_offer: false,
-    notes: "Live for 3 weeks on WhatsApp & PBX. Over 800 blood test appointments booked.",
-    next_step: "Review weekly transcript report",
+    notes: "App MVP live on stores. Active on App Care Plan (₹4,999/mo).",
+    next_step: "Monthly care plan update & review",
     next_step_date: nextWeek,
     status: "completed",
-    portal_token: "tok_nova_diag_991",
+    portal_token: "tok_nova_diag_305",
     consent_at: yesterday,
-    source: "website_demo_form",
+    source: "referral",
     is_example: true,
-    outbound_count: 2,
+    outbound_count: 5,
+    qualifying_answers: {
+      service_needed: "App",
+      budget_range: "₹2,99,999",
+      timeline: "6 weeks",
+      calls_per_day: "120 calls/day",
+      after_hours: "40 calls for report status",
+      current_cost: "₹35,000/month front desk",
+      preferred_time: "Afternoons",
+      description: "Patient booking & automated test report download app for Android & iOS.",
+    },
     checks: {
       l1: { key: "l1", done: true, done_at: yesterday, done_by: "automation" },
       l2: { key: "l2", done: true, done_at: yesterday, done_by: "automation" },
-      l3: { key: "l3", done: true, done_at: yesterday, done_by: "user" },
+      l3: { key: "l3", done: true, done_at: yesterday, done_by: "automation" },
       c1: { key: "c1", done: true, done_at: yesterday, done_by: "automation" },
       c2: { key: "c2", done: true, done_at: yesterday, done_by: "automation" },
       b1: { key: "b1", done: true, done_at: yesterday, done_by: "automation" },
       b2: { key: "b2", done: true, done_at: yesterday, done_by: "automation" },
       b3: { key: "b3", done: true, done_at: yesterday, done_by: "automation" },
-      m1: { key: "m1", done: true, done_at: yesterday, done_by: "user" },
-      m2: { key: "m2", done: true, done_at: yesterday, done_by: "user" },
-      m3: { key: "m3", done: true, done_at: yesterday, done_by: "user" },
-      m4: { key: "m4", done: true, done_at: yesterday, done_by: "user" },
+      r1: { key: "r1", done: true, done_at: yesterday, done_by: "user" },
+      r2: { key: "r2", done: true, done_at: yesterday, done_by: "user" },
+      r3: { key: "r3", done: true, done_at: yesterday, done_by: "user" },
       p1: { key: "p1", done: true, done_at: yesterday, done_by: "automation" },
       p2: { key: "p2", done: true, done_at: yesterday, done_by: "automation" },
+      p3: { key: "p3", done: true, done_at: yesterday, done_by: "automation" },
+      s1: { key: "s1", done: true, done_at: yesterday, done_by: "client" },
+      s2: { key: "s2", done: true, done_at: yesterday, done_by: "automation" },
+      s3: { key: "s3", done: true, done_at: yesterday, done_by: "client" },
       w1: { key: "w1", done: true, done_at: yesterday, done_by: "automation" },
-      w2: { key: "w2", done: true, done_at: yesterday, done_by: "automation" },
-      w3: { key: "w3", done: true, done_at: yesterday, done_by: "automation" },
-      d1: { key: "d1", done: true, done_at: yesterday, done_by: "automation" },
-      d2: { key: "d2", done: true, done_at: yesterday, done_by: "automation" },
-      d3: { key: "d3", done: true, done_at: yesterday, done_by: "automation" },
+      w2: { key: "w2", done: true, done_at: yesterday, done_by: "user" },
+      w3: { key: "w3", done: true, done_at: yesterday, done_by: "user" },
       v1: { key: "v1", done: true, done_at: yesterday, done_by: "user" },
       v2: { key: "v2", done: true, done_at: yesterday, done_by: "user" },
-      v3: { key: "v3", done: true, done_at: yesterday, done_by: "automation" },
+      v3: { key: "v3", done: true, done_at: yesterday, done_by: "client" },
       f1: { key: "f1", done: true, done_at: yesterday, done_by: "automation" },
-      q1: { key: "q1", done: true, done_at: yesterday, done_by: "automation" },
-      q2: { key: "q2", done: true, done_at: yesterday, done_by: "automation" },
+      f2: { key: "f2", done: true, done_at: yesterday, done_by: "automation" },
+      h1: { key: "h1", done: true, done_at: yesterday, done_by: "user" },
+      h2: { key: "h2", done: true, done_at: yesterday, done_by: "client" },
+      h3: { key: "h3", done: true, done_at: yesterday, done_by: "automation" },
     },
     created_at: yesterday,
     updated_at: now,
   };
 
-  const bill1 = calculateBill("growth", false);
-  const bill2 = calculateBill("pro", true);
-  const bill3 = calculateBill("growth", false);
-
-  const proposals: Proposal[] = [
+  // 3 Projects mapping 1:1 to the 3 verticals in v2
+  const projects: Project[] = [
     {
-      id: "prop-1",
+      id: "proj-1",
       client_id: "c-ex-1",
-      version: 1,
+      name: "Example — Sunrise Dental AI Receptionist",
+      service_type: "ai_agent",
       package_id: "growth",
-      setup_paise: rupeesToPaise(bill1.setup),
-      monthly_paise: rupeesToPaise(bill1.monthly),
-      gst_paise: rupeesToPaise(bill1.gst),
-      total_first_bill_paise: rupeesToPaise(bill1.totalFirstBill),
-      advance_paise: rupeesToPaise(bill1.advance),
-      scope_bullets: [
-        "AI Receptionist answering in Hindi & English",
-        "WhatsApp booking agent 24×7",
-        "Google Calendar slot integration",
-      ],
-      status: "draft",
+      price_paise: 3500000,
+      monthly_paise: 1999900,
+      founding_offer: false,
+      milestone_plan: "50_50",
+      revision_rounds_included: 2,
+      revisions_used: 0,
+      portal_token: "tok_sunrise_dent_782",
+      status: "active",
+      next_step: "Call demo agent with doctor live on Friday",
+      next_step_date: tomorrow,
+      checks: client1.checks,
       created_at: yesterday,
       updated_at: now,
     },
     {
-      id: "prop-2",
+      id: "proj-2",
       client_id: "c-ex-2",
-      version: 1,
-      package_id: "pro",
-      setup_paise: rupeesToPaise(bill2.setup),
-      monthly_paise: rupeesToPaise(bill2.monthly),
-      gst_paise: rupeesToPaise(bill2.gst),
-      total_first_bill_paise: rupeesToPaise(bill2.totalFirstBill),
-      advance_paise: rupeesToPaise(bill2.advance),
-      scope_bullets: [
-        "Multi-doctor queue routing",
-        "Skin analysis intake forms on WhatsApp",
-        "Founding 50% setup discount applied",
-      ],
-      status: "accepted",
-      accepted_at: yesterday,
-      accepted_name: "Dr. Rohini Batra",
+      name: "Example — Dr. Batra Skin & Hair Website",
+      service_type: "website",
+      package_id: "business_website",
+      price_paise: 5999900, // ₹59,999
+      monthly_paise: 199900, // Care plan
+      founding_offer: false,
+      milestone_plan: "50_50",
+      revision_rounds_included: 2,
+      revisions_used: 0,
+      portal_token: "tok_batra_skin_419",
+      status: "active",
+      next_step: "Follow up with Dr. Batra on proposal review",
+      next_step_date: nextWeek,
+      checks: client2.checks,
       created_at: yesterday,
       updated_at: now,
+    },
+    {
+      id: "proj-3",
+      client_id: "c-ex-3",
+      name: "Example — Nova Diagnostics Mobile App MVP",
+      service_type: "app",
+      package_id: "app_mvp",
+      price_paise: 29999900,
+      monthly_paise: 499900, // App care plan
+      founding_offer: false,
+      milestone_plan: "40_30_30",
+      revision_rounds_included: 2,
+      revisions_used: 2,
+      portal_token: "tok_nova_diag_305",
+      status: "completed",
+      next_step: "Monthly care plan update & review",
+      next_step_date: nextWeek,
+      checks: client3.checks,
+      created_at: yesterday,
+      updated_at: now,
+    },
+  ];
+
+  const requirements: RequirementRecord[] = [
+    {
+      id: "req-2",
+      project_id: "proj-2",
+      features: [
+        "15 responsive pages (Home, Treatments, Doctors, Pricing, Gallery, Contact)",
+        "Integrated WhatsApp conversational widget",
+        "Direct Google Calendar consult booking",
+        "Custom blog for doctor SEO articles",
+      ],
+      pages_screens: ["Home", "About", "Treatments (10 subpages)", "Doctors", "Blog", "Contact"],
+      integrations: ["Google Calendar", "Razorpay", "WhatsApp Cloud API"],
+      content_owner: "Dr. Rohini Batra",
+      deadline: nextWeek,
+      budget_paise: 2999950,
+      recorded_consent: true,
+      raw_notes: "Focus on clean aesthetic, Before/After photo slider, and easy consult booking.",
+      created_at: yesterday,
+      updated_at: now,
+    },
+  ];
+
+  const scopes: ScopeRecord[] = [
+    {
+      id: "scope-2",
+      project_id: "proj-2",
+      version: 1,
+      goal: "Modern high-converting 15-page website with CMS and WhatsApp booking",
+      deliverables: [
+        "15 responsive custom-designed pages",
+        "Next.js + Tailwind modern frontend",
+        "Headless CMS for doctor blog posts & photos",
+        "Integrated AI appointment booking chat widget",
+      ],
+      platforms: ["Web (Desktop & Mobile)"],
+      languages: ["English", "Hindi"],
+      limits: ["Up to 15 pages", "2 revision rounds included"],
+      not_included: ["Custom mobile app", "Copywriting beyond approved bullet points"],
+      client_provides: ["Doctor high-res photos", "Clinic pricing sheet", "Domain DNS access"],
+      timeline_first_demo: yesterday,
+      timeline_handover: nextWeek,
+      project_fee_paise: 2999950,
+      monthly_fee_paise: 199900,
+      advance_paise: 1500000,
+      milestone_paise: 0,
+      final_paise: 1499950,
+      care_plan_paise: 199900,
+      approved_by_founder: true,
+      created_at: yesterday,
+      updated_at: now,
+    },
+  ];
+
+  const agreements: AgreementRecord[] = [
+    {
+      id: "agr-2",
+      project_id: "proj-2",
+      client_id: "c-ex-2",
+      version: 1,
+      status: "sent",
+      pdf_url: "/api/agreements/agr-2/pdf",
+      document_hash: "a4f89921bc3847e1d5209341",
+      created_at: yesterday,
+      updated_at: yesterday,
+    },
+    {
+      id: "agr-3",
+      project_id: "proj-3",
+      client_id: "c-ex-3",
+      version: 1,
+      status: "accepted",
+      pdf_url: "/api/agreements/agr-3/pdf",
+      document_hash: "b9c71283ea442010c7104882",
+      created_at: yesterday,
+      updated_at: yesterday,
+    },
+  ];
+
+  const agreement_acceptances: AgreementAcceptanceRecord[] = [
+    {
+      id: "acc-3",
+      agreement_id: "agr-3",
+      project_id: "proj-3",
+      typed_name: "Amitabh Sen",
+      otp_code: "610294",
+      otp_verified: true,
+      otp_verified_at: yesterday,
+      ip_address: "103.21.124.55",
+      user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+      document_hash: "b9c71283ea442010c7104882",
+      created_at: yesterday,
+    },
+  ];
+
+  const tasks: TaskRecord[] = [
+    {
+      id: "task-1",
+      project_id: "proj-2",
+      title: "Integrate Before/After photo slider on Treatments page",
+      category: "revision",
+      hours_estimated: 2,
+      due_date: tomorrow,
+      done: false,
+      created_at: yesterday,
+      updated_at: now,
+    },
+    {
+      id: "task-2",
+      project_id: "proj-2",
+      title: "Connect Razorpay consultation checkout form",
+      category: "build",
+      hours_estimated: 3,
+      due_date: yesterday,
+      done: true,
+      done_at: yesterday,
+      created_at: yesterday,
+      updated_at: yesterday,
+    },
+    {
+      id: "task-3",
+      project_id: "proj-1",
+      title: "Clone demo voice receptionist and customize clinic prompt",
+      category: "build",
+      hours_estimated: 1.5,
+      due_date: tomorrow,
+      done: true,
+      done_at: yesterday,
+      created_at: yesterday,
+      updated_at: now,
+    },
+  ];
+
+  const time_logs: TimeLogRecord[] = [
+    {
+      id: "time-1",
+      project_id: "proj-2",
+      task_id: "task-2",
+      description: "Built custom Razorpay modal and webhook listener",
+      hours: 2.5,
+      logged_date: yesterday.slice(0, 10),
+      hourly_rate_paise: 100000,
+      is_change_request: false,
+      created_at: yesterday,
+    },
+  ];
+
+  const deliveries: DeliveryRecord[] = [
+    {
+      id: "del-2-1",
+      project_id: "proj-2",
+      round_number: 1,
+      type: "staging_link",
+      url_or_number: "https://staging.batraskin.agentwala.in",
+      notes: "First working demo of all 15 pages and WhatsApp appointment booking widget.",
+      delivered_at: yesterday,
+      review_deadline: nextWeek,
+    },
+  ];
+
+  const revision_rounds: RevisionRoundRecord[] = [
+    {
+      id: "rev-2-1",
+      project_id: "proj-2",
+      round_number: 1,
+      status: "in_progress",
+      submitted_at: yesterday,
+      items: [
+        {
+          id: "item-1",
+          round_id: "rev-2-1",
+          text: "Can we swap the consultation button color to deep emerald and adjust the clinic hours to 10 AM–8 PM?",
+          ai_label: "revision",
+          ai_reason: "In-scope change to text and button styling of existing pages.",
+          founder_confirmed: true,
+          is_change_request: false,
+        },
+        {
+          id: "item-2",
+          round_id: "rev-2-1",
+          text: "Also add an online pharmacy medicine ordering cart with delivery tracking.",
+          ai_label: "new_feature",
+          ai_reason: "Outside Annex A scope (15 content pages). Requires full e-commerce & cart backend.",
+          founder_confirmed: true,
+          is_change_request: true,
+          change_request_id: "cr-2-1",
+        },
+      ],
+    },
+  ];
+
+  const change_requests: ChangeRequestRecord[] = [
+    {
+      id: "cr-2-1",
+      project_id: "proj-2",
+      title: "Online Pharmacy Medicine Store Module",
+      description: "Product inventory, prescription upload flow, and order status notifications.",
+      hours_quoted: 15,
+      amount_paise: 1500000, // 15 hours * ₹1,000/hr = ₹15,000
+      status: "quoted",
+      created_at: yesterday,
+      updated_at: now,
+    },
+  ];
+
+  const handovers: HandoverRecord[] = [
+    {
+      id: "hand-3",
+      project_id: "proj-3",
+      invoice_paid: true,
+      domain_transferred: true,
+      source_code_transferred: true,
+      repository_url: "https://github.com/nova-diagnostics/mobile-app-mvp",
+      credentials_link: "https://agentwala.in/vault/one-time-tok-847291",
+      credentials_expiry: yesterday,
+      agent_exported: true,
+      documentation_url: "https://novadiagnostics.in/docs/app-guide.pdf",
+      walkthrough_video_url: "https://loom.com/share/nova-app-walkthrough",
+      warranty_start_date: yesterday.slice(0, 10),
+      warranty_end_date: new Date(Date.now() + 29 * 86400000).toISOString().slice(0, 10),
+      care_plan_active: true,
+      client_confirmed: true,
+      client_confirmed_at: yesterday,
+      completion_cert_url: "/api/handovers/hand-3/certificate",
+      created_at: yesterday,
+      updated_at: now,
+    },
+  ];
+
+  const usage_costs: UsageCostRecord[] = [
+    {
+      id: "cost-1",
+      service: "ai",
+      model_or_channel: "gemini-2.5-flash",
+      units: 4200,
+      cost_paise: 84, // ₹0.84
+      project_id: "proj-2",
+      created_at: yesterday,
+    },
+    {
+      id: "cost-2",
+      service: "voice",
+      model_or_channel: "telephony-line",
+      units: 120, // seconds
+      cost_paise: 1600, // ₹16.00
+      project_id: "proj-1",
+      created_at: yesterday,
     },
   ];
 
@@ -229,16 +558,18 @@ function getInitialSeed(): DatabaseSchema {
     {
       id: "inv-2-adv",
       client_id: "c-ex-2",
+      project_id: "proj-2",
       invoice_number: "AW/2026-27/0001",
       type: "advance",
-      subtotal_paise: rupeesToPaise(bill2.setup * 0.5),
-      gst_paise: rupeesToPaise(bill2.setup * 0.5 * 0.18),
-      total_paise: rupeesToPaise(bill2.advance),
-      status: "paid",
-      due_date: yesterday.slice(0, 10),
-      paid_at: yesterday,
-      razorpay_payment_link_id: "plink_mock_adv_441",
-      razorpay_payment_url: "https://rzp.io/i/mock_adv_441",
+      subtotal_paise: 3000000, // ₹30,000 (advance on ₹59,999)
+      is_gst: false, // GST unregistered by default
+      cgst_paise: 0,
+      sgst_paise: 0,
+      igst_paise: 0,
+      total_paise: 3000000,
+      status: "sent", // Dr. Batra: Proposal sent, waiting for advance
+      due_date: tomorrow,
+      razorpay_payment_url: "https://rzp.io/i/mock_batra_adv_441",
       pdf_url: "/api/invoices/inv-2-adv/pdf",
       created_at: yesterday,
       updated_at: yesterday,
@@ -246,117 +577,150 @@ function getInitialSeed(): DatabaseSchema {
     {
       id: "inv-3-adv",
       client_id: "c-ex-3",
+      project_id: "proj-3",
       invoice_number: "AW/2026-27/0002",
       type: "advance",
-      subtotal_paise: rupeesToPaise(bill3.setup * 0.5),
-      gst_paise: rupeesToPaise(bill3.setup * 0.5 * 0.18),
-      total_paise: rupeesToPaise(bill3.advance),
+      subtotal_paise: 12000000, // ₹1,20,000 (40% of ₹2,99,999)
+      is_gst: false,
+      cgst_paise: 0,
+      sgst_paise: 0,
+      igst_paise: 0,
+      total_paise: 12000000,
       status: "paid",
       due_date: yesterday.slice(0, 10),
       paid_at: yesterday,
-      razorpay_payment_url: "https://rzp.io/i/mock_adv_442",
+      razorpay_payment_url: "https://rzp.io/i/mock_nova_adv",
       pdf_url: "/api/invoices/inv-3-adv/pdf",
+      created_at: yesterday,
+      updated_at: yesterday,
+    },
+    {
+      id: "inv-3-mid",
+      client_id: "c-ex-3",
+      project_id: "proj-3",
+      invoice_number: "AW/2026-27/0003",
+      type: "milestone",
+      subtotal_paise: 9000000, // ₹90,000 (30% of ₹2,99,999)
+      is_gst: false,
+      cgst_paise: 0,
+      sgst_paise: 0,
+      igst_paise: 0,
+      total_paise: 9000000,
+      status: "paid",
+      due_date: yesterday.slice(0, 10),
+      paid_at: yesterday,
+      razorpay_payment_url: "https://rzp.io/i/mock_nova_mid",
+      pdf_url: "/api/invoices/inv-3-mid/pdf",
       created_at: yesterday,
       updated_at: yesterday,
     },
     {
       id: "inv-3-fin",
       client_id: "c-ex-3",
-      invoice_number: "AW/2026-27/0003",
+      project_id: "proj-3",
+      invoice_number: "AW/2026-27/0004",
       type: "final",
-      subtotal_paise: rupeesToPaise(bill3.setup * 0.5 + bill3.monthly),
-      gst_paise: rupeesToPaise((bill3.setup * 0.5 + bill3.monthly) * 0.18),
-      total_paise: rupeesToPaise(bill3.finalBill),
+      subtotal_paise: 8999900, // ₹89,999 (last milestone: ₹2,99,999 - ₹1,20,000 - ₹90,000)
+      is_gst: false,
+      cgst_paise: 0,
+      sgst_paise: 0,
+      igst_paise: 0,
+      total_paise: 8999900,
       status: "paid",
       due_date: yesterday.slice(0, 10),
       paid_at: yesterday,
-      razorpay_payment_url: "https://rzp.io/i/mock_fin_443",
+      razorpay_payment_url: "https://rzp.io/i/mock_nova_fin",
       pdf_url: "/api/invoices/inv-3-fin/pdf",
+      created_at: yesterday,
+      updated_at: yesterday,
+    },
+    {
+      id: "inv-3-care",
+      client_id: "c-ex-3",
+      project_id: "proj-3",
+      invoice_number: "AW/2026-27/0005",
+      type: "monthly",
+      subtotal_paise: 499900, // Monthly care plan ₹4,999
+      is_gst: false,
+      cgst_paise: 0,
+      sgst_paise: 0,
+      igst_paise: 0,
+      total_paise: 499900,
+      status: "paid",
+      due_date: yesterday.slice(0, 10),
+      paid_at: yesterday,
+      razorpay_payment_url: "https://rzp.io/i/mock_nova_care",
+      pdf_url: "/api/invoices/inv-3-care/pdf",
       created_at: yesterday,
       updated_at: yesterday,
     },
   ];
 
-  // Automations A1 through A24 with Levels and Shadow Mode
+  const proposals: Proposal[] = [];
+
+  // Official v2 Automations A1–A20 with levels
   const automations: AutomationSetting[] = [
-    { id: "A1", name: "New lead from website form", description: "Creates client, ticks l1 & l2, runs AI pain summary, notifies founder", level: 1, enabled: true, shadow_mode: false, success_count: 14, failure_count: 0, consecutive_no_edit_approvals: 15 },
-    { id: "A2", name: "Welcome message", description: "Within 2 min sends WhatsApp template with demo number and booking link → ticks c1", level: 1, enabled: true, shadow_mode: false, success_count: 14, failure_count: 0, consecutive_no_edit_approvals: 15 },
-    { id: "A3", name: "Reply detection", description: "Inbound WhatsApp webhook ticks c2 and pauses follow-ups for 48h", level: 1, enabled: true, shadow_mode: false, success_count: 11, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A1", name: "Project enquiry captured", description: "Creates client + project, ticks l1–l3, notifies founder on WhatsApp", level: 1, enabled: true, shadow_mode: false, success_count: 14, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A2", name: "Welcome message with booking link", description: "WhatsApp + email with booking link within 2 min → ticks c1", level: 1, enabled: true, shadow_mode: false, success_count: 14, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A3", name: "Reply detection & pause nudges", description: "Inbound message or booking ticks c2 and pauses nudges for 48h", level: 1, enabled: true, shadow_mode: false, success_count: 11, failure_count: 0, consecutive_no_edit_approvals: 15 },
     { id: "A4", name: "Lead nurture", description: "Follow-ups at 24h & 72h; marks cold if 3 messages unresponded", level: 1, enabled: true, shadow_mode: false, success_count: 9, failure_count: 0, consecutive_no_edit_approvals: 15 },
-    { id: "A5", name: "Meeting booked", description: "Cal.com webhook ticks b1, schedules Meet URL, sets next step date", level: 1, enabled: true, shadow_mode: false, success_count: 7, failure_count: 0, consecutive_no_edit_approvals: 15 },
-    { id: "A6", name: "Demo agent prep", description: "Clones demo agent for client niche & personalises with business name → ticks b2", level: 1, enabled: true, shadow_mode: false, success_count: 7, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A5", name: "Booking webhook & calendar sync", description: "Cal.com webhook ticks b1, schedules Meet URL, sets next step date", level: 1, enabled: true, shadow_mode: false, success_count: 7, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A6", name: "Pre-meeting AI brief", description: "Public info research, 10 questions for service type, suggested package & price → ticks b2", level: 1, enabled: true, shadow_mode: false, success_count: 7, failure_count: 0, consecutive_no_edit_approvals: 15 },
     { id: "A7", name: "Meeting reminders", description: "WhatsApp reminders 24h and 1h before meeting → ticks b3", level: 1, enabled: true, shadow_mode: false, success_count: 6, failure_count: 0, consecutive_no_edit_approvals: 15 },
-    { id: "A8", name: "Proposal follow-up", description: "Nudge after 48h and 5d if proposal unaccepted → ticks p2", level: 1, enabled: true, shadow_mode: false, success_count: 5, failure_count: 0, consecutive_no_edit_approvals: 15 },
-    { id: "A9", name: "Accept and advance", description: "Portal accept ticks w1 → creates Razorpay link → on payment ticks w2", level: 1, enabled: true, shadow_mode: false, success_count: 4, failure_count: 0, consecutive_no_edit_approvals: 15 },
-    { id: "A10", name: "Onboarding collection", description: "Sends onboarding form link after advance → on submission ticks w3", level: 1, enabled: true, shadow_mode: false, success_count: 4, failure_count: 0, consecutive_no_edit_approvals: 15 },
-    { id: "A11", name: "Agent build draft", description: "AI generates system prompt & knowledge base from onboarding answers → ticks d1", level: 2, enabled: true, shadow_mode: false, success_count: 4, failure_count: 0, consecutive_no_edit_approvals: 12 },
-    { id: "A12", name: "Automated testing", description: "Generates 50 questions, grades answers, checks ≥90% pass rate → ticks d2", level: 2, enabled: true, shadow_mode: false, success_count: 3, failure_count: 0, consecutive_no_edit_approvals: 10 },
-    { id: "A13", name: "Client test approval", description: "Sends test phone link, client approves in portal → ticks d3", level: 2, enabled: true, shadow_mode: false, success_count: 3, failure_count: 0, consecutive_no_edit_approvals: 14 },
-    { id: "A14", name: "Final bill", description: "When v1 & v2 ticked, generates GST invoice for final bill → ticks f1", level: 1, enabled: true, shadow_mode: false, success_count: 2, failure_count: 0, consecutive_no_edit_approvals: 15 },
-    { id: "A15", name: "Payment received", description: "Razorpay webhook on final bill → ticks q1 → starts monthly subscription", level: 1, enabled: true, shadow_mode: false, success_count: 2, failure_count: 0, consecutive_no_edit_approvals: 15 },
-    { id: "A16", name: "Review request", description: "3 days after final payment sends Google review request → ticks q2", level: 1, enabled: true, shadow_mode: false, success_count: 2, failure_count: 0, consecutive_no_edit_approvals: 15 },
-    { id: "A17", name: "Weekly transcript review", description: "Monday AI review of volume, bookings & missed queries → ticks v3 on 1st run", level: 1, enabled: true, shadow_mode: false, success_count: 2, failure_count: 0, consecutive_no_edit_approvals: 15 },
-    { id: "A18", name: "Monthly client report", description: "1st of month emails PDF report of calls, bookings, hours saved", level: 1, enabled: true, shadow_mode: false, success_count: 2, failure_count: 0, consecutive_no_edit_approvals: 15 },
-    { id: "A19", name: "Monthly invoices & dunning", description: "Retainer invoices + reminders at +3, +7 and +14 days", level: 1, enabled: true, shadow_mode: false, success_count: 1, failure_count: 0, consecutive_no_edit_approvals: 15 },
-    { id: "A20", name: "Founder daily digest", description: "9:00 AM IST WhatsApp summary of meetings, overdue steps, revenue", level: 1, enabled: true, shadow_mode: false, success_count: 14, failure_count: 0, consecutive_no_edit_approvals: 15 },
-    { id: "A21", name: "AI qualifying call", description: "Voice agent calls lead (10 AM–7 PM IST), qualifies calls & cost, pre-fills m2", level: 2, enabled: true, shadow_mode: true, success_count: 0, failure_count: 0, consecutive_no_edit_approvals: 0 },
-    { id: "A22", name: "Meeting notes from recording", description: "AI parses Google Meet audio / voice note, suggests m1–m4 with quotes and drafts proposal", level: 2, enabled: true, shadow_mode: true, success_count: 0, failure_count: 0, consecutive_no_edit_approvals: 0 },
-    { id: "A23", name: "Standard proposal auto-send", description: "Auto-sends standard package proposals after 2-hour cancel window if AI confidence high", level: 2, enabled: true, shadow_mode: true, success_count: 0, failure_count: 0, consecutive_no_edit_approvals: 0 },
-    { id: "A24", name: "Go-live gate", description: "Enforces number connection unlock strictly when d2 ≥ 90% and client approved (d3)", level: 3, enabled: true, shadow_mode: false, success_count: 2, failure_count: 0, consecutive_no_edit_approvals: 0 },
+    { id: "A8", name: "Scope & agreement dispatch", description: "After founder approves scope: sends agreement + quote to portal → ticks p2; follows up at 48h → p3", level: 1, enabled: true, shadow_mode: false, success_count: 5, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A9", name: "Agreement accepted & advance invoice", description: "Portal accept ticks s1 → creates Razorpay link → on payment ticks s2 → generates invoice", level: 1, enabled: true, shadow_mode: false, success_count: 4, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A10", name: "Kickoff content & assets checklist", description: "Sends onboarding upload checklist, nudges every 3 days → ticks s3 when complete", level: 1, enabled: true, shadow_mode: false, success_count: 4, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A11", name: "Work plan generator", description: "AI generates tasks and milestones from scope deliverables with due dates → ticks w1", level: 1, enabled: true, shadow_mode: false, success_count: 4, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A12", name: "Weekly client update", description: "Friday 5 PM AI writes short progress note from ticked tasks & hours, shadow mode until approved", level: 2, enabled: true, shadow_mode: true, success_count: 3, failure_count: 0, consecutive_no_edit_approvals: 10 },
+    { id: "A13", name: "Delivery shared & review timer", description: "Founder uploads link/demo → auto notifies client, starts 7-day review timer → ticks w3", level: 1, enabled: true, shadow_mode: false, success_count: 3, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A14", name: "Revision engine & deemed acceptance", description: "Tracks round 1 & 2 submissions; deemed accepted on day 7 if silent → ticks v1–v3", level: 1, enabled: true, shadow_mode: false, success_count: 2, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A15", name: "Milestone and final invoices", description: "Dispatches final invoice on review complete → ticks f1; payment webhook → ticks f2", level: 1, enabled: true, shadow_mode: false, success_count: 2, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A16", name: "Handover kit generator", description: "Builds Annex B kit, completion cert, one-time credentials link → ticks h1 draft; client confirms → ticks h2", level: 1, enabled: true, shadow_mode: false, success_count: 2, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A17", name: "Warranty, care plan & review request", description: "Starts 30-day warranty, monthly care plan subscription, and requests Google review 3 days later → ticks h3", level: 1, enabled: true, shadow_mode: false, success_count: 2, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A18", name: "Warranty expiry care plan offer", description: "7 days before warranty ends, sends automated care plan proposal", level: 1, enabled: true, shadow_mode: false, success_count: 1, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A19", name: "Monthly billing & dunning", description: "Retainer & care plan invoices with reminders at +3, +7 and +14 days", level: 1, enabled: true, shadow_mode: false, success_count: 1, failure_count: 0, consecutive_no_edit_approvals: 15 },
+    { id: "A20", name: "Founder daily 9:00 AM digest", description: "WhatsApp summary of today's meetings, top 3 Copilot actions, money in/out, failures", level: 1, enabled: true, shadow_mode: false, success_count: 14, failure_count: 0, consecutive_no_edit_approvals: 15 },
   ];
 
   const activity_log: ActivityLogRecord[] = [
-    { id: "log-1", client_id: "c-ex-3", actor: "automation", action: "Final payment confirmed", detail: "Razorpay webhook paid final invoice AW/2026-27/0003. Ticked q1.", trigger_event: "razorpay_webhook", confidence_score: 1.0, shadow: false, created_at: yesterday },
-    { id: "log-2", client_id: "c-ex-2", actor: "automation", action: "Advance payment received", detail: "Advance ₹20,650 paid. Onboarding link sent to Dr. Rohini. Ticked w2.", trigger_event: "razorpay_webhook", confidence_score: 1.0, shadow: false, created_at: yesterday },
-    { id: "log-3", client_id: "c-ex-2", actor: "client", action: "Proposal accepted", detail: "Dr. Rohini Batra accepted Pro Proposal v1 via Client Portal. Ticked w1.", trigger_event: "portal_click", confidence_score: 1.0, shadow: false, created_at: yesterday },
-    { id: "log-4", client_id: "c-ex-1", actor: "automation", action: "Lead created", detail: "Submitted demo form from landing page. AI extracted pain points. Ticked l1, l2.", trigger_event: "website_demo_form", confidence_score: 0.95, shadow: false, created_at: yesterday },
-    { id: "log-5", client_id: "c-ex-1", actor: "automation", action: "Welcome WhatsApp sent", detail: `Template sent with demo number ${DEMO_NUMBER}. Ticked c1.`, trigger_event: "website_demo_form", confidence_score: 1.0, shadow: false, created_at: yesterday },
+    { id: "log-1", client_id: "c-ex-3", project_id: "proj-3", actor: "automation", action: "Final payment received", detail: "Razorpay paid final invoice AW/2026-27/0002. Ticked f2.", trigger_event: "razorpay_webhook", confidence_score: 1.0, shadow: false, created_at: yesterday },
+    { id: "log-2", client_id: "c-ex-2", project_id: "proj-2", actor: "client", action: "Agreement accepted via OTP", detail: "Dr. Rohini Batra verified OTP 849201 and accepted Master Service Agreement v1. Ticked s1.", trigger_event: "portal_otp", confidence_score: 1.0, shadow: false, created_at: yesterday },
+    { id: "log-3", client_id: "c-ex-2", project_id: "proj-2", actor: "automation", action: "Advance invoice paid", detail: "Advance ₹15,000 received. Ticked s2.", trigger_event: "razorpay_webhook", confidence_score: 1.0, shadow: false, created_at: yesterday },
+    { id: "log-4", client_id: "c-ex-1", project_id: "proj-1", actor: "automation", action: "Project enquiry registered", detail: "Website enquiry form captured for Sunrise Dental Clinic. Ticked l1–l3.", trigger_event: "website_enquiry_form", confidence_score: 1.0, shadow: false, created_at: yesterday },
   ];
 
-  // Initial Seed Recommendations for Section 7b AI Copilot
   const recommendations: Recommendation[] = [
     {
       id: "rec-1",
-      client_id: "c-ex-1",
-      client_name: "Sunrise Dental Clinic",
-      type: "money_at_risk",
-      title: "Friday demo call live walkthrough scheduled",
-      reason: "Dr. Vikram Mehta wants a live call demo on Friday. Setup line ready karo taaki call par smooth transition ho.",
-      why_rule: "Lead has been in Contacted stage for 1 day. Next step date set for tomorrow.",
-      action_label: "Open Client Detail",
+      client_id: "c-ex-2",
+      project_id: "proj-2",
+      client_name: "Dr. Batra Skin & Hair Care",
+      type: "scope_creep",
+      title: "New feature detected in Revision Round 1: Pharmacy Store",
+      reason: "Client requested an online pharmacy medicine store with delivery tracking. AI labeled this as a New Feature (outside Annex A). Confirm change request quote.",
+      why_rule: "Revision Engine: item classified as 'new_feature' requires founder approval before billing.",
+      action_label: "Review Change Request",
       action_type: "navigate",
-      action_payload: { url: "/admin/clients/c-ex-1" },
+      action_payload: { url: "/admin/clients/c-ex-2" },
       priority: "high",
-      money_at_risk_rupees: 20650,
+      money_at_risk_rupees: 15000,
       status: "active",
       created_at: now,
     },
     {
       id: "rec-2",
-      client_id: "c-ex-2",
-      client_name: "Dr. Batra Skin & Hair Care",
-      type: "forgotten_step",
-      title: "AI simulation 96% pass ho gayi hai. Test call send karo!",
-      reason: "50 real patient queries ingest ho chuke hain aur 96% pass rate hai. Portal approval link doctor ko bhej kar go-live confirm karo.",
-      why_rule: "Automation A12 passed with >=90%. Stage 7 (Building) ready for client approval (d3).",
-      action_label: "Review Test Report",
+      client_id: "c-ex-1",
+      project_id: "proj-1",
+      client_name: "Sunrise Dental Clinic",
+      type: "money_at_risk",
+      title: "Friday demo walkthrough scheduled",
+      reason: "Dr. Vikram Mehta wants a live phone call demo. Pre-meeting brief ready (A6).",
+      why_rule: "Lead in Qualified stage with scheduled meeting date.",
+      action_label: "Open Client Detail",
       action_type: "navigate",
-      action_payload: { url: "/admin/clients/c-ex-2" },
+      action_payload: { url: "/admin/clients/c-ex-1" },
       priority: "high",
-      money_at_risk_rupees: 58999,
-      status: "active",
-      created_at: now,
-    },
-    {
-      id: "rec-3",
-      type: "coaching",
-      title: "Weekly Business Coaching: 3 active clients, goal is 5",
-      reason: "Current pipeline value ₹1,23,898 hai. Dental aur Skin niches mein 100% conversion dikh raha hai. Do new leads nurture karo.",
-      why_rule: "Monday coaching engine target comparison vs settings target (5 clients by Month 3).",
-      action_label: "View Pipeline",
-      action_type: "navigate",
-      action_payload: { url: "/admin/pipeline" },
-      priority: "medium",
+      money_at_risk_rupees: 35000,
       status: "active",
       created_at: now,
     },
@@ -364,31 +728,32 @@ function getInitialSeed(): DatabaseSchema {
 
   return {
     clients: [client1, client2, client3],
+    projects,
+    requirements,
+    scopes,
+    agreements,
+    agreement_acceptances,
+    tasks,
+    time_logs,
+    deliveries,
+    revision_rounds,
+    change_requests,
+    handovers,
+    usage_costs,
     invoices,
     proposals,
     messages: [
-      { id: "msg-1", client_id: "c-ex-1", direction: "outbound", channel: "whatsapp", body: `Hello Dr. Vikram! Welcome to AgentWala. Test our demo receptionist at ${DEMO_NUMBER} or pick a 20-min slot.`, status: "delivered", created_at: yesterday },
-      { id: "msg-2", client_id: "c-ex-2", direction: "outbound", channel: "whatsapp", body: "Your customized AI receptionist build is underway. Here is your test phone line.", status: "delivered", created_at: yesterday },
+      { id: "msg-1", client_id: "c-ex-1", project_id: "proj-1", direction: "outbound", channel: "whatsapp", body: `Hello Dr. Vikram! Welcome to AgentWala. Test our demo receptionist at ${DEMO_NUMBER} or pick a 20-min slot.`, status: "delivered", created_at: yesterday },
     ],
     agents: [
       {
-        id: "ag-2",
-        client_id: "c-ex-2",
-        niche: "Skin & hair clinic",
-        prompt: "You are the AI receptionist for Dr. Batra Skin & Hair Care. Be polite, warm, and helpful in Hindi and English.",
-        knowledge_base: "Timings: Mon-Sat 10 AM - 8 PM. Doctor consultation: ₹800. Location: Indiranagar 100ft road.",
+        id: "ag-1",
+        client_id: "c-ex-1",
+        project_id: "proj-1",
+        niche: "Dental clinic",
+        prompt: "You are the AI Receptionist for Sunrise Dental Clinic. Answer politely in Hindi and English.",
+        knowledge_base: "Timings: Mon-Sat 10 AM - 8 PM. Doctor consultation: ₹800. Indiranagar.",
         status: "testing",
-        test_report: {
-          total: 50,
-          passed: 48,
-          failed: 2,
-          pass_rate: 96,
-          questions: [
-            { question: "Kal sham ko 5 baje appointment mil sakta hai?", expected_behavior: "Offer 5 PM slot with Dr. Batra", agent_answer: "Haan ji! Kal sham 5:00 PM ka slot available hai. Booking confirm karoon?", passed: true, language: "Hindi" },
-            { question: "What are your charges for consultation?", expected_behavior: "State ₹800 consultation fee", agent_answer: "Doctor consultation fee is ₹800.", passed: true, language: "English" },
-            { question: "Sunday open rehta hai kya clinic?", expected_behavior: "Closed Sunday, open Mon-Sat 10 AM-8 PM", agent_answer: "Hum Mon to Sat 10 AM se 8 PM open rehte hain, Sunday clinic closed rehta hai.", passed: true, language: "Hinglish" },
-          ],
-        },
         created_at: yesterday,
         updated_at: now,
       },
@@ -398,108 +763,149 @@ function getInitialSeed(): DatabaseSchema {
     automations,
     recommendations,
     settings: {
-      ...SITE_CONFIG,
+      agency_name: "AgentWala",
+      tagline: "AI Agents, WhatsApp Bots, Websites & Apps",
+      founder_name: FOUNDER_NAME || "Akash Verma",
+      founder_title: "Founder & Lead Engineer",
+      phone: WHATSAPP_NUMBER || "+91 98200 12345",
+      email: EMAIL || "hello@agentwala.in",
+      city: CITY || "Bengaluru",
+      state: "Karnataka",
+      address: "100 Feet Road, Indiranagar, Bengaluru, Karnataka 560038",
+      gst_registered: false,
+      gstin: "",
+      udyam_number: "UDYAM-KR-03-0012345",
+      pan: "ABCDE1234F",
+      sac_code: "998313",
+      bank_name: "HDFC Bank",
+      account_name: "AgentWala Solutions",
+      account_number: "50200012345678",
+      ifsc: "HDFC0001234",
+      upi_id: "agentwala@okhdfcbank",
+      ai_monthly_cap_inr: 5000,
+      voice_monthly_cap_inr: 3000,
+      hourly_change_rate_inr: 1000,
       pause_all_outbound: false,
       copilot_language: "hinglish",
+      working_hours: "10 AM - 7 PM IST",
+      quiet_hours: "9 PM - 9 AM IST",
       target_clients_month_3: 5,
       target_mrr_month_6: 200000,
-      razorpay_status: "mock",
-      whatsapp_status: "mock",
-      email_status: "mock",
-      cal_status: "mock",
-      ai_status: "mock",
     },
   };
 }
+
+// Lossless Data File Ensurer: Migrates existing data without resetting
+let memoryCache: DatabaseSchema | null = null;
+let lastCacheMtime = 0;
 
 function ensureDataFile(): DatabaseSchema {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
+
   if (!fs.existsSync(DB_FILE)) {
     const initial = getInitialSeed();
+    memoryCache = initial;
     fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), "utf8");
+    lastCacheMtime = fs.statSync(DB_FILE).mtimeMs;
     return initial;
   }
+
+  const stat = fs.statSync(DB_FILE);
+  if (memoryCache && stat.mtimeMs <= lastCacheMtime) {
+    return memoryCache;
+  }
+
   try {
     const raw = fs.readFileSync(DB_FILE, "utf8");
     const parsed = JSON.parse(raw);
-    // Ensure all new schema fields exist if upgrading from earlier seed
     let changed = false;
     const seed = getInitialSeed();
 
-    if (!parsed.recommendations) {
-      parsed.recommendations = seed.recommendations;
-      changed = true;
-    }
-    if (parsed.settings.pause_all_outbound === undefined) {
-      parsed.settings.pause_all_outbound = false;
-      changed = true;
-    }
-    if (!parsed.settings.copilot_language) {
-      parsed.settings.copilot_language = "hinglish";
-      changed = true;
-    }
-    if (!parsed.automations || parsed.automations.length < seed.automations.length) {
-      const existingIds = new Set((parsed.automations || []).map((a: any) => a.id));
-      for (const auto of seed.automations) {
-        if (!existingIds.has(auto.id)) {
-          if (!parsed.automations) parsed.automations = [];
-          parsed.automations.push(auto);
-          changed = true;
-        }
-      }
-    }
-    if (!parsed.agents || parsed.agents.length === 0) {
-      parsed.agents = seed.agents;
-      changed = true;
-    }
-    parsed.clients?.forEach((c: any) => {
-      if (!c.qualifying_answers) {
-        if (c.id === "c-ex-1") {
-          c.qualifying_answers = {
-            calls_per_day: "35 calls/day",
-            after_hours: "12 calls after 8 PM",
-            current_cost: "₹16,000/month front desk",
-            preferred_time: "Evenings after 6 PM",
-          };
-          changed = true;
-        } else if (c.id === "c-ex-2") {
-          c.qualifying_answers = {
-            calls_per_day: "65 calls/day (2 doctors)",
-            after_hours: "22 calls after hours & Sunday",
-            current_cost: "₹28,000/month (2 receptionists)",
-            preferred_time: "Morning 11 AM",
-          };
-          changed = true;
-        } else {
-          c.qualifying_answers = {
-            calls_per_day: "30-50 calls/day",
-            after_hours: "10-15 calls after hours",
-            current_cost: "₹18,000/month front desk",
-            preferred_time: "Normal hours",
-          };
-          changed = true;
-        }
-      }
-    });
+    // Ensure all v2 collections exist
+    const collections = [
+      "projects", "requirements", "scopes", "agreements", "agreement_acceptances",
+      "tasks", "time_logs", "deliveries", "revision_rounds", "change_requests",
+      "handovers", "usage_costs", "recommendations", "automations", "invoices", "clients"
+    ] as const;
 
+    for (const col of collections) {
+      if (!parsed[col] || parsed[col].length === 0) {
+        parsed[col] = (seed as any)[col] || [];
+        changed = true;
+      }
+    }
+
+    // Ensure v2 settings fields exist
+    if (!parsed.settings) {
+      parsed.settings = seed.settings;
+      changed = true;
+    } else {
+      if (parsed.settings.gst_registered === undefined) {
+        parsed.settings.gst_registered = false;
+        changed = true;
+      }
+      if (!parsed.settings.ai_monthly_cap_inr) {
+        parsed.settings.ai_monthly_cap_inr = 5000;
+        changed = true;
+      }
+      if (!parsed.settings.voice_monthly_cap_inr) {
+        parsed.settings.voice_monthly_cap_inr = 3000;
+        changed = true;
+      }
+      if (!parsed.settings.hourly_change_rate_inr) {
+        parsed.settings.hourly_change_rate_inr = 1000;
+        changed = true;
+      }
+      if (!parsed.settings.state) {
+        parsed.settings.state = "Karnataka";
+        changed = true;
+      }
+      if (!parsed.settings.udyam_number) {
+        parsed.settings.udyam_number = "UDYAM-KR-03-0012345";
+        changed = true;
+      }
+    }
+
+    // Ensure projects exist and map to clients
+    if (!parsed.projects || parsed.projects.length === 0) {
+      parsed.projects = seed.projects;
+      changed = true;
+    }
+
+    // Initialize forward-compatible Section 15 stores (Zero-touch upgrades)
+    if (!parsed.templates_library) { parsed.templates_library = []; changed = true; }
+    if (!parsed.quality_checks) { parsed.quality_checks = []; changed = true; }
+    if (!parsed.content_versions) { parsed.content_versions = []; changed = true; }
+    if (!parsed.ledger) { parsed.ledger = []; changed = true; }
+    if (!parsed.freelancers) { parsed.freelancers = []; changed = true; }
+    if (!parsed.otps) { parsed.otps = []; changed = true; }
+    if (!parsed.queued_messages) { parsed.queued_messages = []; changed = true; }
+    if (!parsed.idempotency_keys) { parsed.idempotency_keys = []; changed = true; }
+
+    memoryCache = parsed;
+    lastCacheMtime = stat.mtimeMs;
     if (changed) {
       writeData(parsed);
     }
     return parsed;
   } catch (err) {
     const initial = getInitialSeed();
+    memoryCache = initial;
     fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), "utf8");
+    lastCacheMtime = fs.statSync(DB_FILE).mtimeMs;
     return initial;
   }
 }
 
 function writeData(data: DatabaseSchema): void {
+  memoryCache = data;
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
   fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf8");
+  lastCacheMtime = fs.statSync(DB_FILE).mtimeMs;
 }
 
 export const db = {
@@ -519,6 +925,107 @@ export const db = {
     return data.clients.find((c) => c.portal_token === token) || null;
   },
 
+  async getClientDetailBundle(targetId: string) {
+    const data = ensureDataFile();
+    const client = data.clients.find(
+      (c) => c.id === targetId || (data.projects || []).some((p) => p.id === targetId && p.client_id === c.id)
+    );
+    if (!client) return null;
+
+    const clientId = client.id;
+    const projects = (data.projects || []).filter((p) => p.client_id === clientId);
+    const activeProject = projects.find((p) => p.id === targetId) || projects[0] || null;
+    const projectId = activeProject?.id || clientId;
+
+    // Fix #12: Keep checks unified in project.checks
+    if (activeProject && activeProject.checks) {
+      client.checks = { ...activeProject.checks };
+    }
+
+    const invoices = (data.invoices || []).filter((i) => i.client_id === clientId || i.project_id === projectId);
+    const proposal = (data.proposals || []).find((pr) => pr.client_id === clientId || pr.project_id === projectId) || null;
+    const messages = (data.messages || []).filter((m) => m.client_id === clientId || m.project_id === projectId);
+    const logs = (data.activity_log || []).filter((l) => l.client_id === clientId || l.project_id === projectId).slice(0, 50);
+    const agent = (data.agents || []).find((a) => a.client_id === clientId || a.project_id === projectId) || null;
+    const recommendations = (data.recommendations || []).filter(
+      (r) => r.status === "active" && (r.client_id === clientId || r.project_id === projectId)
+    );
+
+    const requirements = (data.requirements || []).find((r) => r.project_id === projectId) || null;
+    const scopes = (data.scopes || []).filter((s) => s.project_id === projectId);
+    const agreements = (data.agreements || []).filter((a) => a.project_id === projectId);
+    const tasks = (data.tasks || []).filter((t) => t.project_id === projectId);
+    const timeLogs = (data.time_logs || []).filter((tl) => tl.project_id === projectId);
+    const deliveries = (data.deliveries || []).filter((d) => d.project_id === projectId);
+    const revisions = (data.revision_rounds || []).filter((rr) => rr.project_id === projectId);
+    const changeRequests = (data.change_requests || []).filter((cr) => cr.project_id === projectId);
+    const handover = (data.handovers || []).find((h) => h.project_id === projectId) || null;
+
+    return {
+      client,
+      projects,
+      activeProject,
+      requirements,
+      scopes,
+      agreements,
+      tasks,
+      timeLogs,
+      deliveries,
+      revisions,
+      changeRequests,
+      handover,
+      invoices,
+      proposal,
+      messages,
+      logs,
+      agent,
+      recommendations,
+    };
+  },
+
+  async getClientPortalBundle(token: string) {
+    const data = ensureDataFile();
+    const client = data.clients.find(
+      (c) => c.portal_token === token || (data.projects || []).some((p) => p.portal_token === token && p.client_id === c.id)
+    );
+    if (!client) return null;
+
+    const clientId = client.id;
+    const projects = (data.projects || []).filter((p) => p.client_id === clientId);
+    const activeProject = projects.find((p) => p.portal_token === token) || projects[0] || null;
+    const projectId = activeProject?.id || clientId;
+
+    // Fix #12: Keep checks unified in project.checks
+    if (activeProject && activeProject.checks) {
+      client.checks = { ...activeProject.checks };
+    }
+
+    const requirements = (data.requirements || []).find((r) => r.project_id === projectId) || null;
+    const scopes = (data.scopes || []).filter((s) => s.project_id === projectId);
+    const agreements = (data.agreements || []).filter((a) => a.project_id === projectId);
+    const invoices = (data.invoices || []).filter((i) => i.client_id === clientId || i.project_id === projectId);
+    const deliveries = (data.deliveries || []).filter((d) => d.project_id === projectId);
+    const revisions = (data.revision_rounds || []).filter((rr) => rr.project_id === projectId);
+    const changeRequests = (data.change_requests || []).filter((cr) => cr.project_id === projectId);
+    const handover = (data.handovers || []).find((h) => h.project_id === projectId) || null;
+    const settings = data.settings;
+
+    return {
+      client,
+      projects,
+      activeProject,
+      requirements,
+      scopes,
+      agreements,
+      invoices,
+      deliveries,
+      revisions,
+      changeRequests,
+      handover,
+      settings,
+    };
+  },
+
   async createClient(clientData: Partial<Client>): Promise<Client> {
     const data = ensureDataFile();
     const id = "c-" + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
@@ -532,6 +1039,7 @@ export const db = {
       phone: clientData.phone || "",
       email: clientData.email || "",
       city: clientData.city || CITY,
+      state: clientData.state || "Karnataka",
       niche: clientData.niche || "Local business",
       package: clientData.package || "growth",
       founding_offer: Boolean(clientData.founding_offer),
@@ -541,22 +1049,47 @@ export const db = {
       status: "active",
       portal_token: token,
       consent_at: clientData.consent_at || now,
-      source: clientData.source || "website_demo_form",
+      source: clientData.source || "website_enquiry_form",
       outbound_count: 0,
       checks: clientData.checks || {},
+      qualifying_answers: clientData.qualifying_answers,
       created_at: now,
       updated_at: now,
     };
 
     data.clients.unshift(newClient);
+
+    // Also auto-create a matching Project for this client in v2
+    const pkg = getPackageWithSettings(newClient.package, (data.settings as any)?.package_prices);
+    const newProject: Project = {
+      id: "proj-" + Date.now().toString(36),
+      client_id: newClient.id,
+      name: `${newClient.name} Project`,
+      service_type: (newClient.qualifying_answers?.service_needed?.toLowerCase().includes("web") ? "website" : newClient.qualifying_answers?.service_needed?.toLowerCase().includes("app") ? "app" : "ai_agent"),
+      package_id: newClient.package,
+      price_paise: pkg.setupPaise || 3500000,
+      monthly_paise: pkg.monthlyPaise || 0,
+      founding_offer: newClient.founding_offer,
+      milestone_plan: "50_50",
+      revision_rounds_included: 2,
+      revisions_used: 0,
+      portal_token: token,
+      status: "active",
+      checks: newClient.checks,
+      created_at: now,
+      updated_at: now,
+    };
+    if (!data.projects) data.projects = [];
+    data.projects.unshift(newProject);
+
     writeData(data);
 
     await this.logActivity(
       "automation",
-      "Lead Created",
+      "Lead & Project Created",
       `New lead registered for ${newClient.name} (${newClient.phone})`,
       newClient.id,
-      { trigger_event: "website_demo_form", confidence_score: 1.0 }
+      { trigger_event: "website_enquiry_form", confidence_score: 1.0 }
     );
 
     return newClient;
@@ -580,6 +1113,7 @@ export const db = {
     const data = ensureDataFile();
     const initialLen = data.clients.length;
     data.clients = data.clients.filter((c) => c.id !== id);
+    data.projects = (data.projects || []).filter((p) => p.client_id !== id);
     if (data.clients.length !== initialLen) {
       writeData(data);
       await this.logActivity("user", "Client Removed", `Client ${id} was deleted`, id);
@@ -588,38 +1122,608 @@ export const db = {
     return false;
   },
 
+  // PROJECTS (v2 Multi-project pipeline)
+  async getProjects(): Promise<Project[]> {
+    const data = ensureDataFile();
+    return data.projects || [];
+  },
+
+  async getProjectsByClientId(clientId: string): Promise<Project[]> {
+    const data = ensureDataFile();
+    return (data.projects || []).filter((p) => p.client_id === clientId || p.id === clientId);
+  },
+
+  async getProjectById(id: string): Promise<Project | null> {
+    const data = ensureDataFile();
+    return (data.projects || []).find((p) => p.id === id || p.client_id === id) || null;
+  },
+
+  async getProjectByToken(token: string): Promise<Project | null> {
+    const data = ensureDataFile();
+    return (data.projects || []).find((p) => p.portal_token === token) || null;
+  },
+
+  async createProject(projectData: Partial<Project>): Promise<Project> {
+    const data = ensureDataFile();
+    const id = "proj-" + Date.now().toString(36);
+    const token = projectData.portal_token || "tok_" + Math.random().toString(36).substring(2, 10);
+    const now = new Date().toISOString();
+
+    const pkg = getPackageWithSettings(projectData.package_id || "growth", (data.settings as any)?.package_prices);
+    const newProject: Project = {
+      id,
+      client_id: projectData.client_id || "",
+      name: projectData.name || "Untitled Project",
+      service_type: projectData.service_type || "ai_agent",
+      package_id: projectData.package_id || "growth",
+      price_paise: projectData.price_paise ?? pkg.setupPaise,
+      monthly_paise: projectData.monthly_paise ?? pkg.monthlyPaise,
+      founding_offer: Boolean(projectData.founding_offer),
+      milestone_plan: projectData.milestone_plan || "50_50",
+      revision_rounds_included: 2,
+      revisions_used: 0,
+      portal_token: token,
+      status: "active",
+      checks: projectData.checks || {},
+      created_at: now,
+      updated_at: now,
+    };
+
+    if (!data.projects) data.projects = [];
+    data.projects.unshift(newProject);
+    writeData(data);
+    return newProject;
+  },
+
+  async updateProject(id: string, updates: Partial<Project>): Promise<Project | null> {
+    const data = ensureDataFile();
+    if (!data.projects) data.projects = [];
+    const index = data.projects.findIndex((p) => p.id === id || p.client_id === id);
+    if (index === -1) return null;
+
+    data.projects[index] = {
+      ...data.projects[index],
+      ...updates,
+      updated_at: new Date().toISOString(),
+    };
+    writeData(data);
+    return data.projects[index];
+  },
+
+  // CHECKLIST TICKS (v2 27-key derivation)
   async updateCheck(
-    clientId: string,
+    targetId: string, // clientId or projectId
     key: StageKey,
     done: boolean,
     doneBy: "user" | "automation" | "client" = "user"
-  ): Promise<Client | null> {
-    const data = ensureDataFile();
-    const client = data.clients.find((c) => c.id === clientId);
-    if (!client) return null;
+  ): Promise<{ client?: Client; project?: Project } | null> {
+    const founderOnlyKeys: StageKey[] = ["r1", "r2", "r3", "w2", "w3", "h1"];
+    if (doneBy === "automation" && founderOnlyKeys.includes(key)) {
+      await this.logActivity(
+        "system",
+        `Blocked automation tick on founder-only key ${key}`,
+        `Automation attempted to tick founder-only checklist item ${key}. Blocked server-side.`,
+        targetId
+      );
+      throw new Error(`Key ${key} is founder-only and cannot be ticked by automation`);
+    }
 
-    if (!client.checks) client.checks = {};
-    client.checks[key] = {
-      key,
-      done,
-      done_at: done ? new Date().toISOString() : undefined,
-      done_by: doneBy,
-    };
-    client.updated_at = new Date().toISOString();
+    const data = ensureDataFile();
+    const now = getAppTimeISO();
+
+    const client = data.clients.find((c) => c.id === targetId);
+    const project = (data.projects || []).find((p) => p.id === targetId || p.client_id === targetId);
+
+    // Bug 9: Server stage gates
+    if (done) {
+      const existingChecks = {
+        ...(client?.checks || {}),
+        ...(project?.checks || {}),
+      };
+
+      if (key === "w1") {
+        if (!existingChecks.s1?.done || !existingChecks.s2?.done) {
+          throw new Error("Stage gate violation: Stage w1 requires s1 (agreement accepted) and s2 (advance paid).");
+        }
+      }
+
+      if (key === "v1") {
+        if (!existingChecks.w3?.done) {
+          throw new Error("Stage gate violation: Stage v1 requires w3 (initial delivery completed & shared).");
+        }
+      }
+
+      if (key === "v3") {
+        const hasDelivery = (data.deliveries || []).some(
+          (d) => d.project_id === targetId || (project && d.project_id === project.id)
+        );
+        if (!hasDelivery && !existingChecks.w3?.done) {
+          throw new Error("Stage gate violation: Stage v3 requires delivery to have been completed.");
+        }
+      }
+
+      if (key === "f2") {
+        if (!existingChecks.f1?.done) {
+          throw new Error("Stage gate violation: Stage f2 requires f1 (final invoice issued).");
+        }
+        const finalPaid = (data.invoices || []).some(
+          (i) =>
+            (i.project_id === targetId ||
+              (project && i.project_id === project.id) ||
+              i.client_id === targetId ||
+              (client && i.client_id === client.id)) &&
+            i.type === "final" &&
+            i.status === "paid"
+        );
+        if (!finalPaid) {
+          throw new Error("Stage gate violation: Stage f2 requires a real final invoice to exist and be paid.");
+        }
+      }
+
+      if (key === "h1" || key === "h2" || key === "h3") {
+        if (!existingChecks.f2?.done) {
+          throw new Error("Stage gate violation: Handover stages (h1, h2, h3) require f2 (final invoice paid).");
+        }
+      }
+    }
+
+    if (client) {
+      if (!client.checks) client.checks = {};
+      client.checks[key] = { key, done, done_at: done ? now : undefined, done_by: doneBy };
+      client.updated_at = now;
+    }
+
+    if (project) {
+      if (!project.checks) project.checks = {};
+      project.checks[key] = { key, done, done_at: done ? now : undefined, done_by: doneBy };
+      project.updated_at = now;
+    }
 
     writeData(data);
 
     await this.logActivity(
       doneBy,
       `Checklist ${key} ${done ? "completed" : "unmarked"}`,
-      `${doneBy === "automation" ? "Automation" : doneBy === "client" ? "Client Portal" : "User"} marked ${key} as ${done ? "done" : "incomplete"} for ${client.name}`,
-      client.id
+      `${doneBy === "automation" ? "Automation" : doneBy === "client" ? "Client Portal" : "Founder"} marked ${key} as ${done ? "done" : "incomplete"}`,
+      client?.id || project?.client_id
     );
 
-    return client;
+    return { client: client || undefined, project: project || undefined };
   },
 
-  // INVOICES
+  // REQUIREMENTS (H1)
+  async getRequirements(projectId: string): Promise<RequirementRecord | null> {
+    const data = ensureDataFile();
+    return (data.requirements || []).find((r) => r.project_id === projectId) || null;
+  },
+
+  async saveRequirements(reqData: Partial<RequirementRecord> & { project_id: string }): Promise<RequirementRecord> {
+    const data = ensureDataFile();
+    if (!data.requirements) data.requirements = [];
+    const index = data.requirements.findIndex((r) => r.project_id === reqData.project_id);
+    const now = new Date().toISOString();
+
+    if (index >= 0) {
+      data.requirements[index] = { ...data.requirements[index], ...reqData, updated_at: now };
+      writeData(data);
+      return data.requirements[index];
+    } else {
+      const newReq: RequirementRecord = {
+        id: "req-" + Date.now().toString(36),
+        project_id: reqData.project_id,
+        features: reqData.features || [],
+        pages_screens: reqData.pages_screens || [],
+        integrations: reqData.integrations || [],
+        content_owner: reqData.content_owner || "",
+        deadline: reqData.deadline,
+        budget_paise: reqData.budget_paise || 0,
+        recorded_consent: Boolean(reqData.recorded_consent),
+        raw_notes: reqData.raw_notes || "",
+        created_at: now,
+        updated_at: now,
+      };
+      data.requirements.push(newReq);
+      writeData(data);
+      return newReq;
+    }
+  },
+
+  // SCOPE (Annex A)
+  async getScope(projectId: string): Promise<ScopeRecord | null> {
+    const data = ensureDataFile();
+    return (data.scopes || []).find((s) => s.project_id === projectId) || null;
+  },
+
+  async saveScope(scopeData: Partial<ScopeRecord> & { project_id: string }): Promise<ScopeRecord> {
+    const data = ensureDataFile();
+    if (!data.scopes) data.scopes = [];
+    const index = data.scopes.findIndex((s) => s.project_id === scopeData.project_id);
+    const now = new Date().toISOString();
+
+    if (index >= 0) {
+      data.scopes[index] = { ...data.scopes[index], ...scopeData, updated_at: now };
+      writeData(data);
+      return data.scopes[index];
+    } else {
+      const newScope: ScopeRecord = {
+        id: "scope-" + Date.now().toString(36),
+        project_id: scopeData.project_id,
+        version: scopeData.version || 1,
+        goal: scopeData.goal || "",
+        deliverables: scopeData.deliverables || [],
+        platforms: scopeData.platforms || ["Web"],
+        languages: scopeData.languages || ["English", "Hindi"],
+        limits: scopeData.limits || ["2 revision rounds included"],
+        not_included: scopeData.not_included || [],
+        client_provides: scopeData.client_provides || [],
+        timeline_first_demo: scopeData.timeline_first_demo,
+        timeline_handover: scopeData.timeline_handover,
+        project_fee_paise: scopeData.project_fee_paise || 0,
+        monthly_fee_paise: scopeData.monthly_fee_paise || 0,
+        advance_paise: scopeData.advance_paise || 0,
+        milestone_paise: scopeData.milestone_paise || 0,
+        final_paise: scopeData.final_paise || 0,
+        care_plan_paise: scopeData.care_plan_paise || 0,
+        approved_by_founder: Boolean(scopeData.approved_by_founder),
+        created_at: now,
+        updated_at: now,
+      };
+      data.scopes.push(newScope);
+      writeData(data);
+      return newScope;
+    }
+  },
+
+  // AGREEMENT & OTP ACCEPTANCE (Section 8)
+  async getAgreement(projectId: string): Promise<AgreementRecord | null> {
+    const data = ensureDataFile();
+    return (data.agreements || []).find((a) => a.project_id === projectId) || null;
+  },
+
+  async getRequirementsByProjectId(projectId: string): Promise<RequirementRecord | null> {
+    return this.getRequirements(projectId);
+  },
+
+  async getScopesByProjectId(projectId: string): Promise<ScopeRecord[]> {
+    const s = await this.getScope(projectId);
+    return s ? [s] : [];
+  },
+
+  async getAgreementsByProjectId(projectId: string): Promise<AgreementRecord[]> {
+    const a = await this.getAgreement(projectId);
+    return a ? [a] : [];
+  },
+
+  async saveAgreement(agrData: Partial<AgreementRecord> & { project_id: string }): Promise<AgreementRecord> {
+    const data = ensureDataFile();
+    if (!data.agreements) data.agreements = [];
+    const index = data.agreements.findIndex((a) => a.project_id === agrData.project_id);
+    const now = new Date().toISOString();
+
+    if (index >= 0) {
+      data.agreements[index] = { ...data.agreements[index], ...agrData, updated_at: now };
+      writeData(data);
+      return data.agreements[index];
+    } else {
+      const newAgr: AgreementRecord = {
+        id: "agr-" + Date.now().toString(36),
+        project_id: agrData.project_id,
+        client_id: agrData.client_id || "",
+        version: agrData.version || 1,
+        status: agrData.status || "draft",
+        pdf_url: agrData.pdf_url || `/api/agreements/agr-${Date.now().toString(36)}/pdf`,
+        document_hash: agrData.document_hash,
+        created_at: now,
+        updated_at: now,
+      };
+      data.agreements.push(newAgr);
+      writeData(data);
+      return newAgr;
+    }
+  },
+
+  async recordAgreementAcceptance(record: Omit<AgreementAcceptanceRecord, "id" | "created_at">): Promise<AgreementAcceptanceRecord> {
+    const data = ensureDataFile();
+    if (!data.agreement_acceptances) data.agreement_acceptances = [];
+    const newAcc: AgreementAcceptanceRecord = {
+      id: "acc-" + Date.now().toString(36),
+      ...record,
+      created_at: new Date().toISOString(),
+    };
+    data.agreement_acceptances.unshift(newAcc);
+
+    // Update agreement status to accepted
+    const agr = (data.agreements || []).find((a) => a.id === record.agreement_id || a.project_id === record.project_id);
+    if (agr) {
+      agr.status = "accepted";
+      agr.document_hash = record.document_hash;
+    }
+
+    // Tick s1 on project and client
+    await this.updateCheck(record.project_id, "s1", true, "client");
+
+    writeData(data);
+    return newAcc;
+  },
+
+  // TASKS & TIME LOGGING (/admin/work)
+  async getTasks(projectId?: string): Promise<TaskRecord[]> {
+    const data = ensureDataFile();
+    let tasks = data.tasks || [];
+    if (projectId) {
+      tasks = tasks.filter((t) => t.project_id === projectId);
+    }
+    return tasks;
+  },
+
+  async createTask(taskData: Partial<TaskRecord> & { project_id: string; title: string }): Promise<TaskRecord> {
+    const data = ensureDataFile();
+    if (!data.tasks) data.tasks = [];
+    const id = "task-" + Date.now().toString(36);
+    const now = new Date().toISOString();
+
+    const newTask: TaskRecord = {
+      id,
+      project_id: taskData.project_id,
+      title: taskData.title,
+      category: taskData.category || "build",
+      hours_estimated: taskData.hours_estimated || 1,
+      due_date: taskData.due_date,
+      done: false,
+      created_at: now,
+      updated_at: now,
+    };
+    data.tasks.unshift(newTask);
+    writeData(data);
+    return newTask;
+  },
+
+  async updateTask(id: string, updates: Partial<TaskRecord>): Promise<TaskRecord | null> {
+    const data = ensureDataFile();
+    if (!data.tasks) return null;
+    const index = data.tasks.findIndex((t) => t.id === id);
+    if (index === -1) return null;
+    data.tasks[index] = { ...data.tasks[index], ...updates, updated_at: new Date().toISOString() };
+    writeData(data);
+    return data.tasks[index];
+  },
+
+  async getTimeLogs(projectId?: string): Promise<TimeLogRecord[]> {
+    const data = ensureDataFile();
+    let logs = data.time_logs || [];
+    if (projectId) {
+      logs = logs.filter((l) => l.project_id === projectId);
+    }
+    return logs;
+  },
+
+  async logTime(logData: Omit<TimeLogRecord, "id" | "created_at">): Promise<TimeLogRecord> {
+    const data = ensureDataFile();
+    if (!data.time_logs) data.time_logs = [];
+    const newLog: TimeLogRecord = {
+      id: "time-" + Date.now().toString(36),
+      ...logData,
+      created_at: new Date().toISOString(),
+    };
+    data.time_logs.unshift(newLog);
+    writeData(data);
+    return newLog;
+  },
+
+  // DELIVERIES & REVISION ENGINE (Section 7)
+  async getDeliveries(projectId: string): Promise<DeliveryRecord[]> {
+    const data = ensureDataFile();
+    return (data.deliveries || []).filter((d) => d.project_id === projectId);
+  },
+
+  async createDelivery(delData: Omit<DeliveryRecord, "id">): Promise<DeliveryRecord> {
+    const data = ensureDataFile();
+    if (!data.deliveries) data.deliveries = [];
+    const newDel: DeliveryRecord = {
+      id: "del-" + Date.now().toString(36),
+      ...delData,
+    };
+    data.deliveries.unshift(newDel);
+
+    // Ticks w3 (Delivery shared)
+    await this.updateCheck(delData.project_id, "w3", true, "user");
+
+    writeData(data);
+    return newDel;
+  },
+
+  async getRevisionRounds(projectId: string): Promise<RevisionRoundRecord[]> {
+    const data = ensureDataFile();
+    return (data.revision_rounds || []).filter((r) => r.project_id === projectId);
+  },
+
+  async submitRevisionRound(
+    projectId: string,
+    roundNumber: number,
+    items: { text: string; ai_label: "revision" | "new_feature"; ai_reason: string }[]
+  ): Promise<RevisionRoundRecord> {
+    const data = ensureDataFile();
+    const proj = (data.projects || []).find((p) => p.id === projectId || p.client_id === projectId);
+    if (!proj) throw new Error("Project not found");
+
+    // Bug 8: Server revision limits - refuse if w3 not done
+    if (!proj.checks?.w3?.done) {
+      throw new Error("Revision rounds cannot be submitted before the initial build (w3) has been delivered and shared.");
+    }
+
+    // Bug 8: Refuse if revisions_used >= included
+    const included = proj.revision_rounds_included || 2;
+    const used = proj.revisions_used || 0;
+    if (used >= included) {
+      throw new Error(`All ${included} included revision rounds have been used. Additional changes must be requested as a paid Change Request at ₹1,000/hr.`);
+    }
+
+    if (!data.revision_rounds) data.revision_rounds = [];
+    const roundId = "rev-" + Date.now().toString(36);
+
+    const revisionItems: RevisionItemRecord[] = items.map((item, idx) => ({
+      id: `item-${idx + 1}-${Date.now().toString(36)}`,
+      round_id: roundId,
+      text: item.text,
+      ai_label: item.ai_label,
+      ai_reason: item.ai_reason,
+      founder_confirmed: false,
+      is_change_request: item.ai_label === "new_feature",
+    }));
+
+    const newRound: RevisionRoundRecord = {
+      id: roundId,
+      project_id: projectId,
+      round_number: roundNumber,
+      status: "submitted",
+      submitted_at: new Date().toISOString(),
+      items: revisionItems,
+    };
+
+    data.revision_rounds.push(newRound);
+
+    // Increment project revisions_used counter
+    if (proj) {
+      proj.revisions_used = Math.max(proj.revisions_used || 0, roundNumber);
+    }
+
+    writeData(data);
+    return newRound;
+  },
+
+  async confirmRevisionItem(
+    roundId: string,
+    itemId: string,
+    label: "revision" | "new_feature",
+    quoteHours?: number
+  ): Promise<void> {
+    const data = ensureDataFile();
+    for (const round of data.revision_rounds || []) {
+      const item = round.items.find((i) => i.id === itemId);
+      if (item) {
+        item.ai_label = label;
+        item.founder_confirmed = true;
+        item.is_change_request = label === "new_feature";
+
+        if (label === "new_feature" && quoteHours) {
+          const rate = data.settings.hourly_change_rate_inr || 1000;
+          const cr: ChangeRequestRecord = {
+            id: "cr-" + Date.now().toString(36),
+            project_id: round.project_id,
+            title: `Change Request: ${item.text.slice(0, 40)}…`,
+            description: item.text,
+            hours_quoted: quoteHours,
+            amount_paise: quoteHours * rate * 100,
+            status: "quoted",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+          if (!data.change_requests) data.change_requests = [];
+          data.change_requests.unshift(cr);
+          item.change_request_id = cr.id;
+        }
+        break;
+      }
+    }
+    writeData(data);
+  },
+
+  async getChangeRequests(projectId: string): Promise<ChangeRequestRecord[]> {
+    const data = ensureDataFile();
+    return (data.change_requests || []).filter((c) => c.project_id === projectId);
+  },
+
+  // PROPOSALS (Backward compatibility)
+  async getProposalByClientId(clientId: string): Promise<Proposal | null> {
+    const data = ensureDataFile();
+    return (data.proposals || []).find((p) => p.client_id === clientId || p.project_id === clientId) || null;
+  },
+
+  async createProposal(proposalData: Partial<Proposal>): Promise<Proposal> {
+    const data = ensureDataFile();
+    const newProposal: Proposal = {
+      id: "prop-" + Date.now().toString(36),
+      client_id: proposalData.client_id || "",
+      version: proposalData.version || 1,
+      package_id: proposalData.package_id || "growth",
+      setup_paise: proposalData.setup_paise || 3500000,
+      monthly_paise: proposalData.monthly_paise || 1999900,
+      status: proposalData.status || "draft",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...proposalData,
+    };
+    if (!data.proposals) data.proposals = [];
+    data.proposals.unshift(newProposal);
+    writeData(data);
+    return newProposal;
+  },
+
+  async updateProposal(id: string, updates: Partial<Proposal>): Promise<Proposal | null> {
+    const data = ensureDataFile();
+    if (!data.proposals) data.proposals = [];
+    const idx = data.proposals.findIndex((p) => p.id === id || p.client_id === id);
+    if (idx === -1) return null;
+    data.proposals[idx] = { ...data.proposals[idx], ...updates, updated_at: new Date().toISOString() };
+    writeData(data);
+    return data.proposals[idx];
+  },
+
+  // HANDOVERS (Annex B)
+  async getHandover(projectId: string): Promise<HandoverRecord | null> {
+    const data = ensureDataFile();
+    return (data.handovers || []).find((h) => h.project_id === projectId) || null;
+  },
+
+  async saveHandover(handData: Partial<HandoverRecord> & { project_id: string }): Promise<HandoverRecord> {
+    const data = ensureDataFile();
+    if (!data.handovers) data.handovers = [];
+    const index = data.handovers.findIndex((h) => h.project_id === handData.project_id);
+    const now = new Date().toISOString();
+
+    if (index >= 0) {
+      data.handovers[index] = { ...data.handovers[index], ...handData, updated_at: now };
+      writeData(data);
+      return data.handovers[index];
+    } else {
+      const newHand: HandoverRecord = {
+        id: "hand-" + Date.now().toString(36),
+        project_id: handData.project_id,
+        invoice_paid: Boolean(handData.invoice_paid),
+        domain_transferred: Boolean(handData.domain_transferred),
+        source_code_transferred: Boolean(handData.source_code_transferred),
+        agent_exported: Boolean(handData.agent_exported),
+        care_plan_active: Boolean(handData.care_plan_active),
+        client_confirmed: Boolean(handData.client_confirmed),
+        created_at: now,
+        updated_at: now,
+      };
+      data.handovers.push(newHand);
+      writeData(data);
+      return newHand;
+    }
+  },
+
+  // SPENDING CAPS & USAGE COSTS
+  async getUsageCosts(): Promise<UsageCostRecord[]> {
+    const data = ensureDataFile();
+    return data.usage_costs || [];
+  },
+
+  async recordUsageCost(cost: Omit<UsageCostRecord, "id" | "created_at">): Promise<UsageCostRecord> {
+    const data = ensureDataFile();
+    if (!data.usage_costs) data.usage_costs = [];
+    const newCost: UsageCostRecord = {
+      id: "cost-" + Date.now().toString(36),
+      ...cost,
+      created_at: new Date().toISOString(),
+    };
+    data.usage_costs.unshift(newCost);
+    writeData(data);
+    return newCost;
+  },
+
+  // INVOICES (with GST on/off switch awareness)
   async getInvoices(): Promise<Invoice[]> {
     const data = ensureDataFile();
     return data.invoices;
@@ -627,23 +1731,53 @@ export const db = {
 
   async getInvoicesByClientId(clientId: string): Promise<Invoice[]> {
     const data = ensureDataFile();
-    return data.invoices.filter((i) => i.client_id === clientId);
+    return data.invoices.filter((i) => i.client_id === clientId || i.project_id === clientId);
   },
 
   async createInvoice(invoiceData: Partial<Invoice>): Promise<Invoice> {
     const data = ensureDataFile();
-    const id = "inv-" + Date.now().toString(36);
+    // Bug 3: Random unguessable invoice IDs
+    const id = "inv-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
     const invoiceNumber = `AW/2026-27/${String(data.invoices.length + 1).padStart(4, "0")}`;
     const now = new Date().toISOString();
+
+    const isGst = Boolean(data.settings.gst_registered);
+    // Bug 4: Whole rupee arithmetic
+    const subtotalRupees = Math.round((invoiceData.subtotal_paise || 0) / 100);
+    const subtotalPaise = subtotalRupees * 100;
+
+    const client = (data.clients || []).find((c) => c.id === invoiceData.client_id);
+    const founderState = (data.settings.state || "Karnataka").toLowerCase().trim();
+    const clientState = (client?.state || "Karnataka").toLowerCase().trim();
+    const isInterState = isGst && (founderState !== clientState);
+
+    let cgstPaise = 0;
+    let sgstPaise = 0;
+    let igstPaise = 0;
+
+    if (isGst) {
+      if (isInterState) {
+        igstPaise = Math.round(subtotalRupees * 0.18) * 100;
+      } else {
+        cgstPaise = Math.round(subtotalRupees * 0.09) * 100;
+        sgstPaise = cgstPaise; // SGST = same as CGST
+      }
+    }
+
+    const totalPaise = subtotalPaise + (isInterState ? igstPaise : cgstPaise + sgstPaise);
 
     const newInvoice: Invoice = {
       id,
       client_id: invoiceData.client_id || "",
+      project_id: invoiceData.project_id,
       invoice_number: invoiceData.invoice_number || invoiceNumber,
       type: invoiceData.type || "advance",
-      subtotal_paise: invoiceData.subtotal_paise || 0,
-      gst_paise: invoiceData.gst_paise || 0,
-      total_paise: invoiceData.total_paise || 0,
+      subtotal_paise: subtotalPaise,
+      is_gst: isGst,
+      cgst_paise: cgstPaise,
+      sgst_paise: sgstPaise,
+      igst_paise: igstPaise,
+      total_paise: totalPaise,
       status: invoiceData.status || "draft",
       due_date: invoiceData.due_date || new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
       razorpay_payment_url: invoiceData.razorpay_payment_url,
@@ -658,7 +1792,7 @@ export const db = {
     await this.logActivity(
       "automation",
       "Invoice Generated",
-      `Invoice ${newInvoice.invoice_number} generated for ${newInvoice.total_paise / 100} INR`,
+      `Invoice ${newInvoice.invoice_number} generated for ${formatINR(newInvoice.total_paise / 100)} (${isGst ? "GST Registered" : "Bill of Supply - Not registered under GST"})`,
       newInvoice.client_id
     );
 
@@ -679,102 +1813,11 @@ export const db = {
     return data.invoices[index];
   },
 
-  // PROPOSALS
-  async getProposals(): Promise<Proposal[]> {
-    const data = ensureDataFile();
-    return data.proposals;
-  },
-
-  async getProposalByClientId(clientId: string): Promise<Proposal | null> {
-    const data = ensureDataFile();
-    return data.proposals.find((p) => p.client_id === clientId) || null;
-  },
-
-  async createProposal(proposalData: Partial<Proposal>): Promise<Proposal> {
-    const data = ensureDataFile();
-    const id = "prop-" + Date.now().toString(36);
-    const now = new Date().toISOString();
-
-    const newProposal: Proposal = {
-      id,
-      client_id: proposalData.client_id || "",
-      version: proposalData.version || 1,
-      package_id: proposalData.package_id || "growth",
-      setup_paise: proposalData.setup_paise || 0,
-      monthly_paise: proposalData.monthly_paise || 0,
-      gst_paise: proposalData.gst_paise || 0,
-      total_first_bill_paise: proposalData.total_first_bill_paise || 0,
-      advance_paise: proposalData.advance_paise || 0,
-      scope_bullets: proposalData.scope_bullets || [],
-      pdf_url: `/api/proposals/${id}/pdf`,
-      status: proposalData.status || "draft",
-      auto_send_scheduled_at: proposalData.auto_send_scheduled_at,
-      created_at: now,
-      updated_at: now,
-    };
-
-    data.proposals.unshift(newProposal);
-    writeData(data);
-    return newProposal;
-  },
-
-  async updateProposal(id: string, updates: Partial<Proposal>): Promise<Proposal | null> {
-    const data = ensureDataFile();
-    const index = data.proposals.findIndex((p) => p.id === id);
-    if (index === -1) return null;
-
-    data.proposals[index] = {
-      ...data.proposals[index],
-      ...updates,
-      updated_at: new Date().toISOString(),
-    };
-    writeData(data);
-    return data.proposals[index];
-  },
-
-  // AGENTS & QA
-  async getAgentByClientId(clientId: string): Promise<AgentRecord | null> {
-    const data = ensureDataFile();
-    return data.agents?.find((a) => a.client_id === clientId) || null;
-  },
-
-  async saveAgent(agentData: Partial<AgentRecord> & { client_id: string }): Promise<AgentRecord> {
-    const data = ensureDataFile();
-    if (!data.agents) data.agents = [];
-    const index = data.agents.findIndex((a) => a.client_id === agentData.client_id);
-    const now = new Date().toISOString();
-
-    if (index >= 0) {
-      data.agents[index] = {
-        ...data.agents[index],
-        ...agentData,
-        updated_at: now,
-      };
-      writeData(data);
-      return data.agents[index];
-    } else {
-      const newAgent: AgentRecord = {
-        id: "ag-" + Date.now().toString(36),
-        client_id: agentData.client_id,
-        niche: agentData.niche || "clinic",
-        prompt: agentData.prompt || "",
-        knowledge_base: agentData.knowledge_base || "",
-        test_report: agentData.test_report,
-        status: agentData.status || "draft",
-        created_at: now,
-        updated_at: now,
-      };
-      data.agents.push(newAgent);
-      writeData(data);
-      return newAgent;
-    }
-  },
-
   // MESSAGES
   async getMessages(clientId?: string): Promise<MessageRecord[]> {
     const data = ensureDataFile();
     if (clientId) {
-      return data.messages.filter((m) => m.client_id === clientId);
+      return data.messages.filter((m) => m.client_id === clientId || m.project_id === clientId);
     }
     return data.messages;
   },
@@ -814,6 +1857,7 @@ export const db = {
     const newMsg: MessageRecord = {
       id,
       client_id: msg.client_id || "",
+      project_id: msg.project_id,
       direction: msg.direction || "outbound",
       channel: msg.channel || "whatsapp",
       template: msg.template,
@@ -824,7 +1868,6 @@ export const db = {
 
     data.messages.unshift(newMsg);
 
-    // If outbound, increment client's outbound count
     if (msg.direction === "outbound" && msg.client_id) {
       const client = data.clients.find((c) => c.id === msg.client_id);
       if (client) {
@@ -836,12 +1879,47 @@ export const db = {
     return newMsg;
   },
 
+  // AGENTS
+  async getAgentByClientId(clientId: string): Promise<AgentRecord | null> {
+    const data = ensureDataFile();
+    return (data.agents || []).find((a) => a.client_id === clientId || a.project_id === clientId) || null;
+  },
+
+  async saveAgent(agentData: Partial<AgentRecord> & { client_id: string }): Promise<AgentRecord> {
+    const data = ensureDataFile();
+    if (!data.agents) data.agents = [];
+    const index = data.agents.findIndex((a) => a.client_id === agentData.client_id);
+    const now = new Date().toISOString();
+
+    if (index >= 0) {
+      data.agents[index] = { ...data.agents[index], ...agentData, updated_at: now };
+      writeData(data);
+      return data.agents[index];
+    } else {
+      const newAgent: AgentRecord = {
+        id: "ag-" + Date.now().toString(36),
+        client_id: agentData.client_id,
+        project_id: agentData.project_id,
+        niche: agentData.niche || "clinic",
+        prompt: agentData.prompt || "",
+        knowledge_base: agentData.knowledge_base || "",
+        test_report: agentData.test_report,
+        status: agentData.status || "draft",
+        created_at: now,
+        updated_at: now,
+      };
+      data.agents.push(newAgent);
+      writeData(data);
+      return newAgent;
+    }
+  },
+
   // ACTIVITY LOGS
   async getActivityLogs(limit = 30, clientId?: string): Promise<ActivityLogRecord[]> {
     const data = ensureDataFile();
     let logs = data.activity_log;
     if (clientId) {
-      logs = logs.filter((l) => l.client_id === clientId);
+      logs = logs.filter((l) => l.client_id === clientId || l.project_id === clientId);
     }
     return logs.slice(0, limit);
   },
@@ -878,7 +1956,7 @@ export const db = {
     return newLog;
   },
 
-  // JOBS (Background Queue with Idempotency)
+  // JOBS (Queue with Idempotency)
   async getJobs(): Promise<JobRecord[]> {
     const data = ensureDataFile();
     return data.jobs;
@@ -907,6 +1985,7 @@ export const db = {
       idempotency_key: job.idempotency_key,
       type: job.type || "generic",
       client_id: job.client_id,
+      project_id: job.project_id,
       payload: job.payload,
       run_at: job.run_at || new Date().toISOString(),
       attempts: 0,
@@ -954,7 +2033,7 @@ export const db = {
     const auto = data.automations.find((a) => a.id === id);
     if (!auto) return null;
     if (auto.level === 2) {
-      auto.level = 1; // Promoted to full auto!
+      auto.level = 1;
       auto.can_promote = false;
       writeData(data);
       await this.logActivity("user", "Automation Promoted", `Automation ${id} promoted to Level 1 (Auto)`);
@@ -983,7 +2062,7 @@ export const db = {
       } else {
         auto.consecutive_no_edit_approvals += 1;
         if (auto.consecutive_no_edit_approvals >= 15) {
-          auto.can_promote = true; // Surface promotion pill!
+          auto.can_promote = true;
         }
       }
       writeData(data);
@@ -1001,7 +2080,7 @@ export const db = {
     }
   },
 
-  // SECTION 7b: RECOMMENDATIONS (AI COPILOT)
+  // RECOMMENDATIONS (AI COPILOT)
   async getRecommendations(status = "active"): Promise<Recommendation[]> {
     const data = ensureDataFile();
     let recs = data.recommendations || [];
@@ -1017,6 +2096,7 @@ export const db = {
     const newRec: Recommendation = {
       id,
       client_id: rec.client_id,
+      project_id: rec.project_id,
       client_name: rec.client_name,
       type: rec.type || "forgotten_step",
       title: rec.title || "Next Best Action",
@@ -1057,23 +2137,47 @@ export const db = {
   },
 
   // SETTINGS & GLOBAL CONTROLS
-  async getSettings(): Promise<Record<string, any>> {
+  async getSettings(): Promise<Settings> {
     const data = ensureDataFile();
     return data.settings;
   },
 
-  async updateSettings(updates: Record<string, any>): Promise<Record<string, any>> {
+  async updateSettings(updates: Partial<Settings>): Promise<Settings> {
     const data = ensureDataFile();
+
+    // Bug 5: Block turning GST on without valid GSTIN
+    if (updates.gst_registered === true) {
+      const gstinCandidate = (updates.gstin !== undefined ? updates.gstin : data.settings.gstin || "").trim();
+      const gstRegex = /^[0-9]{2}[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}[1-9A-Za-z]{1}[Zz][0-9A-Za-z]{1}$/;
+      if (!gstRegex.test(gstinCandidate)) {
+        throw new Error("Cannot enable GST without a valid 15-character GSTIN (e.g. 29ABCDE1234F1Z5).");
+      }
+    }
+
+    const wasPaused = Boolean(data.settings.pause_all_outbound);
     data.settings = { ...data.settings, ...updates };
     writeData(data);
-    await this.logActivity("user", "Settings Updated", "Business settings updated");
+
+    // Bug 7: Send queued once upon resume
+    if (wasPaused && updates.pause_all_outbound === false) {
+      await this.flushQueuedMessages();
+    }
+
+    await this.logActivity("user", "Settings Updated", "Business settings and GST configuration updated");
     return data.settings;
   },
 
   async toggleGlobalKillSwitch(pause: boolean): Promise<boolean> {
     const data = ensureDataFile();
+    const wasPaused = Boolean(data.settings.pause_all_outbound);
     data.settings.pause_all_outbound = pause;
     writeData(data);
+
+    // Bug 7: Send queued once upon resume
+    if (wasPaused && !pause) {
+      await this.flushQueuedMessages();
+    }
+
     await this.logActivity(
       "user",
       pause ? "Global Kill Switch Activated" : "Global Kill Switch Deactivated",
@@ -1082,5 +2186,328 @@ export const db = {
         : "Outbound messaging resumed."
     );
     return pause;
+  },
+
+  // ==========================================
+  // SECTION 15 ZERO-TOUCH UPGRADE REPOSITORIES
+  // (Forward-compatible for Phases 10-12)
+  // ==========================================
+
+  // Z3: Templates Library
+  async getTemplates(niche?: string): Promise<TemplateRecord[]> {
+    const data = ensureDataFile();
+    const list = data.templates_library || [];
+    return niche ? list.filter((t) => t.niche === niche) : list;
+  },
+
+  async saveTemplate(template: Omit<TemplateRecord, "id" | "created_at" | "updated_at">): Promise<TemplateRecord> {
+    const data = ensureDataFile();
+    if (!data.templates_library) data.templates_library = [];
+    const now = new Date().toISOString();
+    const newTmpl: TemplateRecord = {
+      id: "tmpl-" + Date.now().toString(36),
+      ...template,
+      created_at: now,
+      updated_at: now,
+    };
+    data.templates_library.unshift(newTmpl);
+    writeData(data);
+    return newTmpl;
+  },
+
+  // Z5: Automated Quality Checks
+  async getQualityChecks(projectId: string): Promise<QualityCheckRecord[]> {
+    const data = ensureDataFile();
+    return (data.quality_checks || []).filter((q) => q.project_id === projectId);
+  },
+
+  async recordQualityCheck(qc: Omit<QualityCheckRecord, "id" | "created_at">): Promise<QualityCheckRecord> {
+    const data = ensureDataFile();
+    if (!data.quality_checks) data.quality_checks = [];
+    const newQc: QualityCheckRecord = {
+      id: "qc-" + Date.now().toString(36),
+      ...qc,
+      created_at: new Date().toISOString(),
+    };
+    data.quality_checks.unshift(newQc);
+    writeData(data);
+    return newQc;
+  },
+
+  // Z6: Content Versions & Previews
+  async getContentVersions(projectId: string): Promise<ContentVersionRecord[]> {
+    const data = ensureDataFile();
+    return (data.content_versions || []).filter((cv) => cv.project_id === projectId);
+  },
+
+  async saveContentVersion(cv: Omit<ContentVersionRecord, "id" | "created_at">): Promise<ContentVersionRecord> {
+    const data = ensureDataFile();
+    if (!data.content_versions) data.content_versions = [];
+    const newCv: ContentVersionRecord = {
+      id: "cv-" + Date.now().toString(36),
+      ...cv,
+      created_at: new Date().toISOString(),
+    };
+    data.content_versions.unshift(newCv);
+    writeData(data);
+    return newCv;
+  },
+
+  // Z10: Books & GST Ledger
+  async getLedgerEntries(projectId?: string): Promise<LedgerEntryRecord[]> {
+    const data = ensureDataFile();
+    const list = data.ledger || [];
+    return projectId ? list.filter((l) => l.project_id === projectId) : list;
+  },
+
+  async recordLedgerEntry(entry: Omit<LedgerEntryRecord, "id" | "created_at">): Promise<LedgerEntryRecord> {
+    const data = ensureDataFile();
+    if (!data.ledger) data.ledger = [];
+    const newEntry: LedgerEntryRecord = {
+      id: "ledg-" + Date.now().toString(36),
+      ...entry,
+      created_at: new Date().toISOString(),
+    };
+    data.ledger.unshift(newEntry);
+    writeData(data);
+    return newEntry;
+  },
+
+  // Z11: Freelancer Overflow
+  async getFreelancers(): Promise<FreelancerRecord[]> {
+    const data = ensureDataFile();
+    return data.freelancers || [];
+  },
+
+  async createFreelancer(fData: Omit<FreelancerRecord, "id" | "created_at" | "updated_at">): Promise<FreelancerRecord> {
+    const data = ensureDataFile();
+    if (!data.freelancers) data.freelancers = [];
+    const now = new Date().toISOString();
+    const newF: FreelancerRecord = {
+      id: "free-" + Date.now().toString(36),
+      ...fData,
+      created_at: now,
+      updated_at: now,
+    };
+    data.freelancers.unshift(newF);
+    writeData(data);
+    return newF;
+  },
+
+  async updateFreelancer(id: string, updates: Partial<FreelancerRecord>): Promise<FreelancerRecord | null> {
+    const data = ensureDataFile();
+    if (!data.freelancers) data.freelancers = [];
+    const idx = data.freelancers.findIndex((f) => f.id === id);
+    if (idx === -1) return null;
+    data.freelancers[idx] = { ...data.freelancers[idx], ...updates, updated_at: new Date().toISOString() };
+    writeData(data);
+    return data.freelancers[idx];
+  },
+
+  // QA Test Tools: Outbox & Dev Settings
+  async getOutbox(projectId?: string): Promise<OutboxItem[]> {
+    const data = ensureDataFile();
+    const list = data.outbox || [];
+    if (projectId) {
+      return list.filter((item) => item.project_id === projectId || item.client_id === projectId);
+    }
+    return list;
+  },
+
+  async recordOutbox(item: Omit<OutboxItem, "id" | "created_at">): Promise<OutboxItem> {
+    const data = ensureDataFile();
+    if (!data.outbox) data.outbox = [];
+    const newItem: OutboxItem = {
+      id: "out-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      status: item.status || "sent",
+      ...item,
+      created_at: getAppTimeISO(),
+    };
+    data.outbox.unshift(newItem);
+    writeData(data);
+    return newItem;
+  },
+
+  async clearOutbox(projectId?: string): Promise<void> {
+    const data = ensureDataFile();
+    if (projectId) {
+      data.outbox = (data.outbox || []).filter(
+        (item) => item.project_id !== projectId && item.client_id !== projectId
+      );
+    } else {
+      data.outbox = [];
+    }
+    writeData(data);
+  },
+
+  // Bug 1: OTP Store & Verification
+  async saveOtp(projectId: string, phone: string, clientId?: string): Promise<{ otp: string; record: OtpRecord }> {
+    const data = ensureDataFile();
+    if (!data.otps) data.otps = [];
+
+    // Invalidate earlier unused OTPs for this project
+    for (const o of data.otps) {
+      if ((o.project_id === projectId || o.client_id === clientId) && !o.used) {
+        o.used = true;
+      }
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const now = Date.now();
+    const record: OtpRecord = {
+      id: "otp-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+      project_id: projectId,
+      client_id: clientId,
+      phone,
+      otp: code,
+      attempts: 0,
+      max_attempts: 5,
+      expires_at: now + 10 * 60 * 1000, // 10 minutes
+      used: false,
+      created_at: getAppTimeISO(),
+    };
+    data.otps.unshift(record);
+    writeData(data);
+    return { otp: code, record };
+  },
+
+  async verifyOtp(projectId: string, inputCode: string): Promise<{ valid: boolean; error?: string }> {
+    const data = ensureDataFile();
+    if (!data.otps) data.otps = [];
+    const record = data.otps.find((o) => (o.project_id === projectId || o.client_id === projectId) && !o.used);
+    if (!record) {
+      return { valid: false, error: "No active OTP found. Please request a new code." };
+    }
+    const now = Date.now();
+    if (now > record.expires_at) {
+      record.used = true;
+      writeData(data);
+      return { valid: false, error: "OTP has expired (valid for 10 minutes). Please request a new code." };
+    }
+    if (record.attempts >= record.max_attempts) {
+      record.used = true;
+      writeData(data);
+      return { valid: false, error: "Maximum verification attempts (5) exceeded. Please request a new code." };
+    }
+
+    if (record.otp !== inputCode.trim()) {
+      record.attempts += 1;
+      writeData(data);
+      const remaining = record.max_attempts - record.attempts;
+      return {
+        valid: false,
+        error: `Incorrect OTP code. ${remaining > 0 ? `${remaining} attempt(s) remaining.` : "Maximum attempts reached. Please request a new code."}`,
+      };
+    }
+
+    record.used = true;
+    writeData(data);
+    return { valid: true };
+  },
+
+  // Bug 6: Idempotency Key Management
+  hasIdempotencyKey(key: string): boolean {
+    const data = ensureDataFile();
+    return Boolean(data.idempotency_keys?.includes(key));
+  },
+
+  recordIdempotencyKey(key: string): void {
+    const data = ensureDataFile();
+    if (!data.idempotency_keys) data.idempotency_keys = [];
+    if (!data.idempotency_keys.includes(key)) {
+      data.idempotency_keys.push(key);
+      writeData(data);
+    }
+  },
+
+  // Bug 7: Flush Queued Messages
+  async flushQueuedMessages(): Promise<number> {
+    const data = ensureDataFile();
+    let flushedCount = 0;
+    if (data.outbox) {
+      for (const item of data.outbox) {
+        if (item.status === "queued") {
+          item.status = "sent";
+          item.created_at = getAppTimeISO();
+          flushedCount++;
+        }
+      }
+    }
+    if (flushedCount > 0) {
+      writeData(data);
+      await this.logActivity("system", "Queued Messages Dispatched", `Resumed outbound dispatch: ${flushedCount} queued message(s) sent.`);
+    }
+    return flushedCount;
+  },
+
+  async getDevSettings(): Promise<DevSettings> {
+    const data = ensureDataFile();
+    if (!data.dev_settings) {
+      data.dev_settings = {
+        force_failure: {},
+        integrations: {
+          whatsapp: "mock",
+          email: "mock",
+          razorpay: "mock",
+          cal: "mock",
+          ai: "mock",
+        },
+      };
+      writeData(data);
+    }
+    return data.dev_settings;
+  },
+
+  async updateDevSettings(updates: Partial<DevSettings>): Promise<DevSettings> {
+    const data = ensureDataFile();
+    const current = await this.getDevSettings();
+    data.dev_settings = {
+      ...current,
+      ...updates,
+      force_failure: {
+        ...current.force_failure,
+        ...(updates.force_failure || {}),
+      },
+      integrations: {
+        ...current.integrations,
+        ...(updates.integrations || {}),
+      },
+    };
+    writeData(data);
+    return data.dev_settings;
+  },
+
+  async resetDemoData(): Promise<void> {
+    const freshSeed = getInitialSeed();
+    writeData(freshSeed);
+  },
+
+  async getAutomationRuns(automationId?: string): Promise<AutomationRunRecord[]> {
+    const data = ensureDataFile();
+    const runs = data.automation_runs || [];
+    if (automationId) {
+      return runs.filter((r) => r.automation_id === automationId).slice(0, 20);
+    }
+    return runs.slice(0, 50);
+  },
+
+  async recordAutomationRunEntry(entry: Omit<AutomationRunRecord, "id" | "created_at" | "run_time" | "run_time_ist">): Promise<AutomationRunRecord> {
+    const data = ensureDataFile();
+    if (!data.automation_runs) data.automation_runs = [];
+    const nowIso = getAppTimeISO();
+    const nowIst = getAppTimeIST();
+    const newRun: AutomationRunRecord = {
+      id: "run-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+      run_time: nowIso,
+      run_time_ist: nowIst,
+      created_at: nowIso,
+      ...entry,
+    };
+    data.automation_runs.unshift(newRun);
+    if (data.automation_runs.length > 500) {
+      data.automation_runs = data.automation_runs.slice(0, 500);
+    }
+    writeData(data);
+    return newRun;
   },
 };

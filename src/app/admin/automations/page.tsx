@@ -1,13 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { AutomationSetting } from "@/lib/types";
+import { AutomationSetting, AutomationRunRecord } from "@/lib/types";
 
 export default function AdminAutomationsPage() {
   const [automations, setAutomations] = useState<AutomationSetting[]>([]);
   const [loading, setLoading] = useState(true);
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [filterLevel, setFilterLevel] = useState<string>("all");
+  const [selectedAutoForLogs, setSelectedAutoForLogs] = useState<AutomationSetting | null>(null);
+  const [autoLogs, setAutoLogs] = useState<AutomationRunRecord[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
 
   const fetchAutomations = async () => {
     try {
@@ -92,6 +95,22 @@ export default function AdminAutomationsPage() {
       console.error("Failed to retry automation:", err);
     } finally {
       setRetryingId(null);
+    }
+  };
+
+  const openLogs = async (auto: AutomationSetting) => {
+    setSelectedAutoForLogs(auto);
+    setLoadingLogs(true);
+    try {
+      const res = await fetch(`/api/admin/automations?logs=true&automation_id=${auto.id}`);
+      const json = await res.json();
+      if (json.success) {
+        setAutoLogs(json.runs || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch logs:", err);
+    } finally {
+      setLoadingLogs(false);
     }
   };
 
@@ -308,6 +327,13 @@ export default function AdminAutomationsPage() {
                   </span>
                   <button
                     type="button"
+                    onClick={() => openLogs(auto)}
+                    className="px-2.5 py-1 rounded border border-[#C5BFDB] dark:border-[#3E4369] text-[#1B1F3B] dark:text-[#E2E0EE] hover:bg-[#EAE7F6] dark:hover:bg-[#25284B] font-semibold text-[10.5px] cursor-pointer"
+                  >
+                    Logs
+                  </button>
+                  <button
+                    type="button"
                     disabled={retryingId === auto.id}
                     onClick={() => handleRetry(auto.id)}
                     className="px-2.5 py-1 rounded bg-[#E7E5F1] text-[#1B1F3B] hover:bg-[#D5D2E8] font-semibold text-[10.5px] cursor-pointer disabled:opacity-50"
@@ -320,6 +346,105 @@ export default function AdminAutomationsPage() {
           ))
         )}
       </div>
+
+      {/* Logs Drawer Modal */}
+      {selectedAutoForLogs && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex justify-end">
+          <div className="w-full max-w-xl bg-white dark:bg-[#1B1F3B] h-full shadow-2xl flex flex-col border-l border-[#E2E0EE] dark:border-[#2F3356] animate-in slide-in-from-right duration-200">
+            {/* Drawer Header */}
+            <div className="p-4 border-b border-[#E2E0EE] dark:border-[#2F3356] flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-[#1B1F3B] dark:bg-[#FDB91F] text-white dark:text-[#1B1F3B]">
+                    {selectedAutoForLogs.id}
+                  </span>
+                  <h2 className="font-bold text-base text-[#1B1F3B] dark:text-white">
+                    {selectedAutoForLogs.name}
+                  </h2>
+                </div>
+                <p className="text-xs text-[#585D7A] dark:text-[#A6A9C6] mt-0.5">
+                  Execution history (last 20 runs)
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedAutoForLogs(null)}
+                className="p-1.5 rounded-lg hover:bg-[#F6F5FB] dark:hover:bg-[#25284B] text-[#585D7A] dark:text-[#A6A9C6] cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Drawer Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {loadingLogs ? (
+                <div className="py-12 text-center text-xs text-[#585D7A]">
+                  Loading execution logs…
+                </div>
+              ) : autoLogs.length === 0 ? (
+                <div className="py-12 text-center text-xs text-[#585D7A] space-y-2">
+                  <p>No runs recorded yet for {selectedAutoForLogs.id}.</p>
+                  <p className="text-[11px] opacity-75">
+                    Click "Trigger Run" on the card or run jobs via Dev Toolbar to generate a log entry.
+                  </p>
+                </div>
+              ) : (
+                autoLogs.map((run) => (
+                  <div
+                    key={run.id}
+                    className="p-3.5 rounded-xl border border-[#E2E0EE] dark:border-[#2F3356] bg-[#FDFDFD] dark:bg-[#15172C] space-y-2 text-xs"
+                  >
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-2 py-0.5 rounded-full font-bold uppercase text-[10px] ${
+                            run.result === "success"
+                              ? "bg-[#E4F3EB] text-[#2E7D5B] border border-[#BCE8B4]"
+                              : run.result === "failure"
+                              ? "bg-[#FFEAE5] text-[#D83A14] border border-[#FBC5B8]"
+                              : "bg-[#FAF0D7] text-[#9A6400] border border-[#F5DC9A]"
+                          }`}
+                        >
+                          {run.result}
+                        </span>
+                        <span className="font-semibold text-[#1B1F3B] dark:text-white">
+                          {run.project_name || "System"}
+                        </span>
+                        <span className="text-[11px] px-1.5 py-0.5 rounded bg-[#EAE7F6] dark:bg-[#25284B] text-[#585D7A] dark:text-[#A6A9C6]">
+                          {run.trigger}
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-mono text-[#727791]">
+                        {run.run_time_ist || new Date(run.run_time).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
+                      </span>
+                    </div>
+
+                    <div className="bg-white dark:bg-[#1B1F3B] p-2.5 rounded-lg border border-[#E2E0EE] dark:border-[#282B4B] text-[11.5px] font-mono text-[#383C56] dark:text-[#C5BFDB] whitespace-pre-wrap">
+                      {run.output_or_error}
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10.5px] text-[#727791]">
+                      <span>Retries: <b className="font-mono text-[#1B1F3B] dark:text-white">{run.retries || "0/3"}</b></span>
+                      <span className="font-mono text-[10px]">ID: {run.id}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="p-3 border-t border-[#E2E0EE] dark:border-[#2F3356] bg-[#F6F5FB] dark:bg-[#12142A] flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedAutoForLogs(null)}
+                className="px-4 py-1.5 rounded-lg bg-[#1B1F3B] dark:bg-[#FDB91F] text-white dark:text-[#1B1F3B] font-bold text-xs cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

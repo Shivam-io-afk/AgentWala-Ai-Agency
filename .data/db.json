@@ -1,978 +1,1516 @@
 {
   "clients": [
     {
-      "id": "c-mvg2xi22xfoz",
-      "name": "Joshi Dental Care",
-      "owner_name": "Dr. Sameer Joshi",
-      "phone": "+91 98201 99887",
-      "email": "",
-      "city": "Mumbai",
-      "niche": "Dental / Healthcare clinic",
-      "package": "growth",
-      "founding_offer": false,
-      "notes": "Lead source: Landing Page Demo Form. AI Diagnosis: Potential missed patient enquiries after 8 PM and during heavy appointment rush hours. Recommend instant call forwarding to 24×7 multilingual receptionist.",
-      "next_step": "20-min demo call via Google Meet: https://meet.google.com/aw-test-call",
-      "next_step_date": "2026-10-25",
-      "status": "active",
-      "portal_token": "tok_5i90rqnn",
-      "consent_at": "2026-10-20T02:44:03.622Z",
-      "source": "website_demo_form",
-      "checks": {
-        "l1": {
-          "key": "l1",
-          "done": true,
-          "done_at": "2026-10-20T02:44:03.622Z",
-          "done_by": "automation"
-        },
-        "l2": {
-          "key": "l2",
-          "done": true,
-          "done_at": "2026-10-20T02:44:03.622Z",
-          "done_by": "automation"
-        },
-        "c1": {
-          "key": "c1",
-          "done": true,
-          "done_at": "2026-10-20T02:44:03.622Z",
-          "done_by": "automation"
-        },
-        "b1": {
-          "key": "b1",
-          "done": true,
-          "done_at": "2026-10-20T02:44:04.373Z",
-          "done_by": "automation"
-        },
-        "b2": {
-          "key": "b2",
-          "done": true,
-          "done_at": "2026-10-20T02:44:04.378Z",
-          "done_by": "automation"
-        }
-      },
-      "created_at": "2026-10-20T02:44:03.626Z",
-      "updated_at": "2026-10-20T02:44:04.378Z",
-      "qualifying_answers": {
-        "calls_per_day": "30-50 calls/day",
-        "after_hours": "10-15 calls after hours",
-        "current_cost": "₹18,000/month front desk",
-        "preferred_time": "Normal hours"
-      }
-    },
-    {
       "id": "c-ex-1",
-      "name": "Sunrise Dental Clinic",
+      "name": "Example — Sunrise Dental Clinic",
       "owner_name": "Dr. Vikram Mehta",
       "phone": "+91 98200 45678",
       "email": "vikram@sunrisedental.in",
       "city": "Mumbai",
+      "state": "Maharashtra",
       "niche": "Dental clinic",
       "package": "growth",
       "founding_offer": false,
       "notes": "Owner requested 30-sec demo call on Friday. Needs Google Calendar booking.",
-      "next_step": "Call demo agent with doctor live on Friday",
-      "next_step_date": "2026-10-21",
+      "next_step": "Follow up on proposal acceptance within 48h",
+      "next_step_date": "2026-10-22",
       "status": "active",
       "portal_token": "tok_sunrise_dent_782",
-      "consent_at": "2026-10-19T02:44:03.624Z",
+      "consent_at": "2026-10-19T07:31:22.405Z",
       "source": "website_demo_form",
       "is_example": true,
+      "outbound_count": 1,
+      "qualifying_answers": {
+        "service_needed": "AI agent",
+        "budget_range": "₹35,000 setup + ₹19,999/mo",
+        "timeline": "Within 1 week",
+        "calls_per_day": "35 calls/day",
+        "after_hours": "12 calls after 8 PM",
+        "current_cost": "₹16,000/month front desk",
+        "preferred_time": "Evenings after 6 PM",
+        "description": "Needs 24/7 Hindi and English call answering and WhatsApp appointment scheduler."
+      },
       "checks": {
         "l1": {
           "key": "l1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
-        "l2": {
-          "key": "l2",
+        "p1": {
+          "key": "p1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
-          "done_by": "automation"
-        },
-        "l3": {
-          "key": "l3",
-          "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-20T07:54:35.863Z",
           "done_by": "user"
         },
-        "c1": {
-          "key": "c1",
+        "p2": {
+          "key": "p2",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
-          "done_by": "automation"
+          "done_at": "2026-10-20T07:54:36.292Z",
+          "done_by": "user"
         },
-        "c2": {
-          "key": "c2",
+        "h3": {
+          "key": "h3",
           "done": false,
           "done_by": "user"
         }
       },
-      "created_at": "2026-10-19T02:44:03.624Z",
-      "updated_at": "2026-10-20T02:44:03.624Z",
-      "qualifying_answers": {
-        "calls_per_day": "35 calls/day",
-        "after_hours": "12 calls after 8 PM",
-        "current_cost": "₹16,000/month front desk",
-        "preferred_time": "Evenings after 6 PM"
-      }
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-20T07:56:20.536Z"
     },
     {
       "id": "c-ex-2",
-      "name": "Dr. Batra Skin & Hair Care",
+      "name": "Example — Dr. Batra Skin & Hair Care",
       "owner_name": "Dr. Rohini Batra",
       "phone": "+91 99301 88221",
       "email": "dr.rohini@batraskin.com",
       "city": "Bengaluru",
+      "state": "Karnataka",
       "niche": "Skin & hair clinic",
-      "package": "pro",
-      "founding_offer": true,
-      "notes": "50 real questions ingested. Running AI automated simulation test suite.",
-      "next_step": "Review AI test report with doctor",
+      "package": "business_website",
+      "founding_offer": false,
+      "notes": "Proposal and Annex A sent to client portal. Waiting for client agreement OTP signature.",
+      "next_step": "Follow up with Dr. Batra on proposal review",
       "next_step_date": "2026-10-27",
       "status": "active",
       "portal_token": "tok_batra_skin_419",
-      "consent_at": "2026-10-19T02:44:03.624Z",
+      "consent_at": "2026-10-19T07:31:22.405Z",
       "source": "referral",
       "is_example": true,
+      "outbound_count": 2,
+      "qualifying_answers": {
+        "service_needed": "Website",
+        "budget_range": "₹59,999 (Founding 50% applied: ₹29,999)",
+        "timeline": "2 weeks",
+        "calls_per_day": "65 calls/day (2 doctors)",
+        "after_hours": "22 calls after hours & Sunday",
+        "current_cost": "₹28,000/month (2 receptionists)",
+        "preferred_time": "Morning 11 AM",
+        "description": "Up to 15 pages with CMS, treatment bookings, doctor bios, and integrated AI chat."
+      },
       "checks": {
         "l1": {
           "key": "l1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
         "l2": {
           "key": "l2",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
         "l3": {
           "key": "l3",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
-          "done_by": "user"
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
         },
         "c1": {
           "key": "c1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
         "c2": {
           "key": "c2",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
         "b1": {
           "key": "b1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
         "b2": {
           "key": "b2",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
         "b3": {
           "key": "b3",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
-        "m1": {
-          "key": "m1",
+        "r1": {
+          "key": "r1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "user"
         },
-        "m2": {
-          "key": "m2",
+        "r2": {
+          "key": "r2",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "user"
         },
-        "m3": {
-          "key": "m3",
+        "r3": {
+          "key": "r3",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
-          "done_by": "user"
-        },
-        "m4": {
-          "key": "m4",
-          "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "user"
         },
         "p1": {
           "key": "p1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
         "p2": {
           "key": "p2",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
-        "w1": {
-          "key": "w1",
+        "p3": {
+          "key": "p3",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
-          "done_by": "automation"
-        },
-        "w2": {
-          "key": "w2",
-          "done": true,
-          "done_at": "2026-10-20T02:44:04.690Z",
-          "done_by": "automation"
-        },
-        "w3": {
-          "key": "w3",
-          "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
-          "done_by": "automation"
-        },
-        "d1": {
-          "key": "d1",
-          "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
-          "done_by": "automation"
-        },
-        "d2": {
-          "key": "d2",
-          "done": false,
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         }
       },
-      "created_at": "2026-10-19T02:44:03.624Z",
-      "updated_at": "2026-10-20T02:44:04.690Z",
-      "qualifying_answers": {
-        "calls_per_day": "65 calls/day (2 doctors)",
-        "after_hours": "22 calls after hours & Sunday",
-        "current_cost": "₹28,000/month (2 receptionists)",
-        "preferred_time": "Morning 11 AM"
-      }
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-20T07:31:22.404Z"
     },
     {
       "id": "c-ex-3",
-      "name": "Nova Diagnostics & Imaging",
+      "name": "Example — Nova Diagnostics & Imaging",
       "owner_name": "Amitabh Sen",
       "phone": "+91 97110 33412",
       "email": "operations@novadiagnostics.in",
       "city": "Delhi NCR",
+      "state": "Delhi",
       "niche": "Diagnostic lab",
-      "package": "growth",
+      "package": "app_mvp",
       "founding_offer": false,
-      "notes": "Live for 3 weeks on WhatsApp & PBX. Over 800 blood test appointments booked.",
-      "next_step": "Review weekly transcript report",
+      "notes": "App MVP live on stores. Active on App Care Plan (₹4,999/mo).",
+      "next_step": "Monthly care plan update & review",
       "next_step_date": "2026-10-27",
       "status": "completed",
-      "portal_token": "tok_nova_diag_991",
-      "consent_at": "2026-10-19T02:44:03.624Z",
-      "source": "website_demo_form",
+      "portal_token": "tok_nova_diag_305",
+      "consent_at": "2026-10-19T07:31:22.405Z",
+      "source": "referral",
       "is_example": true,
+      "outbound_count": 5,
+      "qualifying_answers": {
+        "service_needed": "App",
+        "budget_range": "₹2,99,999",
+        "timeline": "6 weeks",
+        "calls_per_day": "120 calls/day",
+        "after_hours": "40 calls for report status",
+        "current_cost": "₹35,000/month front desk",
+        "preferred_time": "Afternoons",
+        "description": "Patient booking & automated test report download app for Android & iOS."
+      },
       "checks": {
         "l1": {
           "key": "l1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
         "l2": {
           "key": "l2",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
         "l3": {
           "key": "l3",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
-          "done_by": "user"
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
         },
         "c1": {
           "key": "c1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
         "c2": {
           "key": "c2",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
         "b1": {
           "key": "b1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
         "b2": {
           "key": "b2",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
         "b3": {
           "key": "b3",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
-        "m1": {
-          "key": "m1",
+        "r1": {
+          "key": "r1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "user"
         },
-        "m2": {
-          "key": "m2",
+        "r2": {
+          "key": "r2",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "user"
         },
-        "m3": {
-          "key": "m3",
+        "r3": {
+          "key": "r3",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
-          "done_by": "user"
-        },
-        "m4": {
-          "key": "m4",
-          "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "user"
         },
         "p1": {
           "key": "p1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
         "p2": {
           "key": "p2",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
+        },
+        "p3": {
+          "key": "p3",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "s1": {
+          "key": "s1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "client"
+        },
+        "s2": {
+          "key": "s2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "s3": {
+          "key": "s3",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "client"
         },
         "w1": {
           "key": "w1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
         "w2": {
           "key": "w2",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
-          "done_by": "automation"
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "user"
         },
         "w3": {
           "key": "w3",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
-          "done_by": "automation"
-        },
-        "d1": {
-          "key": "d1",
-          "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
-          "done_by": "automation"
-        },
-        "d2": {
-          "key": "d2",
-          "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
-          "done_by": "automation"
-        },
-        "d3": {
-          "key": "d3",
-          "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
-          "done_by": "automation"
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "user"
         },
         "v1": {
           "key": "v1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "user"
         },
         "v2": {
           "key": "v2",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "user"
         },
         "v3": {
           "key": "v3",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
-          "done_by": "automation"
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "client"
         },
         "f1": {
           "key": "f1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
-        "q1": {
-          "key": "q1",
+        "f2": {
+          "key": "f2",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         },
-        "q2": {
-          "key": "q2",
+        "h1": {
+          "key": "h1",
           "done": true,
-          "done_at": "2026-10-19T02:44:03.624Z",
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "user"
+        },
+        "h2": {
+          "key": "h2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "client"
+        },
+        "h3": {
+          "key": "h3",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
           "done_by": "automation"
         }
       },
-      "created_at": "2026-10-19T02:44:03.624Z",
-      "updated_at": "2026-10-20T02:44:03.624Z",
-      "qualifying_answers": {
-        "calls_per_day": "30-50 calls/day",
-        "after_hours": "10-15 calls after hours",
-        "current_cost": "₹18,000/month front desk",
-        "preferred_time": "Normal hours"
-      }
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-20T07:31:22.404Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "client_id": "c-ex-1",
+      "name": "Example — Sunrise Dental AI Receptionist",
+      "service_type": "ai_agent",
+      "package_id": "growth",
+      "price_paise": 3500000,
+      "monthly_paise": 1999900,
+      "founding_offer": false,
+      "milestone_plan": "50_50",
+      "revision_rounds_included": 2,
+      "revisions_used": 0,
+      "portal_token": "tok_sunrise_dent_782",
+      "status": "active",
+      "next_step": "Call demo agent with doctor live on Friday",
+      "next_step_date": "2026-10-21",
+      "checks": {
+        "l1": {
+          "key": "l1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "p1": {
+          "key": "p1",
+          "done": true,
+          "done_at": "2026-10-20T07:54:35.863Z",
+          "done_by": "user"
+        },
+        "p2": {
+          "key": "p2",
+          "done": true,
+          "done_at": "2026-10-20T07:54:36.292Z",
+          "done_by": "user"
+        },
+        "h3": {
+          "key": "h3",
+          "done": false,
+          "done_by": "user"
+        }
+      },
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-20T07:56:20.536Z"
+    },
+    {
+      "id": "proj-2",
+      "client_id": "c-ex-2",
+      "name": "Example — Dr. Batra Skin & Hair Website",
+      "service_type": "website",
+      "package_id": "business_website",
+      "price_paise": 5999900,
+      "monthly_paise": 199900,
+      "founding_offer": false,
+      "milestone_plan": "50_50",
+      "revision_rounds_included": 2,
+      "revisions_used": 0,
+      "portal_token": "tok_batra_skin_419",
+      "status": "active",
+      "next_step": "Follow up with Dr. Batra on proposal review",
+      "next_step_date": "2026-10-27",
+      "checks": {
+        "l1": {
+          "key": "l1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "l2": {
+          "key": "l2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "l3": {
+          "key": "l3",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "c1": {
+          "key": "c1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "c2": {
+          "key": "c2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "b1": {
+          "key": "b1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "b2": {
+          "key": "b2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "b3": {
+          "key": "b3",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "r1": {
+          "key": "r1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "user"
+        },
+        "r2": {
+          "key": "r2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "user"
+        },
+        "r3": {
+          "key": "r3",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "user"
+        },
+        "p1": {
+          "key": "p1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "p2": {
+          "key": "p2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "p3": {
+          "key": "p3",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        }
+      },
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-20T07:31:22.404Z"
+    },
+    {
+      "id": "proj-3",
+      "client_id": "c-ex-3",
+      "name": "Example — Nova Diagnostics Mobile App MVP",
+      "service_type": "app",
+      "package_id": "app_mvp",
+      "price_paise": 29999900,
+      "monthly_paise": 499900,
+      "founding_offer": false,
+      "milestone_plan": "40_30_30",
+      "revision_rounds_included": 2,
+      "revisions_used": 2,
+      "portal_token": "tok_nova_diag_305",
+      "status": "completed",
+      "next_step": "Monthly care plan update & review",
+      "next_step_date": "2026-10-27",
+      "checks": {
+        "l1": {
+          "key": "l1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "l2": {
+          "key": "l2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "l3": {
+          "key": "l3",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "c1": {
+          "key": "c1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "c2": {
+          "key": "c2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "b1": {
+          "key": "b1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "b2": {
+          "key": "b2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "b3": {
+          "key": "b3",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "r1": {
+          "key": "r1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "user"
+        },
+        "r2": {
+          "key": "r2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "user"
+        },
+        "r3": {
+          "key": "r3",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "user"
+        },
+        "p1": {
+          "key": "p1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "p2": {
+          "key": "p2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "p3": {
+          "key": "p3",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "s1": {
+          "key": "s1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "client"
+        },
+        "s2": {
+          "key": "s2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "s3": {
+          "key": "s3",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "client"
+        },
+        "w1": {
+          "key": "w1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "w2": {
+          "key": "w2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "user"
+        },
+        "w3": {
+          "key": "w3",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "user"
+        },
+        "v1": {
+          "key": "v1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "user"
+        },
+        "v2": {
+          "key": "v2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "user"
+        },
+        "v3": {
+          "key": "v3",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "client"
+        },
+        "f1": {
+          "key": "f1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "f2": {
+          "key": "f2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        },
+        "h1": {
+          "key": "h1",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "user"
+        },
+        "h2": {
+          "key": "h2",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "client"
+        },
+        "h3": {
+          "key": "h3",
+          "done": true,
+          "done_at": "2026-10-19T07:31:22.405Z",
+          "done_by": "automation"
+        }
+      },
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-20T07:31:22.404Z"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "req-2",
+      "project_id": "proj-2",
+      "features": [
+        "15 responsive pages (Home, Treatments, Doctors, Pricing, Gallery, Contact)",
+        "Integrated WhatsApp conversational widget",
+        "Direct Google Calendar consult booking",
+        "Custom blog for doctor SEO articles"
+      ],
+      "pages_screens": [
+        "Home",
+        "About",
+        "Treatments (10 subpages)",
+        "Doctors",
+        "Blog",
+        "Contact"
+      ],
+      "integrations": [
+        "Google Calendar",
+        "Razorpay",
+        "WhatsApp Cloud API"
+      ],
+      "content_owner": "Dr. Rohini Batra",
+      "deadline": "2026-10-27",
+      "budget_paise": 2999950,
+      "recorded_consent": true,
+      "raw_notes": "Focus on clean aesthetic, Before/After photo slider, and easy consult booking.",
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-20T07:31:22.404Z"
+    }
+  ],
+  "scopes": [
+    {
+      "id": "scope-2",
+      "project_id": "proj-2",
+      "version": 1,
+      "goal": "Modern high-converting 15-page website with CMS and WhatsApp booking",
+      "deliverables": [
+        "15 responsive custom-designed pages",
+        "Next.js + Tailwind modern frontend",
+        "Headless CMS for doctor blog posts & photos",
+        "Integrated AI appointment booking chat widget"
+      ],
+      "platforms": [
+        "Web (Desktop & Mobile)"
+      ],
+      "languages": [
+        "English",
+        "Hindi"
+      ],
+      "limits": [
+        "Up to 15 pages",
+        "2 revision rounds included"
+      ],
+      "not_included": [
+        "Custom mobile app",
+        "Copywriting beyond approved bullet points"
+      ],
+      "client_provides": [
+        "Doctor high-res photos",
+        "Clinic pricing sheet",
+        "Domain DNS access"
+      ],
+      "timeline_first_demo": "2026-10-19T07:31:22.405Z",
+      "timeline_handover": "2026-10-27",
+      "project_fee_paise": 2999950,
+      "monthly_fee_paise": 199900,
+      "advance_paise": 1500000,
+      "milestone_paise": 0,
+      "final_paise": 1499950,
+      "care_plan_paise": 199900,
+      "approved_by_founder": true,
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-20T07:31:22.404Z"
+    }
+  ],
+  "agreements": [
+    {
+      "id": "agr-2",
+      "project_id": "proj-2",
+      "client_id": "c-ex-2",
+      "version": 1,
+      "status": "sent",
+      "pdf_url": "/api/agreements/agr-2/pdf",
+      "document_hash": "a4f89921bc3847e1d5209341",
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-19T07:31:22.405Z"
+    },
+    {
+      "id": "agr-3",
+      "project_id": "proj-3",
+      "client_id": "c-ex-3",
+      "version": 1,
+      "status": "accepted",
+      "pdf_url": "/api/agreements/agr-3/pdf",
+      "document_hash": "b9c71283ea442010c7104882",
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-19T07:31:22.405Z"
+    }
+  ],
+  "agreement_acceptances": [
+    {
+      "id": "acc-3",
+      "agreement_id": "agr-3",
+      "project_id": "proj-3",
+      "typed_name": "Amitabh Sen",
+      "otp_code": "610294",
+      "otp_verified": true,
+      "otp_verified_at": "2026-10-19T07:31:22.405Z",
+      "ip_address": "103.21.124.55",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+      "document_hash": "b9c71283ea442010c7104882",
+      "created_at": "2026-10-19T07:31:22.405Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-1",
+      "project_id": "proj-2",
+      "title": "Integrate Before/After photo slider on Treatments page",
+      "category": "revision",
+      "hours_estimated": 2,
+      "due_date": "2026-10-21",
+      "done": false,
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-20T07:31:22.404Z"
+    },
+    {
+      "id": "task-2",
+      "project_id": "proj-2",
+      "title": "Connect Razorpay consultation checkout form",
+      "category": "build",
+      "hours_estimated": 3,
+      "due_date": "2026-10-19T07:31:22.405Z",
+      "done": true,
+      "done_at": "2026-10-19T07:31:22.405Z",
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-19T07:31:22.405Z"
+    },
+    {
+      "id": "task-3",
+      "project_id": "proj-1",
+      "title": "Clone demo voice receptionist and customize clinic prompt",
+      "category": "build",
+      "hours_estimated": 1.5,
+      "due_date": "2026-10-21",
+      "done": true,
+      "done_at": "2026-10-19T07:31:22.405Z",
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-20T07:31:22.404Z"
+    }
+  ],
+  "time_logs": [
+    {
+      "id": "time-1",
+      "project_id": "proj-2",
+      "task_id": "task-2",
+      "description": "Built custom Razorpay modal and webhook listener",
+      "hours": 2.5,
+      "logged_date": "2026-10-19",
+      "hourly_rate_paise": 100000,
+      "is_change_request": false,
+      "created_at": "2026-10-19T07:31:22.405Z"
+    }
+  ],
+  "deliveries": [
+    {
+      "id": "del-2-1",
+      "project_id": "proj-2",
+      "round_number": 1,
+      "type": "staging_link",
+      "url_or_number": "https://staging.batraskin.agentwala.in",
+      "notes": "First working demo of all 15 pages and WhatsApp appointment booking widget.",
+      "delivered_at": "2026-10-19T07:31:22.405Z",
+      "review_deadline": "2026-10-27"
+    }
+  ],
+  "revision_rounds": [
+    {
+      "id": "rev-2-1",
+      "project_id": "proj-2",
+      "round_number": 1,
+      "status": "in_progress",
+      "submitted_at": "2026-10-19T07:31:22.405Z",
+      "items": [
+        {
+          "id": "item-1",
+          "round_id": "rev-2-1",
+          "text": "Can we swap the consultation button color to deep emerald and adjust the clinic hours to 10 AM–8 PM?",
+          "ai_label": "revision",
+          "ai_reason": "In-scope change to text and button styling of existing pages.",
+          "founder_confirmed": true,
+          "is_change_request": false
+        },
+        {
+          "id": "item-2",
+          "round_id": "rev-2-1",
+          "text": "Also add an online pharmacy medicine ordering cart with delivery tracking.",
+          "ai_label": "new_feature",
+          "ai_reason": "Outside Annex A scope (15 content pages). Requires full e-commerce & cart backend.",
+          "founder_confirmed": true,
+          "is_change_request": true,
+          "change_request_id": "cr-2-1"
+        }
+      ]
+    }
+  ],
+  "change_requests": [
+    {
+      "id": "cr-2-1",
+      "project_id": "proj-2",
+      "title": "Online Pharmacy Medicine Store Module",
+      "description": "Product inventory, prescription upload flow, and order status notifications.",
+      "hours_quoted": 15,
+      "amount_paise": 1500000,
+      "status": "quoted",
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-20T07:31:22.404Z"
+    }
+  ],
+  "handovers": [
+    {
+      "id": "hand-3",
+      "project_id": "proj-3",
+      "invoice_paid": true,
+      "domain_transferred": true,
+      "source_code_transferred": true,
+      "repository_url": "https://github.com/nova-diagnostics/mobile-app-mvp",
+      "credentials_link": "https://agentwala.in/vault/one-time-tok-847291",
+      "credentials_expiry": "2026-10-19T07:31:22.405Z",
+      "agent_exported": true,
+      "documentation_url": "https://novadiagnostics.in/docs/app-guide.pdf",
+      "walkthrough_video_url": "https://loom.com/share/nova-app-walkthrough",
+      "warranty_start_date": "2026-10-19",
+      "warranty_end_date": "2026-11-18",
+      "care_plan_active": true,
+      "client_confirmed": true,
+      "client_confirmed_at": "2026-10-19T07:31:22.405Z",
+      "completion_cert_url": "/api/handovers/hand-3/certificate",
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-20T07:31:22.404Z"
+    }
+  ],
+  "usage_costs": [
+    {
+      "id": "cost-1",
+      "service": "ai",
+      "model_or_channel": "gemini-2.5-flash",
+      "units": 4200,
+      "cost_paise": 84,
+      "project_id": "proj-2",
+      "created_at": "2026-10-19T07:31:22.405Z"
+    },
+    {
+      "id": "cost-2",
+      "service": "voice",
+      "model_or_channel": "telephony-line",
+      "units": 120,
+      "cost_paise": 1600,
+      "project_id": "proj-1",
+      "created_at": "2026-10-19T07:31:22.405Z"
     }
   ],
   "invoices": [
     {
       "id": "inv-2-adv",
       "client_id": "c-ex-2",
+      "project_id": "proj-2",
       "invoice_number": "AW/2026-27/0001",
       "type": "advance",
-      "subtotal_paise": 1875000,
-      "gst_paise": 337500,
-      "total_paise": 2212500,
-      "status": "paid",
-      "due_date": "2026-10-19",
-      "paid_at": "2026-10-20T02:44:04.686Z",
-      "razorpay_payment_link_id": "plink_mock_adv_441",
-      "razorpay_payment_url": "https://rzp.io/i/mock_adv_441",
+      "subtotal_paise": 3000000,
+      "is_gst": false,
+      "cgst_paise": 0,
+      "sgst_paise": 0,
+      "igst_paise": 0,
+      "total_paise": 3000000,
+      "status": "sent",
+      "due_date": "2026-10-21",
+      "razorpay_payment_url": "https://rzp.io/i/mock_batra_adv_441",
       "pdf_url": "/api/invoices/inv-2-adv/pdf",
-      "created_at": "2026-10-19T02:44:03.624Z",
-      "updated_at": "2026-10-20T02:44:04.687Z"
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-19T07:31:22.405Z"
     },
     {
       "id": "inv-3-adv",
       "client_id": "c-ex-3",
+      "project_id": "proj-3",
       "invoice_number": "AW/2026-27/0002",
       "type": "advance",
-      "subtotal_paise": 1750000,
-      "gst_paise": 315000,
-      "total_paise": 2065000,
+      "subtotal_paise": 12000000,
+      "is_gst": false,
+      "cgst_paise": 0,
+      "sgst_paise": 0,
+      "igst_paise": 0,
+      "total_paise": 12000000,
       "status": "paid",
       "due_date": "2026-10-19",
-      "paid_at": "2026-10-19T02:44:03.624Z",
-      "razorpay_payment_url": "https://rzp.io/i/mock_adv_442",
+      "paid_at": "2026-10-19T07:31:22.405Z",
+      "razorpay_payment_url": "https://rzp.io/i/mock_nova_adv",
       "pdf_url": "/api/invoices/inv-3-adv/pdf",
-      "created_at": "2026-10-19T02:44:03.624Z",
-      "updated_at": "2026-10-19T02:44:03.624Z"
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-19T07:31:22.405Z"
+    },
+    {
+      "id": "inv-3-mid",
+      "client_id": "c-ex-3",
+      "project_id": "proj-3",
+      "invoice_number": "AW/2026-27/0003",
+      "type": "milestone",
+      "subtotal_paise": 9000000,
+      "is_gst": false,
+      "cgst_paise": 0,
+      "sgst_paise": 0,
+      "igst_paise": 0,
+      "total_paise": 9000000,
+      "status": "paid",
+      "due_date": "2026-10-19",
+      "paid_at": "2026-10-19T07:31:22.405Z",
+      "razorpay_payment_url": "https://rzp.io/i/mock_nova_mid",
+      "pdf_url": "/api/invoices/inv-3-mid/pdf",
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-19T07:31:22.405Z"
     },
     {
       "id": "inv-3-fin",
       "client_id": "c-ex-3",
-      "invoice_number": "AW/2026-27/0003",
+      "project_id": "proj-3",
+      "invoice_number": "AW/2026-27/0004",
       "type": "final",
-      "subtotal_paise": 3749900,
-      "gst_paise": 674982,
-      "total_paise": 4424900,
+      "subtotal_paise": 8999900,
+      "is_gst": false,
+      "cgst_paise": 0,
+      "sgst_paise": 0,
+      "igst_paise": 0,
+      "total_paise": 8999900,
       "status": "paid",
       "due_date": "2026-10-19",
-      "paid_at": "2026-10-19T02:44:03.624Z",
-      "razorpay_payment_url": "https://rzp.io/i/mock_fin_443",
+      "paid_at": "2026-10-19T07:31:22.405Z",
+      "razorpay_payment_url": "https://rzp.io/i/mock_nova_fin",
       "pdf_url": "/api/invoices/inv-3-fin/pdf",
-      "created_at": "2026-10-19T02:44:03.624Z",
-      "updated_at": "2026-10-19T02:44:03.624Z"
-    }
-  ],
-  "proposals": [
-    {
-      "id": "prop-1",
-      "client_id": "c-ex-1",
-      "version": 1,
-      "package_id": "growth",
-      "setup_paise": 3500000,
-      "monthly_paise": 1999900,
-      "gst_paise": 990000,
-      "total_first_bill_paise": 6489900,
-      "advance_paise": 2065000,
-      "scope_bullets": [
-        "AI Receptionist answering in Hindi & English",
-        "WhatsApp booking agent 24×7",
-        "Google Calendar slot integration"
-      ],
-      "status": "draft",
-      "created_at": "2026-10-19T02:44:03.624Z",
-      "updated_at": "2026-10-20T02:44:03.624Z"
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-19T07:31:22.405Z"
     },
     {
-      "id": "prop-2",
-      "client_id": "c-ex-2",
-      "version": 1,
-      "package_id": "pro",
-      "setup_paise": 3750000,
-      "monthly_paise": 4999900,
-      "gst_paise": 1575000,
-      "total_first_bill_paise": 10324900,
-      "advance_paise": 2212500,
-      "scope_bullets": [
-        "Multi-doctor queue routing",
-        "Skin analysis intake forms on WhatsApp",
-        "Founding 50% setup discount applied"
-      ],
-      "status": "accepted",
-      "accepted_at": "2026-10-19T02:44:03.624Z",
-      "accepted_name": "Dr. Rohini Batra",
-      "created_at": "2026-10-19T02:44:03.624Z",
-      "updated_at": "2026-10-20T02:44:03.624Z"
+      "id": "inv-3-care",
+      "client_id": "c-ex-3",
+      "project_id": "proj-3",
+      "invoice_number": "AW/2026-27/0005",
+      "type": "monthly",
+      "subtotal_paise": 499900,
+      "is_gst": false,
+      "cgst_paise": 0,
+      "sgst_paise": 0,
+      "igst_paise": 0,
+      "total_paise": 499900,
+      "status": "paid",
+      "due_date": "2026-10-19",
+      "paid_at": "2026-10-19T07:31:22.405Z",
+      "razorpay_payment_url": "https://rzp.io/i/mock_nova_care",
+      "pdf_url": "/api/invoices/inv-3-care/pdf",
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-19T07:31:22.405Z"
     }
   ],
+  "proposals": [],
   "messages": [
-    {
-      "id": "msg-mvg2xivo",
-      "client_id": "c-ex-2",
-      "direction": "outbound",
-      "channel": "whatsapp",
-      "template": "onboarding_request",
-      "body": "Payment received! Please fill your clinic intake form here: http://localhost:3000/p/tok_batra_skin_419",
-      "status": "sent",
-      "created_at": "2026-10-20T02:44:04.692Z"
-    },
-    {
-      "id": "msg-mvg2xi26",
-      "client_id": "c-mvg2xi22xfoz",
-      "direction": "outbound",
-      "channel": "whatsapp",
-      "template": "welcome_demo_v1",
-      "body": "Namaste Dr. Sameer Joshi! Thank you for requesting a demo for Joshi Dental Care. Our founder Samar will share a demo agent trained on your business in 48 hours.",
-      "status": "delivered",
-      "created_at": "2026-10-20T02:44:03.630Z"
-    },
     {
       "id": "msg-1",
       "client_id": "c-ex-1",
+      "project_id": "proj-1",
       "direction": "outbound",
       "channel": "whatsapp",
       "body": "Hello Dr. Vikram! Welcome to AgentWala. Test our demo receptionist at +91 80 4736 1234 or pick a 20-min slot.",
       "status": "delivered",
-      "created_at": "2026-10-19T02:44:03.624Z"
-    },
-    {
-      "id": "msg-2",
-      "client_id": "c-ex-2",
-      "direction": "outbound",
-      "channel": "whatsapp",
-      "body": "Your customized AI receptionist build is underway. Here is your test phone line.",
-      "status": "delivered",
-      "created_at": "2026-10-19T02:44:03.624Z"
+      "created_at": "2026-10-19T07:31:22.405Z"
     }
   ],
   "agents": [
     {
-      "id": "ag-2",
-      "client_id": "c-ex-2",
-      "niche": "Skin & hair clinic",
-      "prompt": "You are the AI receptionist for Dr. Batra Skin & Hair Care. Be polite, warm, and helpful in Hindi and English.",
-      "knowledge_base": "Timings: Mon-Sat 10 AM - 8 PM. Doctor consultation: ₹800. Location: Indiranagar 100ft road.",
+      "id": "ag-1",
+      "client_id": "c-ex-1",
+      "project_id": "proj-1",
+      "niche": "Dental clinic",
+      "prompt": "You are the AI Receptionist for Sunrise Dental Clinic. Answer politely in Hindi and English.",
+      "knowledge_base": "Timings: Mon-Sat 10 AM - 8 PM. Doctor consultation: ₹800. Indiranagar.",
       "status": "testing",
-      "created_at": "2026-10-19T02:44:03.624Z",
-      "updated_at": "2026-10-20T02:44:03.624Z"
+      "created_at": "2026-10-19T07:31:22.405Z",
+      "updated_at": "2026-10-20T07:31:22.404Z"
     }
   ],
   "jobs": [],
   "activity_log": [
     {
-      "id": "log-mvg2xivp7ze",
-      "client_id": "c-ex-2",
-      "actor": "automation",
-      "action": "Advance Payment Received (Razorpay A9)",
-      "detail": "Razorpay payment confirmed for AW/2026-27/0001. Ticked w2. Onboarding requested.",
-      "created_at": "2026-10-20T02:44:04.693Z"
+      "id": "log-mvge33k0emt",
+      "client_id": "c-ex-1",
+      "actor": "user",
+      "action": "Checklist h3 unmarked",
+      "detail": "Founder marked h3 as incomplete",
+      "confidence_score": 1,
+      "shadow": false,
+      "created_at": "2026-10-20T07:56:20.544Z"
     },
     {
-      "id": "log-mvg2xivns72",
-      "client_id": "c-ex-2",
-      "actor": "automation",
-      "action": "Checklist w2 completed",
-      "detail": "Automation marked w2 as done for Dr. Batra Skin & Hair Care",
-      "created_at": "2026-10-20T02:44:04.691Z"
+      "id": "log-mvge0v490zb",
+      "client_id": "c-ex-1",
+      "actor": "user",
+      "action": "Checklist p2 completed",
+      "detail": "Founder marked p2 as done",
+      "confidence_score": 1,
+      "shadow": false,
+      "created_at": "2026-10-20T07:54:36.297Z"
     },
     {
-      "id": "log-mvg2xin0csd",
-      "client_id": "c-mvg2xi22xfoz",
-      "actor": "automation",
-      "action": "Meeting Booked (Cal.com Webhook - A5 & A6)",
-      "detail": "Meeting confirmed for 2026-10-25. Demo agent cloned & personalised. Ticked b1 and b2.",
-      "created_at": "2026-10-20T02:44:04.380Z"
+      "id": "log-mvge0usezct",
+      "client_id": "c-ex-1",
+      "actor": "user",
+      "action": "Checklist p1 completed",
+      "detail": "Founder marked p1 as done",
+      "confidence_score": 1,
+      "shadow": false,
+      "created_at": "2026-10-20T07:54:35.870Z"
     },
     {
-      "id": "log-mvg2ximz6uv",
-      "client_id": "c-mvg2xi22xfoz",
-      "actor": "automation",
-      "action": "Checklist b2 completed",
-      "detail": "Automation marked b2 as done for Joshi Dental Care",
-      "created_at": "2026-10-20T02:44:04.379Z"
+      "id": "log-mvgdxxthujo",
+      "client_id": "c-ex-1",
+      "actor": "user",
+      "action": "Checklist p2 completed",
+      "detail": "Founder marked p2 as done",
+      "confidence_score": 1,
+      "shadow": false,
+      "created_at": "2026-10-20T07:52:19.830Z"
     },
     {
-      "id": "log-mvg2ximv4x1",
-      "client_id": "c-mvg2xi22xfoz",
-      "actor": "automation",
-      "action": "Checklist b1 completed",
-      "detail": "Automation marked b1 as done for Joshi Dental Care",
-      "created_at": "2026-10-20T02:44:04.375Z"
-    },
-    {
-      "id": "log-mvg2xi27oxi",
-      "client_id": "c-mvg2xi22xfoz",
-      "actor": "automation",
-      "action": "Mock Webhook Executed",
-      "detail": "[MOCK] Lead data prepared for Google Sheet sync: Dr. Sameer Joshi (Joshi Dental Care, +91 98201 99887)",
-      "created_at": "2026-10-20T02:44:03.631Z"
-    },
-    {
-      "id": "log-mvg2xi257d4",
-      "client_id": "c-mvg2xi22xfoz",
-      "actor": "automation",
-      "action": "Lead Created",
-      "detail": "New lead registered for Joshi Dental Care (+91 98201 99887)",
-      "created_at": "2026-10-20T02:44:03.629Z"
+      "id": "log-mvgdxvli2u3",
+      "client_id": "c-ex-1",
+      "actor": "user",
+      "action": "Checklist p1 completed",
+      "detail": "Founder marked p1 as done",
+      "confidence_score": 1,
+      "shadow": false,
+      "created_at": "2026-10-20T07:52:16.951Z"
     },
     {
       "id": "log-1",
       "client_id": "c-ex-3",
+      "project_id": "proj-3",
       "actor": "automation",
-      "action": "Final payment confirmed",
-      "detail": "Razorpay webhook paid final invoice AW/2026-27/0003. Ticked q1.",
-      "created_at": "2026-10-19T02:44:03.624Z"
+      "action": "Final payment received",
+      "detail": "Razorpay paid final invoice AW/2026-27/0002. Ticked f2.",
+      "trigger_event": "razorpay_webhook",
+      "confidence_score": 1,
+      "shadow": false,
+      "created_at": "2026-10-19T07:31:22.405Z"
     },
     {
       "id": "log-2",
       "client_id": "c-ex-2",
-      "actor": "automation",
-      "action": "Advance payment received",
-      "detail": "Advance ₹20,650 paid. Onboarding link sent to Dr. Rohini. Ticked w2.",
-      "created_at": "2026-10-19T02:44:03.624Z"
+      "project_id": "proj-2",
+      "actor": "client",
+      "action": "Agreement accepted via OTP",
+      "detail": "Dr. Rohini Batra verified OTP 849201 and accepted Master Service Agreement v1. Ticked s1.",
+      "trigger_event": "portal_otp",
+      "confidence_score": 1,
+      "shadow": false,
+      "created_at": "2026-10-19T07:31:22.405Z"
     },
     {
       "id": "log-3",
       "client_id": "c-ex-2",
-      "actor": "client",
-      "action": "Proposal accepted",
-      "detail": "Dr. Rohini Batra accepted Pro Proposal v1 via Client Portal. Ticked w1.",
-      "created_at": "2026-10-19T02:44:03.624Z"
+      "project_id": "proj-2",
+      "actor": "automation",
+      "action": "Advance invoice paid",
+      "detail": "Advance ₹15,000 received. Ticked s2.",
+      "trigger_event": "razorpay_webhook",
+      "confidence_score": 1,
+      "shadow": false,
+      "created_at": "2026-10-19T07:31:22.405Z"
     },
     {
       "id": "log-4",
       "client_id": "c-ex-1",
+      "project_id": "proj-1",
       "actor": "automation",
-      "action": "Lead created",
-      "detail": "Submitted demo form from landing page. AI extracted pain points. Ticked l1, l2.",
-      "created_at": "2026-10-19T02:44:03.624Z"
-    },
-    {
-      "id": "log-5",
-      "client_id": "c-ex-1",
-      "actor": "automation",
-      "action": "Welcome WhatsApp sent",
-      "detail": "Template sent with demo number +91 80 4736 1234. Ticked c1.",
-      "created_at": "2026-10-19T02:44:03.624Z"
+      "action": "Project enquiry registered",
+      "detail": "Website enquiry form captured for Sunrise Dental Clinic. Ticked l1–l3.",
+      "trigger_event": "website_enquiry_form",
+      "confidence_score": 1,
+      "shadow": false,
+      "created_at": "2026-10-19T07:31:22.405Z"
     }
   ],
   "automations": [
     {
       "id": "A1",
-      "name": "New lead from website form",
-      "description": "Creates client, ticks l1 & l2, runs AI pain summary, notifies founder",
+      "name": "Project enquiry captured",
+      "description": "Creates client + project, ticks l1–l3, notifies founder on WhatsApp",
+      "level": 1,
       "enabled": true,
+      "shadow_mode": false,
       "success_count": 14,
-      "failure_count": 0
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
     },
     {
       "id": "A2",
-      "name": "Welcome message",
-      "description": "Within 2 min sends WhatsApp template with demo number and booking link → ticks c1",
+      "name": "Welcome message with booking link",
+      "description": "WhatsApp + email with booking link within 2 min → ticks c1",
+      "level": 1,
       "enabled": true,
+      "shadow_mode": false,
       "success_count": 14,
-      "failure_count": 0
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
     },
     {
       "id": "A3",
-      "name": "Reply detection",
-      "description": "Inbound WhatsApp webhook ticks c2 and logs to messages tab",
+      "name": "Reply detection & pause nudges",
+      "description": "Inbound message or booking ticks c2 and pauses nudges for 48h",
+      "level": 1,
       "enabled": true,
+      "shadow_mode": false,
       "success_count": 11,
-      "failure_count": 0
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
     },
     {
       "id": "A4",
       "name": "Lead nurture",
       "description": "Follow-ups at 24h & 72h; marks cold if 3 messages unresponded",
+      "level": 1,
       "enabled": true,
+      "shadow_mode": false,
       "success_count": 9,
-      "failure_count": 0
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
     },
     {
       "id": "A5",
-      "name": "Meeting booked",
+      "name": "Booking webhook & calendar sync",
       "description": "Cal.com webhook ticks b1, schedules Meet URL, sets next step date",
+      "level": 1,
       "enabled": true,
+      "shadow_mode": false,
       "success_count": 7,
-      "failure_count": 0
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
     },
     {
       "id": "A6",
-      "name": "Demo agent prep",
-      "description": "Clones demo agent for client niche & personalises with business name → ticks b2",
+      "name": "Pre-meeting AI brief",
+      "description": "Public info research, 10 questions for service type, suggested package & price → ticks b2",
+      "level": 1,
       "enabled": true,
+      "shadow_mode": false,
       "success_count": 7,
-      "failure_count": 0
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
     },
     {
       "id": "A7",
       "name": "Meeting reminders",
       "description": "WhatsApp reminders 24h and 1h before meeting → ticks b3",
+      "level": 1,
       "enabled": true,
+      "shadow_mode": false,
       "success_count": 6,
-      "failure_count": 0
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
     },
     {
       "id": "A8",
-      "name": "Proposal follow-up",
-      "description": "Nudge after 48h and 5d if proposal unaccepted → ticks p2",
+      "name": "Scope & agreement dispatch",
+      "description": "After founder approves scope: sends agreement + quote to portal → ticks p2; follows up at 48h → p3",
+      "level": 1,
       "enabled": true,
+      "shadow_mode": false,
       "success_count": 5,
-      "failure_count": 0
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
     },
     {
       "id": "A9",
-      "name": "Accept and advance",
-      "description": "Portal accept ticks w1 → creates Razorpay link → on payment ticks w2",
+      "name": "Agreement accepted & advance invoice",
+      "description": "Portal accept ticks s1 → creates Razorpay link → on payment ticks s2 → generates invoice",
+      "level": 1,
       "enabled": true,
+      "shadow_mode": false,
       "success_count": 4,
-      "failure_count": 0
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
     },
     {
       "id": "A10",
-      "name": "Onboarding collection",
-      "description": "Sends onboarding form link after advance → on submission ticks w3",
+      "name": "Kickoff content & assets checklist",
+      "description": "Sends onboarding upload checklist, nudges every 3 days → ticks s3 when complete",
+      "level": 1,
       "enabled": true,
+      "shadow_mode": false,
       "success_count": 4,
-      "failure_count": 0
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
     },
     {
       "id": "A11",
-      "name": "Agent build draft",
-      "description": "AI generates system prompt & knowledge base from onboarding answers → ticks d1",
+      "name": "Work plan generator",
+      "description": "AI generates tasks and milestones from scope deliverables with due dates → ticks w1",
+      "level": 1,
       "enabled": true,
+      "shadow_mode": false,
       "success_count": 4,
-      "failure_count": 0
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
     },
     {
       "id": "A12",
-      "name": "Automated testing",
-      "description": "Generates 50 questions, grades answers, checks ≥90% pass rate → ticks d2",
+      "name": "Weekly client update",
+      "description": "Friday 5 PM AI writes short progress note from ticked tasks & hours, shadow mode until approved",
+      "level": 2,
       "enabled": true,
+      "shadow_mode": true,
       "success_count": 3,
-      "failure_count": 0
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 10
     },
     {
       "id": "A13",
-      "name": "Client test approval",
-      "description": "Sends test phone link, client approves in portal → ticks d3",
+      "name": "Delivery shared & review timer",
+      "description": "Founder uploads link/demo → auto notifies client, starts 7-day review timer → ticks w3",
+      "level": 1,
       "enabled": true,
+      "shadow_mode": false,
       "success_count": 3,
-      "failure_count": 0
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
     },
     {
       "id": "A14",
-      "name": "Final bill",
-      "description": "When v1 & v2 ticked, generates GST invoice for final bill → ticks f1",
-      "enabled": true,
-      "success_count": 2,
-      "failure_count": 0
-    },
-    {
-      "id": "A15",
-      "name": "Payment received",
-      "description": "Razorpay webhook on final bill → ticks q1 → starts monthly subscription",
-      "enabled": true,
-      "success_count": 2,
-      "failure_count": 0
-    },
-    {
-      "id": "A16",
-      "name": "Review request",
-      "description": "3 days after final payment sends Google review request → ticks q2",
-      "enabled": true,
-      "success_count": 2,
-      "failure_count": 0
-    },
-    {
-      "id": "A17",
-      "name": "Weekly transcript review",
-      "description": "Monday AI review of volume, bookings & missed queries → ticks v3 on 1st run",
-      "enabled": true,
-      "success_count": 2,
-      "failure_count": 0
-    },
-    {
-      "id": "A18",
-      "name": "Monthly client report",
-      "description": "1st of month emails PDF report of calls, bookings, hours saved",
-      "enabled": true,
-      "success_count": 2,
-      "failure_count": 0
-    },
-    {
-      "id": "A19",
-      "name": "Monthly invoices & dunning",
-      "description": "Retainer invoices + reminders at +3, +7 and +14 days",
-      "enabled": true,
-      "success_count": 1,
-      "failure_count": 0
-    },
-    {
-      "id": "A20",
-      "name": "Founder daily digest",
-      "description": "9:00 AM IST WhatsApp summary of meetings, overdue steps, revenue",
-      "enabled": true,
-      "success_count": 14,
-      "failure_count": 0
-    },
-    {
-      "id": "A21",
-      "name": "AI qualifying call",
-      "description": "Voice agent calls lead (10 AM–7 PM IST), qualifies calls & cost, pre-fills m2",
-      "level": 2,
-      "enabled": true,
-      "shadow_mode": true,
-      "success_count": 0,
-      "failure_count": 0,
-      "consecutive_no_edit_approvals": 0
-    },
-    {
-      "id": "A22",
-      "name": "Meeting notes from recording",
-      "description": "AI parses Google Meet audio / voice note, suggests m1–m4 with quotes and drafts proposal",
-      "level": 2,
-      "enabled": true,
-      "shadow_mode": true,
-      "success_count": 0,
-      "failure_count": 0,
-      "consecutive_no_edit_approvals": 0
-    },
-    {
-      "id": "A23",
-      "name": "Standard proposal auto-send",
-      "description": "Auto-sends standard package proposals after 2-hour cancel window if AI confidence high",
-      "level": 2,
-      "enabled": true,
-      "shadow_mode": true,
-      "success_count": 0,
-      "failure_count": 0,
-      "consecutive_no_edit_approvals": 0
-    },
-    {
-      "id": "A24",
-      "name": "Go-live gate",
-      "description": "Enforces number connection unlock strictly when d2 ≥ 90% and client approved (d3)",
-      "level": 3,
+      "name": "Revision engine & deemed acceptance",
+      "description": "Tracks round 1 & 2 submissions; deemed accepted on day 7 if silent → ticks v1–v3",
+      "level": 1,
       "enabled": true,
       "shadow_mode": false,
       "success_count": 2,
       "failure_count": 0,
-      "consecutive_no_edit_approvals": 0
+      "consecutive_no_edit_approvals": 15
+    },
+    {
+      "id": "A15",
+      "name": "Milestone and final invoices",
+      "description": "Dispatches final invoice on review complete → ticks f1; payment webhook → ticks f2",
+      "level": 1,
+      "enabled": true,
+      "shadow_mode": false,
+      "success_count": 2,
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
+    },
+    {
+      "id": "A16",
+      "name": "Handover kit generator",
+      "description": "Builds Annex B kit, completion cert, one-time credentials link → ticks h1 draft; client confirms → ticks h2",
+      "level": 1,
+      "enabled": true,
+      "shadow_mode": false,
+      "success_count": 2,
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
+    },
+    {
+      "id": "A17",
+      "name": "Warranty, care plan & review request",
+      "description": "Starts 30-day warranty, monthly care plan subscription, and requests Google review 3 days later → ticks h3",
+      "level": 1,
+      "enabled": true,
+      "shadow_mode": false,
+      "success_count": 2,
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
+    },
+    {
+      "id": "A18",
+      "name": "Warranty expiry care plan offer",
+      "description": "7 days before warranty ends, sends automated care plan proposal",
+      "level": 1,
+      "enabled": true,
+      "shadow_mode": false,
+      "success_count": 1,
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
+    },
+    {
+      "id": "A19",
+      "name": "Monthly billing & dunning",
+      "description": "Retainer & care plan invoices with reminders at +3, +7 and +14 days",
+      "level": 1,
+      "enabled": true,
+      "shadow_mode": false,
+      "success_count": 1,
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
+    },
+    {
+      "id": "A20",
+      "name": "Founder daily 9:00 AM digest",
+      "description": "WhatsApp summary of today's meetings, top 3 Copilot actions, money in/out, failures",
+      "level": 1,
+      "enabled": true,
+      "shadow_mode": false,
+      "success_count": 14,
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 15
     }
   ],
-  "settings": {
-    "name": "AgentWala",
-    "tagline": "AI receptionists & autonomous agents for Indian businesses",
-    "DEMO_NUMBER": "+91 80 4736 1234",
-    "DEMO_NUMBER_RAW": "+918047361234",
-    "WHATSAPP_NUMBER": "+91 98200 12345",
-    "WHATSAPP_NUMBER_RAW": "+919820012345",
-    "EMAIL": "hello@agentwala.in",
-    "CITY": "Mumbai",
-    "FOUNDER_NAME": "Samar",
-    "FOUNDER_PHOTO": "/founder.jpg",
-    "GSTIN": "27AABCU9603R1ZM",
-    "LEGAL_NAME": "AgentWala Technologies Private Limited",
-    "PAN": "AABCU9603R",
-    "ADDRESS": "402, Lotus Grandeur, Veera Desai Road, Andheri West, Mumbai, Maharashtra 400053",
-    "BOOKING_LINK": "https://cal.com/agentwala/20min",
-    "BANK_NAME": "HDFC Bank",
-    "ACCOUNT_NUMBER": "50200083921029",
-    "IFSC_CODE": "HDFC0000083",
-    "UPI_ID": "agentwala@okhdfcbank",
-    "razorpay_status": "mock",
-    "whatsapp_status": "mock",
-    "email_status": "mock",
-    "cal_status": "mock",
-    "ai_status": "mock",
-    "pause_all_outbound": false,
-    "copilot_language": "hinglish"
-  },
   "recommendations": [
     {
       "id": "rec-1",
+      "client_id": "c-ex-2",
+      "project_id": "proj-2",
+      "client_name": "Dr. Batra Skin & Hair Care",
+      "type": "scope_creep",
+      "title": "New feature detected in Revision Round 1: Pharmacy Store",
+      "reason": "Client requested an online pharmacy medicine store with delivery tracking. AI labeled this as a New Feature (outside Annex A). Confirm change request quote.",
+      "why_rule": "Revision Engine: item classified as 'new_feature' requires founder approval before billing.",
+      "action_label": "Review Change Request",
+      "action_type": "navigate",
+      "action_payload": {
+        "url": "/admin/clients/c-ex-2"
+      },
+      "priority": "high",
+      "money_at_risk_rupees": 15000,
+      "status": "active",
+      "created_at": "2026-10-20T07:31:22.404Z"
+    },
+    {
+      "id": "rec-2",
       "client_id": "c-ex-1",
+      "project_id": "proj-1",
       "client_name": "Sunrise Dental Clinic",
       "type": "money_at_risk",
-      "title": "Friday demo call live walkthrough scheduled",
-      "reason": "Dr. Vikram Mehta wants a live call demo on Friday. Setup line ready karo taaki call par smooth transition ho.",
-      "why_rule": "Lead has been in Contacted stage for 1 day. Next step date set for tomorrow.",
+      "title": "Friday demo walkthrough scheduled",
+      "reason": "Dr. Vikram Mehta wants a live phone call demo. Pre-meeting brief ready (A6).",
+      "why_rule": "Lead in Qualified stage with scheduled meeting date.",
       "action_label": "Open Client Detail",
       "action_type": "navigate",
       "action_payload": {
         "url": "/admin/clients/c-ex-1"
       },
       "priority": "high",
-      "money_at_risk_rupees": 20650,
+      "money_at_risk_rupees": 35000,
       "status": "active",
-      "created_at": "2026-10-20T03:02:42.736Z"
-    },
-    {
-      "id": "rec-2",
-      "client_id": "c-ex-2",
-      "client_name": "Dr. Batra Skin & Hair Care",
-      "type": "forgotten_step",
-      "title": "AI simulation 96% pass ho gayi hai. Test call send karo!",
-      "reason": "50 real patient queries ingest ho chuke hain aur 96% pass rate hai. Portal approval link doctor ko bhej kar go-live confirm karo.",
-      "why_rule": "Automation A12 passed with >=90%. Stage 7 (Building) ready for client approval (d3).",
-      "action_label": "Review Test Report",
-      "action_type": "navigate",
-      "action_payload": {
-        "url": "/admin/clients/c-ex-2"
-      },
-      "priority": "high",
-      "money_at_risk_rupees": 58999,
-      "status": "active",
-      "created_at": "2026-10-20T03:02:42.736Z"
-    },
-    {
-      "id": "rec-3",
-      "type": "coaching",
-      "title": "Weekly Business Coaching: 3 active clients, goal is 5",
-      "reason": "Current pipeline value ₹1,23,898 hai. Dental aur Skin niches mein 100% conversion dikh raha hai. Do new leads nurture karo.",
-      "why_rule": "Monday coaching engine target comparison vs settings target (5 clients by Month 3).",
-      "action_label": "View Pipeline",
-      "action_type": "navigate",
-      "action_payload": {
-        "url": "/admin/pipeline"
-      },
-      "priority": "medium",
-      "status": "active",
-      "created_at": "2026-10-20T03:02:42.736Z"
+      "created_at": "2026-10-20T07:31:22.404Z"
     }
-  ]
+  ],
+  "settings": {
+    "agency_name": "AgentWala",
+    "tagline": "AI Agents, WhatsApp Bots, Websites & Apps",
+    "founder_name": "Samar",
+    "founder_title": "Founder & Lead Engineer",
+    "phone": "+91 98200 12345",
+    "email": "hello@agentwala.in",
+    "city": "Mumbai",
+    "state": "Karnataka",
+    "address": "100 Feet Road, Indiranagar, Bengaluru, Karnataka 560038",
+    "gst_registered": false,
+    "gstin": "",
+    "udyam_number": "UDYAM-KR-03-0012345",
+    "pan": "ABCDE1234F",
+    "sac_code": "998313",
+    "bank_name": "HDFC Bank",
+    "account_name": "AgentWala Solutions",
+    "account_number": "50200012345678",
+    "ifsc": "HDFC0001234",
+    "upi_id": "agentwala@okhdfcbank",
+    "ai_monthly_cap_inr": 5000,
+    "voice_monthly_cap_inr": 3000,
+    "hourly_change_rate_inr": 1000,
+    "pause_all_outbound": false,
+    "copilot_language": "hinglish",
+    "working_hours": "10 AM - 7 PM IST",
+    "quiet_hours": "9 PM - 9 AM IST",
+    "target_clients_month_3": 5,
+    "target_mrr_month_6": 200000
+  },
+  "templates_library": [],
+  "quality_checks": [],
+  "content_versions": [],
+  "ledger": [],
+  "freelancers": [],
+  "otps": [],
+  "queued_messages": [],
+  "idempotency_keys": []
 }

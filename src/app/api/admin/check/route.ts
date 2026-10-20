@@ -5,7 +5,8 @@ import { calculateBill, formatINR, rupeesToPaise } from "@/lib/pricing";
 
 export async function POST(req: NextRequest) {
   try {
-    const { clientId, key, done, doneBy = "user" } = await req.json();
+    const { clientId, key, done, doneBy = "user", source } = await req.json();
+    const effectiveDoneBy = (source || doneBy) as "user" | "automation" | "client";
 
     if (!clientId || !key) {
       return NextResponse.json(
@@ -14,7 +15,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const updatedClient = await db.updateCheck(clientId, key as StageKey, Boolean(done), doneBy);
+    const FOUNDER_ONLY_KEYS: StageKey[] = ["r1", "r2", "r3", "w2", "w3", "h1"];
+    if (effectiveDoneBy === "automation" && FOUNDER_ONLY_KEYS.includes(key as StageKey)) {
+      await db.logActivity(
+        "system",
+        `Blocked automation tick on founder-only key ${key}`,
+        `Automation attempted to tick founder-only checklist item ${key}. Blocked server-side.`,
+        clientId
+      );
+      return NextResponse.json(
+        { success: false, error: `Key ${key} is founder-only and cannot be ticked by automation` },
+        { status: 400 }
+      );
+    }
+
+    const result = await db.updateCheck(clientId, key as StageKey, Boolean(done), effectiveDoneBy);
+    const updatedClient = result?.client || (await db.getClientById(clientId));
     if (!updatedClient) {
       return NextResponse.json({ success: false, error: "Client not found" }, { status: 404 });
     }
@@ -74,7 +90,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, client: updatedClient });
+    return NextResponse.json({ success: true, client: updatedClient, project: result?.project });
   } catch (err: any) {
     console.error("Check API error:", err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });

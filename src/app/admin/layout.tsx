@@ -14,9 +14,33 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
+  React.useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (pathname === "/admin") {
+      document.title = "Pipeline · AgentWala OS";
+    } else if (pathname.startsWith("/admin/clients/")) {
+      // client detail page sets its own document.title
+    } else if (pathname.startsWith("/admin/automations")) {
+      document.title = "Automations · AgentWala OS";
+    } else if (pathname.startsWith("/admin/work")) {
+      document.title = "Work Board · AgentWala OS";
+    } else if (pathname.startsWith("/admin/invoices")) {
+      document.title = "Invoices · AgentWala OS";
+    } else if (pathname.startsWith("/admin/messages")) {
+      document.title = "Messages · AgentWala OS";
+    } else if (pathname.startsWith("/admin/proposals")) {
+      document.title = "Proposals · AgentWala OS";
+    } else if (pathname.startsWith("/admin/settings")) {
+      document.title = "Settings · AgentWala OS";
+    } else {
+      document.title = "Pipeline · AgentWala OS";
+    }
+  }, [pathname]);
+
   const navItems = [
     { label: "Dashboard", href: "/admin" },
     { label: "Pipeline", href: "/admin/pipeline" },
+    { label: "My Work", href: "/admin/work" },
     { label: "Invoices", href: "/admin/invoices" },
     { label: "Automations", href: "/admin/automations" },
     { label: "Templates", href: "/admin/templates" },
@@ -95,6 +119,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <div className="w-8 h-8 rounded-full bg-[#FAF0D7] text-[#9A6400] text-xs font-bold flex items-center justify-center border border-[#EEDB9F]">
               AW
             </div>
+
+            <button
+              type="button"
+              onClick={async () => {
+                await fetch("/api/auth/logout", { method: "POST" });
+                window.location.href = "/login";
+              }}
+              className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#E2E0EE] dark:border-[#2F3356] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+              title="Log out of founder session"
+            >
+              Logout
+            </button>
 
             {/* Mobile menu trigger */}
             <button

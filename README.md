@@ -215,3 +215,5 @@ export const VERTICALS: Record<string, VerticalContent> = {
 | `AI_API_KEY` | Gemini or Anthropic Claude API Key | Optional (uses simulation engine if absent) |
 | `AI_PROVIDER` | `gemini` or `anthropic` | Optional (default: `gemini`) |
 
+
+# AgentWala-Ai-Agency-

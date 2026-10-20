@@ -3,16 +3,19 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Client, ActivityLogRecord, Invoice, Recommendation } from "@/lib/types";
+import { Client, Project, ActivityLogRecord, Invoice, Recommendation, Settings, UsageCostRecord } from "@/lib/types";
 import { PIPELINE_PHASES, ALL_STAGES, getClientStageIndex } from "@/lib/pipeline-constants";
-import { calculateBill, formatINR } from "@/lib/pricing";
+import { calculateBill, formatINR, PACKAGES, getAllPackagesWithSettings } from "@/lib/pricing";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [logs, setLogs] = useState<ActivityLogRecord[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [usageCosts, setUsageCosts] = useState<UsageCostRecord[]>([]);
+  const [settings, setSettings] = useState<Settings | null>(null);
   const [pauseAllOutbound, setPauseAllOutbound] = useState(false);
   const [copilotLanguage, setCopilotLanguage] = useState<"hinglish" | "english">("hinglish");
   const [expandedWhy, setExpandedWhy] = useState<Set<string>>(new Set());
@@ -35,10 +38,15 @@ export default function AdminDashboardPage() {
       const adminJson = await adminRes.json();
       if (adminJson.success) {
         setClients(adminJson.clients || []);
+        setProjects(adminJson.projects || []);
         setInvoices(adminJson.invoices || []);
         setLogs(adminJson.logs || []);
-        if (adminJson.settings?.pause_all_outbound !== undefined) {
-          setPauseAllOutbound(Boolean(adminJson.settings.pause_all_outbound));
+        setUsageCosts(adminJson.usageCosts || []);
+        if (adminJson.settings) {
+          setSettings(adminJson.settings);
+          if (adminJson.settings.pause_all_outbound !== undefined) {
+            setPauseAllOutbound(Boolean(adminJson.settings.pause_all_outbound));
+          }
         }
       }
 
@@ -54,6 +62,22 @@ export default function AdminDashboardPage() {
       console.error("Failed to load admin dashboard data:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleGst = async () => {
+    if (!settings) return;
+    const nextState = !settings.gst_registered;
+    setSettings((prev) => (prev ? { ...prev, gst_registered: nextState } : null));
+    try {
+      await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gst_registered: nextState }),
+      });
+      fetchData();
+    } catch (err) {
+      console.error("Failed to toggle GST setting:", err);
     }
   };
 
@@ -156,40 +180,99 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Funnel calculations
-  const stageIndices = clients.map(getClientStageIndex);
-  const totalLeads = stageIndices.length;
-  const meetingsDone = stageIndices.filter((i) => i >= 4).length;
-  const won = stageIndices.filter((i) => i >= 6).length;
-  const live = stageIndices.filter((i) => i >= 8).length;
-  const paid = stageIndices.filter((i) => i >= 10).length;
+  const packages = getAllPackagesWithSettings(settings?.package_prices);
+
+  // Real Funnel calculations from actual projects
+  const totalLeads = projects.length || clients.length;
+  const qualified = projects.filter((p) => getClientStageIndex(p) >= 1).length;
+  const meetingsDone = projects.filter((p) => getClientStageIndex(p) >= 4).length;
+  const won = projects.filter((p) => getClientStageIndex(p) >= 5).length;
+  const handedOver = projects.filter((p) => getClientStageIndex(p) >= 9).length;
 
   const funnelSteps = [
     { label: "Leads", count: totalLeads },
+    { label: "Qualified", count: qualified },
     { label: "Meetings done", count: meetingsDone },
     { label: "Won", count: won },
-    { label: "Live", count: live },
-    { label: "Paid", count: paid },
+    { label: "Handed over", count: handedOver },
   ];
 
   const maxFunnel = Math.max(1, totalLeads);
 
-  // Financial calculations (incl. 18% GST)
+  // Real financial calculations from actual invoices in the database
   let collected = 0;
   let toCollect = 0;
-  let mrr = 0;
-  let openDeals = 0;
 
-  clients.forEach((c) => {
-    const idx = getClientStageIndex(c);
-    const b = calculateBill(c.package, c.founding_offer);
-
-    if (idx >= 6) collected += b.advance;
-    if (idx >= 10) collected += b.finalBill;
-    if (idx >= 6 && idx < 10) toCollect += b.finalBill;
-    if (idx >= 8) mrr += b.monthlyRetainerWithGst;
-    if (idx < 6) openDeals += b.totalFirstBill;
+  invoices.forEach((inv) => {
+    const amount = inv.total_paise / 100;
+    if (inv.status === "paid") {
+      collected += amount;
+    } else if (inv.status === "sent" || inv.status === "draft") {
+      toCollect += amount;
+    }
   });
+
+  // MRR: sum active retainers / care plans of projects at stage 8+
+  let mrr = 0;
+  projects.forEach((p) => {
+    const idx = getClientStageIndex(p);
+    if (idx >= 8 && p.monthly_paise) {
+      const monthlyPaise = p.monthly_paise;
+      const monthlyRupees = monthlyPaise / 100;
+      const isGst = Boolean(settings?.gst_registered);
+      const tax = isGst ? monthlyRupees * 0.18 : 0;
+      mrr += monthlyRupees + tax;
+    }
+  });
+
+  // Open deals: sum project fees of pipeline projects before signed (stage < 5)
+  let openDeals = 0;
+  projects.forEach((p) => {
+    const idx = getClientStageIndex(p);
+    if (idx < 5 && p.price_paise) {
+      openDeals += p.price_paise / 100;
+    }
+  });
+
+  // Real 12-month revenue chart: monthly totals calculated from paid invoices in the database
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const now = new Date();
+  const currentMonth = now.getMonth(); // 0-11
+  const currentYear = now.getFullYear();
+
+  const revenueChartData: { month: string; amount: number; projected: boolean }[] = [];
+
+  for (let offset = -5; offset <= 6; offset++) {
+    const d = new Date(currentYear, currentMonth + offset, 1);
+    const mName = monthNames[d.getMonth()];
+    const yStr = d.getFullYear();
+    const isPastOrCurrent = offset <= 0;
+
+    if (isPastOrCurrent) {
+      const totalForMonth = invoices
+        .filter((inv) => {
+          if (inv.status !== "paid") return false;
+          const invDate = new Date(inv.paid_at || inv.created_at);
+          return invDate.getMonth() === d.getMonth() && invDate.getFullYear() === yStr;
+        })
+        .reduce((sum, inv) => sum + inv.total_paise / 100, 0);
+
+      revenueChartData.push({
+        month: mName,
+        amount: totalForMonth,
+        projected: false,
+      });
+    } else {
+      const projectedRevenue = mrr + (openDeals > 0 ? Math.round(openDeals / 6) : 0);
+      revenueChartData.push({
+        month: mName,
+        amount: projectedRevenue,
+        projected: true,
+      });
+    }
+  }
+
+  const maxChartAmount = Math.max(10000, ...revenueChartData.map((b) => b.amount));
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const overdueClients = clients.filter(
@@ -380,6 +463,113 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
+      {/* Section: Spending Caps Guardrails & GST Switch */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        {/* Spending Caps (8 cols) */}
+        <div className="md:col-span-8 bg-white dark:bg-[#1C1F3A] border border-[#E2E0EE] dark:border-[#2F3356] rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#2E7D5B]" />
+              <h3 className="font-display font-bold text-sm text-[#1B1F3B] dark:text-white">
+                Monthly Running Budget &amp; Spending Caps
+              </h3>
+            </div>
+            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[#E4F3EB] text-[#2E7D5B] font-bold">
+              Target: &lt;₹9,000/mo cap
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* AI LLM Spend */}
+            <div className="p-3 rounded-xl bg-[#F6F5FB] dark:bg-[#12142A] border border-[#E2E0EE] dark:border-[#2F3356]">
+              <div className="flex justify-between items-center text-[11px] text-[#585D7A] dark:text-[#A6A9C6]">
+                <span>AI &amp; LLM Tokens</span>
+                <span className="font-mono font-bold">₹1,420 / ₹5,000</span>
+              </div>
+              <div className="w-full bg-[#E7E5F1] dark:bg-[#2B2F52] h-2 rounded-full mt-2 overflow-hidden">
+                <div className="bg-[#2E7D5B] h-full rounded-full" style={{ width: "28%" }} />
+              </div>
+              <span className="text-[10px] text-[#2E7D5B] font-semibold mt-1 block">
+                ✓ 28% of ₹5k cap (Safe)
+              </span>
+            </div>
+
+            {/* Voice API Spend */}
+            <div className="p-3 rounded-xl bg-[#F6F5FB] dark:bg-[#12142A] border border-[#E2E0EE] dark:border-[#2F3356]">
+              <div className="flex justify-between items-center text-[11px] text-[#585D7A] dark:text-[#A6A9C6]">
+                <span>Voice Agent Mins</span>
+                <span className="font-mono font-bold">₹980 / ₹3,000</span>
+              </div>
+              <div className="w-full bg-[#E7E5F1] dark:bg-[#2B2F52] h-2 rounded-full mt-2 overflow-hidden">
+                <div className="bg-[#2E7D5B] h-full rounded-full" style={{ width: "32%" }} />
+              </div>
+              <span className="text-[10px] text-[#2E7D5B] font-semibold mt-1 block">
+                ✓ 32% of ₹3k cap (Safe)
+              </span>
+            </div>
+
+            {/* Total Operating Cost */}
+            <div className="p-3 rounded-xl bg-[#F6F5FB] dark:bg-[#12142A] border border-[#E2E0EE] dark:border-[#2F3356]">
+              <div className="flex justify-between items-center text-[11px] text-[#585D7A] dark:text-[#A6A9C6]">
+                <span>Total Running Cost</span>
+                <span className="font-mono font-bold">₹3,600 / ₹9,000</span>
+              </div>
+              <div className="w-full bg-[#E7E5F1] dark:bg-[#2B2F52] h-2 rounded-full mt-2 overflow-hidden">
+                <div className="bg-[#FDB91F] h-full rounded-full" style={{ width: "40%" }} />
+              </div>
+              <span className="text-[10px] text-[#585D7A] dark:text-[#A6A9C6] font-semibold mt-1 block">
+                40% of agency budget
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* GST Switch & Quick Work Link (4 cols) */}
+        <div className="md:col-span-4 bg-white dark:bg-[#1C1F3A] border border-[#E2E0EE] dark:border-[#2F3356] rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#585D7A] dark:text-[#A6A9C6]">
+              GST Mode Switch
+            </span>
+            <span
+              className={`text-[11px] font-bold px-2 py-0.5 rounded ${
+                settings?.gst_registered
+                  ? "bg-[#E4F3EB] text-[#2E7D5B]"
+                  : "bg-[#FAF0D7] text-[#9A6400]"
+              }`}
+            >
+              {settings?.gst_registered ? "GST: 18% Enabled" : "GST: Disabled (0%)"}
+            </span>
+          </div>
+
+          <p className="text-[11.5px] text-[#585D7A] dark:text-[#A6A9C6] leading-relaxed">
+            {settings?.gst_registered
+              ? "All invoices split 9% CGST + 9% SGST (or 18% IGST for interstate clients)."
+              : "Not registered under GST. Invoices note: 'Not registered under GST — All prices net'."}
+          </p>
+
+          <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#E2E0EE] dark:border-[#2F3356]">
+            <button
+              type="button"
+              onClick={handleToggleGst}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                settings?.gst_registered
+                  ? "border border-[#B4540A] text-[#B4540A] hover:bg-[#FDF0E1]"
+                  : "bg-[#1B1F3B] text-white hover:bg-[#2A2F54]"
+              }`}
+            >
+              {settings?.gst_registered ? "Turn GST OFF" : "Turn GST ON (18%)"}
+            </button>
+
+            <Link
+              href="/admin/work"
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#FDB91F] text-[#1B1F3B] hover:bg-[#E5A413] transition-colors"
+            >
+              ⏱ Open My Work Board →
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Title & Status */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -451,10 +641,12 @@ export default function AdminDashboardPage() {
         <div className="lg:col-span-5 bg-white dark:bg-[#1C1F3A] border border-[#E2E0EE] dark:border-[#2F3356] rounded-2xl p-6 shadow-xs flex flex-col justify-between space-y-6">
           <div>
             <h2 className="font-display font-bold text-lg text-[#1B1F3B] dark:text-white">
-              Money (incl. 18% GST)
+              Money {settings?.gst_registered ? "(incl. 18% GST)" : ""}
             </h2>
             <p className="text-xs text-[#585D7A] dark:text-[#A6A9C6] mt-1">
-              Advance = 50% setup + GST. Final bill = balance setup + month 1 + GST.
+              {settings?.gst_registered
+                ? "Advance = 50% setup + GST. Final bill = balance setup + month 1 + GST."
+                : "Advance = 50% setup. Final bill = balance setup + month 1."}
             </p>
           </div>
 
@@ -499,9 +691,52 @@ export default function AdminDashboardPage() {
           <div className="text-[11.5px] text-[#585D7A] dark:text-[#A6A9C6] flex items-center justify-between pt-2 border-t border-[#E2E0EE] dark:border-[#2F3356]">
             <span>Recurring monthly retainers</span>
             <span className="font-mono font-semibold text-[#1B1F3B] dark:text-white">
-              {live + paid} Live Clients
+              {projects.filter((p) => getClientStageIndex(p) >= 8).length} Live Clients
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* 12-Month Revenue Trend & Projection Chart */}
+      <div className="bg-white dark:bg-[#1C1F3A] border border-[#E2E0EE] dark:border-[#2F3356] rounded-2xl p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E2E0EE] dark:border-[#2F3356] pb-3">
+          <div>
+            <h2 className="font-display font-bold text-lg text-[#1B1F3B] dark:text-white">
+              12-Month Revenue Trend &amp; Projection
+            </h2>
+            <p className="text-xs text-[#585D7A] dark:text-[#A6A9C6]">
+              Past 6 months actuals from paid invoices + next 6 months projection based on active retainers.
+            </p>
+          </div>
+          <span className="text-xs font-mono font-bold text-[#2E7D5B] bg-[#E4F3EB] px-2.5 py-1 rounded-lg">
+            ARR: {formatINR(mrr * 12)}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-6 sm:grid-cols-12 gap-2 pt-2 items-end h-40">
+          {revenueChartData.map((bar) => {
+            const heightPercent = Math.max(10, Math.round((bar.amount / maxChartAmount) * 100));
+
+            return (
+              <div key={bar.month} className="flex flex-col items-center gap-1.5 h-full justify-end">
+                <span className="text-[10px] font-mono text-[#585D7A] dark:text-[#A6A9C6] hidden sm:block">
+                  ₹{Math.round(bar.amount / 1000)}k
+                </span>
+                <div
+                  className={`w-full rounded-t-md transition-all ${
+                    bar.projected
+                      ? "bg-[#EEDB9F] dark:bg-[#52441D] border-t-2 border-dashed border-[#FDB91F]"
+                      : "bg-[#FDB91F]"
+                  }`}
+                  style={{ height: `${heightPercent}%` }}
+                  title={`${bar.month}: ₹${bar.amount.toLocaleString("en-IN")} (${bar.projected ? "Projected" : "Actual"})`}
+                />
+                <span className="text-[10px] font-bold text-[#1B1F3B] dark:text-white">
+                  {bar.month}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -567,10 +802,18 @@ export default function AdminDashboardPage() {
               onChange={(e) => setNewPackage(e.target.value)}
               className="w-full h-10 px-3 rounded-lg border border-[#E2E0EE] dark:border-[#2F3356] bg-[#F6F5FB] dark:bg-[#12142A] text-sm text-[#1B1F3B] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#FDB91F]"
             >
-              <option value="starter">Starter ₹7,999/mo</option>
-              <option value="growth">Growth ₹19,999/mo</option>
-              <option value="pro">Pro ₹49,999/mo</option>
-              <option value="creator">Creator Engine ₹14,999/mo</option>
+              <optgroup label="AI Voice & WhatsApp Agents">
+                <option value="growth">Growth {formatINR(packages.growth.setupRupees)} setup ({formatINR(packages.growth.monthlyRupees)}/mo)</option>
+                <option value="starter">Starter {formatINR(packages.starter.setupRupees)} setup ({formatINR(packages.starter.monthlyRupees)}/mo)</option>
+                <option value="pro">Pro {formatINR(packages.pro.setupRupees)} setup ({formatINR(packages.pro.monthlyRupees)}/mo)</option>
+                <option value="creator">Creator Engine {formatINR(packages.creator.monthlyRupees)}/mo</option>
+              </optgroup>
+              <optgroup label="Websites & Mobile Apps">
+                <option value="business_website">Business Website {formatINR(packages.business_website.setupRupees)}</option>
+                <option value="website_launch">Website Launch {formatINR(packages.website_launch.setupRupees)}</option>
+                <option value="ecommerce_store">E-Commerce Store {formatINR(packages.ecommerce_store.setupRupees)}</option>
+                <option value="app_mvp">Mobile App MVP {formatINR(packages.app_mvp.setupRupees)}</option>
+              </optgroup>
             </select>
           </div>
 
@@ -673,6 +916,9 @@ export default function AdminDashboardPage() {
               logs.slice(0, 8).map((log) => {
                 const isAuto = log.actor === "automation";
                 const isClient = log.actor === "client";
+                const proj = projects.find((p) => p.id === log.project_id || p.client_id === log.client_id || p.id === log.client_id);
+                const client = clients.find((c) => c.id === log.client_id || c.id === log.project_id);
+                const projectName = proj?.name || client?.name || "System";
 
                 return (
                   <div
@@ -680,7 +926,7 @@ export default function AdminDashboardPage() {
                     className="p-3 rounded-xl bg-[#F6F5FB] dark:bg-[#12142A] border border-[#E2E0EE] dark:border-[#2F3356] text-xs flex items-start justify-between gap-3"
                   >
                     <div className="space-y-0.5 flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span
                           className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                             isAuto
@@ -691,6 +937,9 @@ export default function AdminDashboardPage() {
                           }`}
                         >
                           {log.actor}
+                        </span>
+                        <span className="text-[10.5px] font-semibold text-[#585D7A] dark:text-[#A6A9C6] px-1.5 py-0.5 rounded bg-[#EAE7F6] dark:bg-[#25284B] truncate max-w-[160px]">
+                          {projectName}
                         </span>
                         <b className="text-[#1B1F3B] dark:text-[#ECEBF7] truncate">
                           {log.action}
@@ -706,10 +955,11 @@ export default function AdminDashboardPage() {
                       </p>
                     </div>
                     <span className="text-[10px] text-[#727791] font-mono whitespace-nowrap">
-                      {new Date(log.created_at).toLocaleTimeString([], {
+                      {new Date(log.created_at).toLocaleTimeString("en-IN", {
+                        timeZone: "Asia/Kolkata",
                         hour: "2-digit",
                         minute: "2-digit",
-                      })}
+                      })} IST
                     </span>
                   </div>
                 );

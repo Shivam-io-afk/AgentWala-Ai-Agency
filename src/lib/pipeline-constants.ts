@@ -1,4 +1,4 @@
-import { PhaseDef, StageDef, ChecklistItemDef, Client, StageKey } from "./types";
+import { PhaseDef, StageDef, ChecklistItemDef, Client, Project, StageKey } from "./types";
 
 export const PIPELINE_PHASES: PhaseDef[] = [
   {
@@ -11,19 +11,19 @@ export const PIPELINE_PHASES: PhaseDef[] = [
         phaseId: 0,
         phaseName: "Find",
         items: [
-          { key: "l1", label: "Business and owner name noted", who: "Auto (form)", isAutomation: true },
-          { key: "l2", label: "Phone / WhatsApp saved", who: "Auto (form)", isAutomation: true },
-          { key: "l3", label: "Pain spotted (missed calls, slow replies, no follow-up)", who: "AI suggests, human confirms", isAutomation: true },
+          { key: "l1", label: "Name, business and need captured", who: "Auto (form)", isAutomation: true },
+          { key: "l2", label: "WhatsApp number and consent saved", who: "Auto (form)", isAutomation: true },
+          { key: "l3", label: "Budget and timeline captured", who: "Auto (form)", isAutomation: true },
         ],
       },
       {
         id: 1,
-        name: "Contacted",
+        name: "Qualified",
         phaseId: 0,
         phaseName: "Find",
         items: [
-          { key: "c1", label: "First message, call or walk-in done", who: "Auto (welcome WhatsApp)", isAutomation: true },
-          { key: "c2", label: "Owner replied or showed interest", who: "Auto (inbound reply webhook)", isAutomation: true },
+          { key: "c1", label: "Welcome message sent with booking link", who: "Auto", isAutomation: true },
+          { key: "c2", label: "Lead replied or booked", who: "Auto (webhook)", isAutomation: true },
         ],
       },
     ],
@@ -38,21 +38,20 @@ export const PIPELINE_PHASES: PhaseDef[] = [
         phaseId: 1,
         phaseName: "Meet",
         items: [
-          { key: "b1", label: "Date and time confirmed", who: "Auto (booking webhook)", isAutomation: true },
-          { key: "b2", label: "Demo agent set up for their business type", who: "Auto (template clone)", isAutomation: true },
-          { key: "b3", label: "Reminder sent the day before", who: "Auto (cron)", isAutomation: true },
+          { key: "b1", label: "Date and time confirmed", who: "Auto (Cal.com)", isAutomation: true },
+          { key: "b2", label: "Pre-meeting brief ready (research, questions, suggested package)", who: "Auto (AI)", isAutomation: true },
+          { key: "b3", label: "Reminders sent (24 h and 1 h)", who: "Auto", isAutomation: true },
         ],
       },
       {
         id: 3,
-        name: "Meeting done",
+        name: "Requirements final",
         phaseId: 1,
         phaseName: "Meet",
         items: [
-          { key: "m1", label: "Owner called the demo agent live", who: "Human" },
-          { key: "m2", label: "Asked: calls per day, after-hours enquiries, current cost", who: "Human (meeting notes form)" },
-          { key: "m3", label: "Recommended one package with price", who: "Human" },
-          { key: "m4", label: "Next step agreed with a date", who: "Human" },
+          { key: "r1", label: "Meeting done", who: "Founder" },
+          { key: "r2", label: "Requirements form filled (features, pages/screens, deadline, budget)", who: "Founder (AI pre-fill)" },
+          { key: "r3", label: "Scope and price agreed in the meeting", who: "Founder" },
         ],
       },
     ],
@@ -67,72 +66,75 @@ export const PIPELINE_PHASES: PhaseDef[] = [
         phaseId: 2,
         phaseName: "Win",
         items: [
-          { key: "p1", label: "Proposal with package and ₹ price sent", who: "Auto after human approval", isAutomation: true },
-          { key: "p2", label: "Followed up within 48 hours", who: "Auto (cron)", isAutomation: true },
+          { key: "p1", label: "Scope of Work + quote generated and approved by founder", who: "Auto draft → founder taps Approve" },
+          { key: "p2", label: "Agreement + quote sent to client portal", who: "Auto", isAutomation: true },
+          { key: "p3", label: "Followed up at 48 h", who: "Auto", isAutomation: true },
         ],
       },
       {
         id: 5,
-        name: "Won",
+        name: "Signed and paid",
         phaseId: 2,
         phaseName: "Win",
         items: [
-          { key: "w1", label: "Client said yes", who: "Auto (client clicks Accept)", isAutomation: true },
-          { key: "w2", label: "50% setup advance received", who: "Auto (Razorpay webhook)", isAutomation: true },
-          { key: "w3", label: "FAQs, prices and timings collected", who: "Auto (onboarding form submitted)", isAutomation: true },
+          { key: "s1", label: "Agreement accepted (name + OTP, or Aadhaar eSign)", who: "Auto (client)", isAutomation: true },
+          { key: "s2", label: "Advance received", who: "Auto (Razorpay)", isAutomation: true },
+          { key: "s3", label: "Kickoff: client content, logins and assets received", who: "Auto (portal uploads checklist)", isAutomation: true },
         ],
       },
     ],
   },
   {
     id: 3,
-    name: "Deliver",
+    name: "Build",
     stages: [
       {
         id: 6,
-        name: "Building",
+        name: "In progress",
         phaseId: 3,
-        phaseName: "Deliver",
+        phaseName: "Build",
         items: [
-          { key: "d1", label: "Agent built from template", who: "Auto (AI draft from onboarding data)", isAutomation: true },
-          { key: "d2", label: "Tested on 50 real questions", who: "Auto (AI test run, pass rate ≥ 90%)", isAutomation: true },
-          { key: "d3", label: "Client approved a test call", who: "Auto (client clicks Approve)", isAutomation: true },
+          { key: "w1", label: "Work plan and milestones created from the scope", who: "Auto", isAutomation: true },
+          { key: "w2", label: "Build complete", who: "Founder" },
+          { key: "w3", label: "Delivery shared (staging link / test number / demo build)", who: "Founder uploads → auto notifies client" },
         ],
       },
       {
         id: 7,
-        name: "Live",
+        name: "Review",
         phaseId: 3,
-        phaseName: "Deliver",
+        phaseName: "Build",
         items: [
-          { key: "v1", label: "Connected to their number / WhatsApp", who: "Human" },
-          { key: "v2", label: "Client team trained on human handoff", who: "Human" },
-          { key: "v3", label: "First-week transcript review done", who: "Auto (AI review report generated)", isAutomation: true },
+          { key: "v1", label: "Revision round 1 closed (or skipped)", who: "Founder does work, auto tracks" },
+          { key: "v2", label: "Revision round 2 closed (or skipped)", who: "Founder does work, auto tracks" },
+          { key: "v3", label: "Client approved (or deemed accepted after 7 days)", who: "Auto (client / timer)", isAutomation: true },
         ],
       },
     ],
   },
   {
     id: 4,
-    name: "Bill",
+    name: "Handover",
     stages: [
       {
         id: 8,
-        name: "Final bill sent",
+        name: "Final payment",
         phaseId: 4,
-        phaseName: "Bill",
+        phaseName: "Handover",
         items: [
-          { key: "f1", label: "Final invoice sent (balance setup + month 1, with GST)", who: "Auto (when v1 + v2 done)", isAutomation: true },
+          { key: "f1", label: "Final invoice sent", who: "Auto", isAutomation: true },
+          { key: "f2", label: "Final payment received", who: "Auto (Razorpay)", isAutomation: true },
         ],
       },
       {
         id: 9,
-        name: "Paid",
+        name: "Handed over",
         phaseId: 4,
-        phaseName: "Bill",
+        phaseName: "Handover",
         items: [
-          { key: "q1", label: "Payment received", who: "Auto (Razorpay webhook)", isAutomation: true },
-          { key: "q2", label: "Testimonial or Google review asked", who: "Auto (3 days after payment)", isAutomation: true },
+          { key: "h1", label: "Handover kit delivered (Annex B)", who: "Auto kit + founder confirms access transfer" },
+          { key: "h2", label: "Client confirmed receipt in portal", who: "Auto (client)", isAutomation: true },
+          { key: "h3", label: "Warranty, care plan / retainer and review request started", who: "Auto", isAutomation: true },
         ],
       },
     ],
@@ -141,40 +143,97 @@ export const PIPELINE_PHASES: PhaseDef[] = [
 
 export const ALL_STAGES: StageDef[] = PIPELINE_PHASES.flatMap((p) => p.stages);
 export const ALL_CHECKLIST_ITEMS: ChecklistItemDef[] = ALL_STAGES.flatMap((s) => s.items);
-export const TOTAL_CHECKLIST_COUNT = ALL_CHECKLIST_ITEMS.length; // 25 items
+export const TOTAL_CHECKLIST_COUNT = ALL_CHECKLIST_ITEMS.length; // 27 items in v2
+
+// Helper map to translate legacy v1 keys to v2 keys
+export const LEGACY_KEY_MAP: Record<string, StageKey> = {
+  m1: "r1",
+  m2: "r2",
+  m3: "r3",
+  m4: "r3",
+  w1: "s1",
+  w2: "s2",
+  w3: "s3",
+  d1: "w1",
+  d2: "w2",
+  d3: "w3",
+  q1: "f2",
+  q2: "h3",
+};
 
 /**
- * Stage derivation algorithm:
- * "A client's stage is derived: it is the first stage whose checklist is not fully ticked.
- * Ticking the last item of a stage moves the client forward automatically."
+ * Stage derivation algorithm (Section 6):
+ * "The stage is derived: the first stage whose checklist is not complete.
+ * Ticking the last item moves the project forward automatically."
  */
-export function getClientStageIndex(client: Pick<Client, "checks">): number {
-  const checks = client.checks || {};
+export function getClientStageIndex(clientOrProject: { checks?: Record<string, { done?: boolean }> } | null | undefined): number {
+  if (!clientOrProject || !clientOrProject.checks) return 0;
+  const checks = clientOrProject.checks;
+
+  // Normalized check lookup with legacy fallback
+  const isKeyDone = (key: string): boolean => {
+    if (checks[key]?.done) return true;
+    // Check legacy aliases
+    for (const [legacy, v2Key] of Object.entries(LEGACY_KEY_MAP)) {
+      if (v2Key === key && checks[legacy]?.done) return true;
+    }
+    return false;
+  };
+
+  // Bug 12: Furthest stage derived properly
+  // If all 10 stages complete, return 10
+  const allStagesDone = ALL_STAGES.every((stage) => stage.items.every((item) => isKeyDone(item.key)));
+  if (allStagesDone) return 10;
+
+  // Find the furthest stage reached
+  let furthest = 0;
   for (let i = 0; i < ALL_STAGES.length; i++) {
     const stage = ALL_STAGES[i];
-    const isStageDone = stage.items.every((item) => checks[item.key]?.done);
-    if (!isStageDone) {
-      return i; // Current active stage
+    const hasAnyDone = stage.items.some((item) => isKeyDone(item.key));
+    const allItemsDone = stage.items.every((item) => isKeyDone(item.key));
+    if (hasAnyDone) {
+      furthest = Math.max(furthest, i);
+    }
+    if (allItemsDone && i + 1 < ALL_STAGES.length) {
+      furthest = Math.max(furthest, i + 1);
     }
   }
-  return ALL_STAGES.length; // 10 = All stages completed!
+
+  return furthest;
 }
 
-export function getClientStageName(client: Pick<Client, "checks">): string {
-  const idx = getClientStageIndex(client);
-  if (idx >= ALL_STAGES.length) {
-    return "Completed — paid";
+export function getClientStageName(clientOrProject: { checks?: Record<string, { done?: boolean }> } | null | undefined): string {
+  const idx = getClientStageIndex(clientOrProject);
+  if (idx >= 10) return "Completed";
+  return ALL_STAGES[idx]?.name || "Lead";
+}
+
+export function getClientPhaseName(clientOrProject: { checks?: Record<string, { done?: boolean }> } | null | undefined): string {
+  const idx = getClientStageIndex(clientOrProject);
+  if (idx >= 10) return "Handover";
+  return ALL_STAGES[idx]?.phaseName || "Find";
+}
+
+export function getClientProgressPercent(clientOrProject: { checks?: Record<string, { done?: boolean }> } | null | undefined): number {
+  if (!clientOrProject || !clientOrProject.checks) return 0;
+  const checks = clientOrProject.checks;
+  let doneCount = 0;
+
+  for (const item of ALL_CHECKLIST_ITEMS) {
+    if (checks[item.key]?.done) {
+      doneCount++;
+    } else {
+      // Check legacy mapping
+      for (const [legacy, v2Key] of Object.entries(LEGACY_KEY_MAP)) {
+        if (v2Key === item.key && checks[legacy]?.done) {
+          doneCount++;
+          break;
+        }
+      }
+    }
   }
-  return ALL_STAGES[idx].name;
+
+  return Math.round((doneCount / TOTAL_CHECKLIST_COUNT) * 100);
 }
 
-export function getClientTickedCount(client: Pick<Client, "checks">): number {
-  const checks = client.checks || {};
-  return ALL_CHECKLIST_ITEMS.filter((item) => checks[item.key]?.done).length;
-}
-
-export function getClientProgressPercentage(client: Pick<Client, "checks">): number {
-  const ticked = getClientTickedCount(client);
-  return Math.round((ticked / TOTAL_CHECKLIST_COUNT) * 100);
-}
-
+export const getClientProgressPercentage = getClientProgressPercent;
