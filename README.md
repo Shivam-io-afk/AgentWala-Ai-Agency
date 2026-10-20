@@ -214,3 +214,4 @@ export const VERTICALS: Record<string, VerticalContent> = {
 | `RESEND_API_KEY` | Resend Email API Key | Optional |
 | `AI_API_KEY` | Gemini or Anthropic Claude API Key | Optional (uses simulation engine if absent) |
 | `AI_PROVIDER` | `gemini` or `anthropic` | Optional (default: `gemini`) |
+

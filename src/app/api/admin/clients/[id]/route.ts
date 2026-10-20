@@ -16,6 +16,9 @@ export async function GET(req: NextRequest, { params }: Params) {
     const proposal = await db.getProposalByClientId(id);
     const messages = await db.getMessages(id);
     const logs = await db.getActivityLogs(50, id);
+    const agent = await db.getAgentByClientId(id);
+    const allRecs = await db.getRecommendations("active");
+    const recommendations = allRecs.filter((r) => r.client_id === id);
 
     return NextResponse.json({
       success: true,
@@ -24,6 +27,8 @@ export async function GET(req: NextRequest, { params }: Params) {
       proposal,
       messages,
       logs,
+      agent,
+      recommendations,
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
@@ -53,3 +58,4 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
+

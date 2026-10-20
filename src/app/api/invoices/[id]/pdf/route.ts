@@ -156,3 +156,4 @@ export async function GET(req: NextRequest, { params }: Params) {
     return new NextResponse("Error generating invoice PDF", { status: 500 });
   }
 }
+

@@ -84,3 +84,4 @@ export function FAQAccordion({ faqs }: FAQAccordionProps) {
     </div>
   );
 }
+

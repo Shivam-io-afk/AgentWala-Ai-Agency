@@ -12,10 +12,25 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { action, id, enabled } = await req.json();
+    const { action, id, enabled, shadow, level } = await req.json();
 
     if (action === "toggle") {
       const updated = await db.toggleAutomation(id, enabled);
+      return NextResponse.json({ success: true, automation: updated });
+    }
+
+    if (action === "toggle_shadow") {
+      const updated = await db.toggleShadowMode(id, Boolean(shadow));
+      return NextResponse.json({ success: true, automation: updated });
+    }
+
+    if (action === "promote") {
+      const updated = await db.promoteAutomation(id);
+      return NextResponse.json({ success: true, automation: updated });
+    }
+
+    if (action === "demote") {
+      const updated = await db.demoteAutomation(id, level as 1 | 2 | 3);
       return NextResponse.json({ success: true, automation: updated });
     }
 
@@ -30,3 +45,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
+

@@ -50,7 +50,13 @@
         }
       },
       "created_at": "2026-10-20T02:44:03.626Z",
-      "updated_at": "2026-10-20T02:44:04.378Z"
+      "updated_at": "2026-10-20T02:44:04.378Z",
+      "qualifying_answers": {
+        "calls_per_day": "30-50 calls/day",
+        "after_hours": "10-15 calls after hours",
+        "current_cost": "₹18,000/month front desk",
+        "preferred_time": "Normal hours"
+      }
     },
     {
       "id": "c-ex-1",
@@ -102,7 +108,13 @@
         }
       },
       "created_at": "2026-10-19T02:44:03.624Z",
-      "updated_at": "2026-10-20T02:44:03.624Z"
+      "updated_at": "2026-10-20T02:44:03.624Z",
+      "qualifying_answers": {
+        "calls_per_day": "35 calls/day",
+        "after_hours": "12 calls after 8 PM",
+        "current_cost": "₹16,000/month front desk",
+        "preferred_time": "Evenings after 6 PM"
+      }
     },
     {
       "id": "c-ex-2",
@@ -238,7 +250,13 @@
         }
       },
       "created_at": "2026-10-19T02:44:03.624Z",
-      "updated_at": "2026-10-20T02:44:04.690Z"
+      "updated_at": "2026-10-20T02:44:04.690Z",
+      "qualifying_answers": {
+        "calls_per_day": "65 calls/day (2 doctors)",
+        "after_hours": "22 calls after hours & Sunday",
+        "current_cost": "₹28,000/month (2 receptionists)",
+        "preferred_time": "Morning 11 AM"
+      }
     },
     {
       "id": "c-ex-3",
@@ -417,7 +435,13 @@
         }
       },
       "created_at": "2026-10-19T02:44:03.624Z",
-      "updated_at": "2026-10-20T02:44:03.624Z"
+      "updated_at": "2026-10-20T02:44:03.624Z",
+      "qualifying_answers": {
+        "calls_per_day": "30-50 calls/day",
+        "after_hours": "10-15 calls after hours",
+        "current_cost": "₹18,000/month front desk",
+        "preferred_time": "Normal hours"
+      }
     }
   ],
   "invoices": [
@@ -824,6 +848,50 @@
       "enabled": true,
       "success_count": 14,
       "failure_count": 0
+    },
+    {
+      "id": "A21",
+      "name": "AI qualifying call",
+      "description": "Voice agent calls lead (10 AM–7 PM IST), qualifies calls & cost, pre-fills m2",
+      "level": 2,
+      "enabled": true,
+      "shadow_mode": true,
+      "success_count": 0,
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 0
+    },
+    {
+      "id": "A22",
+      "name": "Meeting notes from recording",
+      "description": "AI parses Google Meet audio / voice note, suggests m1–m4 with quotes and drafts proposal",
+      "level": 2,
+      "enabled": true,
+      "shadow_mode": true,
+      "success_count": 0,
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 0
+    },
+    {
+      "id": "A23",
+      "name": "Standard proposal auto-send",
+      "description": "Auto-sends standard package proposals after 2-hour cancel window if AI confidence high",
+      "level": 2,
+      "enabled": true,
+      "shadow_mode": true,
+      "success_count": 0,
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 0
+    },
+    {
+      "id": "A24",
+      "name": "Go-live gate",
+      "description": "Enforces number connection unlock strictly when d2 ≥ 90% and client approved (d3)",
+      "level": 3,
+      "enabled": true,
+      "shadow_mode": false,
+      "success_count": 2,
+      "failure_count": 0,
+      "consecutive_no_edit_approvals": 0
     }
   ],
   "settings": {
@@ -850,6 +918,61 @@
     "whatsapp_status": "mock",
     "email_status": "mock",
     "cal_status": "mock",
-    "ai_status": "mock"
-  }
+    "ai_status": "mock",
+    "pause_all_outbound": false,
+    "copilot_language": "hinglish"
+  },
+  "recommendations": [
+    {
+      "id": "rec-1",
+      "client_id": "c-ex-1",
+      "client_name": "Sunrise Dental Clinic",
+      "type": "money_at_risk",
+      "title": "Friday demo call live walkthrough scheduled",
+      "reason": "Dr. Vikram Mehta wants a live call demo on Friday. Setup line ready karo taaki call par smooth transition ho.",
+      "why_rule": "Lead has been in Contacted stage for 1 day. Next step date set for tomorrow.",
+      "action_label": "Open Client Detail",
+      "action_type": "navigate",
+      "action_payload": {
+        "url": "/admin/clients/c-ex-1"
+      },
+      "priority": "high",
+      "money_at_risk_rupees": 20650,
+      "status": "active",
+      "created_at": "2026-10-20T03:02:42.736Z"
+    },
+    {
+      "id": "rec-2",
+      "client_id": "c-ex-2",
+      "client_name": "Dr. Batra Skin & Hair Care",
+      "type": "forgotten_step",
+      "title": "AI simulation 96% pass ho gayi hai. Test call send karo!",
+      "reason": "50 real patient queries ingest ho chuke hain aur 96% pass rate hai. Portal approval link doctor ko bhej kar go-live confirm karo.",
+      "why_rule": "Automation A12 passed with >=90%. Stage 7 (Building) ready for client approval (d3).",
+      "action_label": "Review Test Report",
+      "action_type": "navigate",
+      "action_payload": {
+        "url": "/admin/clients/c-ex-2"
+      },
+      "priority": "high",
+      "money_at_risk_rupees": 58999,
+      "status": "active",
+      "created_at": "2026-10-20T03:02:42.736Z"
+    },
+    {
+      "id": "rec-3",
+      "type": "coaching",
+      "title": "Weekly Business Coaching: 3 active clients, goal is 5",
+      "reason": "Current pipeline value ₹1,23,898 hai. Dental aur Skin niches mein 100% conversion dikh raha hai. Do new leads nurture karo.",
+      "why_rule": "Monday coaching engine target comparison vs settings target (5 clients by Month 3).",
+      "action_label": "View Pipeline",
+      "action_type": "navigate",
+      "action_payload": {
+        "url": "/admin/pipeline"
+      },
+      "priority": "medium",
+      "status": "active",
+      "created_at": "2026-10-20T03:02:42.736Z"
+    }
+  ]
 }

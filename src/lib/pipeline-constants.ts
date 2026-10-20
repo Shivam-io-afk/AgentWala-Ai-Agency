@@ -177,3 +177,4 @@ export function getClientProgressPercentage(client: Pick<Client, "checks">): num
   const ticked = getClientTickedCount(client);
   return Math.round((ticked / TOTAL_CHECKLIST_COUNT) * 100);
 }
+

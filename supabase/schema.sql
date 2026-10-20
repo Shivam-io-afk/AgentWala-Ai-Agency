@@ -117,30 +117,58 @@ CREATE TABLE IF NOT EXISTS public.agents (
     updated_at TIMESTAMPTZ DEFAULT TIMEZONE('Asia/Kolkata', NOW())
 );
 
--- 8. Background Jobs Queue
+-- 8. Background Jobs Queue with Safety & Idempotency
 CREATE TABLE IF NOT EXISTS public.jobs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    idempotency_key TEXT UNIQUE,
     type TEXT NOT NULL,
     client_id UUID REFERENCES public.clients(id) ON DELETE CASCADE,
     payload JSONB DEFAULT '{}'::jsonb,
     run_at TIMESTAMPTZ DEFAULT TIMEZONE('Asia/Kolkata', NOW()),
     attempts INTEGER DEFAULT 0,
     max_attempts INTEGER DEFAULT 3,
+    level INTEGER DEFAULT 1 CHECK (level IN (1, 2, 3)),
+    shadow_mode BOOLEAN DEFAULT FALSE,
     status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'running', 'completed', 'failed')),
     error TEXT,
     created_at TIMESTAMPTZ DEFAULT TIMEZONE('Asia/Kolkata', NOW()),
     updated_at TIMESTAMPTZ DEFAULT TIMEZONE('Asia/Kolkata', NOW())
 );
 
--- 9. Activity Log Table
+-- 9. Activity Log Table with Full Audit Trail
 CREATE TABLE IF NOT EXISTS public.activity_log (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     client_id UUID REFERENCES public.clients(id) ON DELETE SET NULL,
     actor TEXT NOT NULL CHECK (actor IN ('user', 'automation', 'client', 'system')),
     action TEXT NOT NULL,
     detail TEXT NOT NULL,
+    trigger_event TEXT,
+    ai_input TEXT,
+    ai_output TEXT,
+    confidence_score FLOAT DEFAULT 1.0,
+    shadow BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT TIMEZONE('Asia/Kolkata', NOW())
 );
+
+-- 9b. AI Copilot Recommendations Table (Section 7b)
+CREATE TABLE IF NOT EXISTS public.recommendations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    client_id UUID REFERENCES public.clients(id) ON DELETE CASCADE,
+    type TEXT NOT NULL CHECK (type IN ('forgotten_step', 'skipped_item', 'missing_data', 'money_at_risk', 'client_risk', 'upsell', 'coaching', 'learning_tip')),
+    title TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    why_rule TEXT,
+    action_label TEXT NOT NULL,
+    action_type TEXT NOT NULL DEFAULT 'navigate',
+    action_payload JSONB DEFAULT '{}'::jsonb,
+    priority TEXT NOT NULL DEFAULT 'medium' CHECK (priority IN ('high', 'medium', 'low')),
+    money_at_risk_rupees NUMERIC,
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'snoozed', 'dismissed', 'acted')),
+    snoozed_until TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT TIMEZONE('Asia/Kolkata', NOW()),
+    acted_at TIMESTAMPTZ
+);
+
 
 -- 10. Settings & Templates
 CREATE TABLE IF NOT EXISTS public.settings (
@@ -163,3 +191,4 @@ CREATE POLICY "Public portal access via token" ON public.clients
 -- Authenticated founder has full admin access
 CREATE POLICY "Founder full access" ON public.clients
     FOR ALL USING (auth.role() = 'authenticated');
+

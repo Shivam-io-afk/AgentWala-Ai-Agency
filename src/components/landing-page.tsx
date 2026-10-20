@@ -535,3 +535,4 @@ export function LandingPage({ content }: LandingPageProps) {
     </div>
   );
 }
+

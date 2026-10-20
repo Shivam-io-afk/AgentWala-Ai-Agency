@@ -43,3 +43,4 @@ export default async function VerticalPage({ params }: VerticalPageProps) {
   const content = getVerticalContent(vertical);
   return <LandingPage content={content} />;
 }
+

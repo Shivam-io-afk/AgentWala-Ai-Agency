@@ -63,6 +63,16 @@ export interface Client {
   source: string;
   is_example?: boolean;
   checks: Record<string, ClientCheckRecord>;
+  paused_follow_ups_until?: string;
+  outbound_count?: number;
+  last_inbound_at?: string;
+  ai_confidence_score?: number;
+  qualifying_answers?: {
+    calls_per_day?: string;
+    after_hours?: string;
+    current_cost?: string;
+    preferred_time?: string;
+  };
   created_at: string;
   updated_at: string;
 }
@@ -100,6 +110,7 @@ export interface Proposal {
   status: "draft" | "sent" | "accepted" | "declined";
   accepted_at?: string;
   accepted_name?: string;
+  auto_send_scheduled_at?: string; // For A23 2-hour delay window
   created_at: string;
   updated_at: string;
 }
@@ -141,12 +152,15 @@ export interface MessageRecord {
 
 export interface JobRecord {
   id: string;
+  idempotency_key?: string; // client_id + automation + step
   type: string;
   client_id?: string;
   payload?: any;
   run_at: string;
   attempts: number;
   max_attempts: number;
+  level: 1 | 2 | 3; // 1 = Auto, 2 = AI + approve, 3 = Human only
+  shadow_mode: boolean;
   status: "pending" | "running" | "completed" | "failed";
   error?: string;
   created_at: string;
@@ -159,6 +173,11 @@ export interface ActivityLogRecord {
   actor: "user" | "automation" | "client" | "system";
   action: string;
   detail: string;
+  trigger_event?: string;
+  ai_input?: string;
+  ai_output?: string;
+  confidence_score?: number;
+  shadow?: boolean;
   created_at: string;
 }
 
@@ -166,8 +185,40 @@ export interface AutomationSetting {
   id: string; // e.g. "A1", "A2", ...
   name: string;
   description: string;
+  level: 1 | 2 | 3; // 1 = Auto, 2 = AI + approve, 3 = Human only
   enabled: boolean;
+  shadow_mode: boolean;
   last_run?: string;
   success_count: number;
   failure_count: number;
+  consecutive_no_edit_approvals: number;
+  can_promote?: boolean;
 }
+
+export interface Recommendation {
+  id: string;
+  client_id?: string;
+  client_name?: string;
+  type:
+    | "forgotten_step"
+    | "skipped_item"
+    | "missing_data"
+    | "money_at_risk"
+    | "client_risk"
+    | "upsell"
+    | "coaching"
+    | "learning_tip";
+  title: string;
+  reason: string;
+  why_rule?: string;
+  action_label: string;
+  action_type: string;
+  action_payload?: any;
+  priority: "high" | "medium" | "low";
+  money_at_risk_rupees?: number;
+  status: "active" | "snoozed" | "dismissed" | "acted";
+  snoozed_until?: string;
+  created_at: string;
+  acted_at?: string;
+}
+

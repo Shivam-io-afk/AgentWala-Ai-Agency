@@ -23,3 +23,4 @@ export function verticalExists(slug: string): boolean {
 
 export * from "./clinics";
 export * from "./site";
+

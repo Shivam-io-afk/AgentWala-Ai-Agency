@@ -301,3 +301,4 @@ export const clinicsContent: VerticalContent = {
   formWhatsAppPrefill:
     "Hi AgentWala team! I just requested a free demo receptionist for my clinic. Can we connect?",
 };
+

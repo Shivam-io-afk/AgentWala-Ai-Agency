@@ -192,3 +192,4 @@ export const salonsContent: VerticalContent = {
   formSuccessMessage: "We've received your salon details! We'll WhatsApp you within one working day.",
   formWhatsAppPrefill: "Hi AgentWala! I want to try the salon receptionist demo.",
 };
+

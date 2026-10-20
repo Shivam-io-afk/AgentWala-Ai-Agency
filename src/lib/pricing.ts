@@ -194,3 +194,4 @@ export function calculateBill(packageKey: string, foundingOffer: boolean = false
     monthlyRetainerWithGst,
   };
 }
+
