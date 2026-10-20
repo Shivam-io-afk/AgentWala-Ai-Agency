@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { RobotIcon } from "@/components/icons";
@@ -8,16 +8,54 @@ import { RobotIcon } from "@/components/icons";
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("founder@agentwala.in");
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [sentMessage, setSentMessage] = useState<string | null>(null);
   const [verifyUrl, setVerifyUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get("error");
+      if (err === "used_token") {
+        setError("This magic link has already been used. Please request a new one.");
+      } else if (err === "invalid_or_expired_token") {
+        setError("Invalid or expired magic link. Please request a new one.");
+      } else if (err === "missing_token") {
+        setError("Missing authentication token. Please request a new login link.");
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setLoading(true);
     setError(null);
+
+    // If founder login code is entered, submit directly to /api/auth/verify
+    if (code.trim()) {
+      try {
+        const res = await fetch("/api/auth/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim(), code: code.trim() }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          router.push(data.redirect || "/admin");
+        } else {
+          setError(data.error || "Invalid email or login code");
+        }
+      } catch (err: any) {
+        setError(err.message || "Network error");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -135,12 +173,27 @@ export default function LoginPage() {
               />
             </div>
 
+            <div>
+              <label className="block text-xs font-semibold text-[#1C1F3A] mb-1.5">
+                Founder Login Code <span className="text-[#727791] font-normal">(Optional fallback)</span>
+              </label>
+              <input
+                type="password"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Enter FOUNDER_LOGIN_CODE if Resend is pending"
+                className="w-full h-11 px-3.5 rounded-xl border border-[#ECE6D8] bg-[#FBF7EE] text-sm text-[#1C1F3A] focus:outline-none focus:ring-2 focus:ring-[#FDB91F]"
+              />
+            </div>
+
             <button
               type="submit"
               disabled={loading}
               className="w-full h-12 bg-[#FDB91F] hover:bg-[#E5A413] text-[#1C1F3A] font-bold text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
             >
-              {loading ? "Generating Link..." : "Send Magic Login Link →"}
+              {loading
+                ? (code.trim() ? "Authenticating..." : "Generating Link...")
+                : (code.trim() ? "Log In with Code →" : "Send Magic Login Link →")}
             </button>
 
             {/* Quick dev bypass button (hidden in production) */}

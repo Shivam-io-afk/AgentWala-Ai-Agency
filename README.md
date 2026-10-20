@@ -191,6 +191,7 @@ export const VERTICALS: Record<string, VerticalContent> = {
    - `NEXT_PUBLIC_SITE_URL`: Your Vercel production URL (e.g. `https://agent-wala-ai-agency.vercel.app`)
    - `AUTH_SECRET`: A secure random string with 32+ characters (e.g. generated via `openssl rand -hex 32`)
    - `FOUNDER_EMAILS`: Comma-separated allowlist of authorized founder emails (e.g. `founder@agentwala.in`)
+   - `FOUNDER_LOGIN_CODE`: Direct login fallback code (32+ chars) allowing instant founder login without waiting for Resend
    - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase Project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon key
    - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role secret
@@ -206,6 +207,7 @@ export const VERTICALS: Record<string, VerticalContent> = {
 | `NEXT_PUBLIC_SITE_URL` | Base public URL of the website (e.g. `https://agent-wala-ai-agency.vercel.app`) | Recommended |
 | `AUTH_SECRET` | HMAC secret for session and magic login token signing (32+ chars) | **Required in production** |
 | `FOUNDER_EMAILS` | Comma-separated list of founder emails authorized to log in | **Required in production** |
+| `FOUNDER_LOGIN_CODE` | Direct founder login fallback code (bypasses email delivery) | Recommended fallback |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Recommended (uses ephemeral /tmp on Vercel) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key | Optional |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role secret (bypasses RLS to manage `app_state`) | Recommended for persistence on Vercel |
