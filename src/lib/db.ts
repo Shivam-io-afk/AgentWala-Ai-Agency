@@ -944,6 +944,32 @@ async function writeData(data: DatabaseSchema): Promise<void> {
   lastCacheTime = Date.now();
 }
 
+function toPublicSettings(settings: any) {
+  if (!settings) return {};
+  return {
+    agency_name: settings.agency_name,
+    tagline: settings.tagline,
+    founder_name: settings.founder_name,
+    founder_title: settings.founder_title,
+    phone: settings.phone,
+    email: settings.email,
+    city: settings.city,
+    state: settings.state,
+    address: settings.address,
+    gst_registered: settings.gst_registered,
+    gstin: settings.gstin,
+    pan: settings.pan,
+    sac_code: settings.sac_code,
+    udyam_number: settings.udyam_number,
+    bank_name: settings.bank_name,
+    account_name: settings.account_name,
+    account_number: settings.account_number,
+    ifsc: settings.ifsc,
+    upi_id: settings.upi_id,
+    package_prices: settings.package_prices || {},
+  };
+}
+
 export const db = {
   // CLIENTS
   async getClients(): Promise<Client[]> {
@@ -1044,7 +1070,7 @@ export const db = {
     const revisions = (data.revision_rounds || []).filter((rr) => rr.project_id === projectId);
     const changeRequests = (data.change_requests || []).filter((cr) => cr.project_id === projectId);
     const handover = (data.handovers || []).find((h) => h.project_id === projectId) || null;
-    const settings = data.settings;
+    const settings = toPublicSettings(data.settings);
 
     return {
       client,
