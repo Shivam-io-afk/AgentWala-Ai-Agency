@@ -4,6 +4,8 @@ import { getVerticalContent, verticalExists } from "@/content";
 import { LandingPage } from "@/components/landing-page";
 import { db } from "@/lib/db";
 
+export const revalidate = 60;
+
 interface VerticalPageProps {
   params: Promise<{
     vertical: string;
@@ -48,6 +50,10 @@ export default async function VerticalPage({ params }: VerticalPageProps) {
 
   const content = getVerticalContent(vertical);
   const settings = await db.getSettings();
-  return <LandingPage content={content} initialSettings={settings} />;
+  return (
+    <LandingPage
+      content={content}
+      initialSettings={{ package_prices: settings?.package_prices }}
+    />
+  );
 }
-

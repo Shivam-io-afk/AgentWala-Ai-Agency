@@ -37,10 +37,10 @@ export function LandingPage({ content, initialSettings }: LandingPageProps) {
   const [pricingTab, setPricingTab] = useState<"ai" | "web_app">("ai");
 
   useEffect(() => {
-    fetch("/api/admin/settings")
+    fetch("/api/public/pricing")
       .then((r) => r.json())
       .then((d) => {
-        if (d.success && d.settings) setSettings(d.settings);
+        if (d.success && d.package_prices) setSettings({ package_prices: d.package_prices });
       })
       .catch(() => {});
   }, []);
