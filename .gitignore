@@ -7,3 +7,6 @@ tsconfig.tsbuildinfo
 .data/
 .env.local
 
+
+.vercel
+.env*

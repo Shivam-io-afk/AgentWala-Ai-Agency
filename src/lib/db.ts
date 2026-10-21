@@ -908,7 +908,7 @@ async function ensureDataFile(): Promise<DatabaseSchema> {
  * and retries up to 3 times on version conflict.
  */
 async function mutate<T>(fn: (data: DatabaseSchema) => T | Promise<T>): Promise<T> {
-  const maxRetries = 3;
+  const maxRetries = 50;
   let attempt = 0;
 
   while (attempt < maxRetries) {
@@ -926,9 +926,10 @@ async function mutate<T>(fn: (data: DatabaseSchema) => T | Promise<T>): Promise<
       return result;
     }
 
-    console.warn(`[db] Version conflict on attempt ${attempt}/${maxRetries} (expected v${version}). Retrying mutation...`);
     memoryCache = null;
-    await new Promise((r) => setTimeout(r, 25 * attempt));
+    const jitter = Math.floor(Math.random() * 80);
+    const backoff = Math.min(500, attempt * 20 + jitter);
+    await new Promise((r) => setTimeout(r, backoff));
   }
 
   throw new Error("[db] Mutate failed: exceeded maximum retries due to concurrent write conflicts.");

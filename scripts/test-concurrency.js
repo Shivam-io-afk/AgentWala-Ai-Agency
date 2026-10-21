@@ -11,6 +11,22 @@
 const fs = require("fs");
 const path = require("path");
 
+// Automatically load .env.local if present
+if (fs.existsSync(".env.local")) {
+  const envContent = fs.readFileSync(".env.local", "utf8");
+  for (const line of envContent.split("\n")) {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith("#") && trimmed.includes("=")) {
+      const idx = trimmed.indexOf("=");
+      const key = trimmed.slice(0, idx).trim();
+      const val = trimmed.slice(idx + 1).trim().replace(/^["']|["']$/g, "");
+      if (!process.env[key]) {
+        process.env[key] = val;
+      }
+    }
+  }
+}
+
 const targetUrl = process.argv[2] || process.env.APP_URL || "http://localhost:3000";
 
 async function getDbClients() {
