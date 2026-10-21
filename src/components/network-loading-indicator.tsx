@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, createContext, useContext } from "react";
+import { usePathname } from "next/navigation";
 
 export interface NetworkLogItem {
   id: string;
@@ -143,6 +144,17 @@ export function NetworkLoadingProvider({ children }: { children: React.ReactNode
   }, [activeCount]);
 
   const isLoading = activeCount > 0;
+  const pathname = usePathname();
+  const showTelemetry =
+    process.env.NODE_ENV === "development" ||
+    Boolean(pathname && pathname.startsWith("/admin"));
+
+  const lastLog = recentLogs[0];
+  const isLastError =
+    recentLogs.length > 0 &&
+    (lastLog?.state === "error" ||
+      (lastLog?.status !== undefined &&
+        (lastLog.status < 200 || lastLog.status >= 400)));
 
   return (
     <NetworkContext.Provider value={{ activeCount, currentRequest, recentLogs, isLoading }}>
@@ -159,156 +171,162 @@ export function NetworkLoadingProvider({ children }: { children: React.ReactNode
       {children}
 
       {/* Floating Real-Time Request / Response Telemetry Pill */}
-      <div className="fixed bottom-3 right-3 z-50 font-sans text-xs select-none">
-        {!isExpanded ? (
-          <button
-            type="button"
-            onClick={() => setIsExpanded(true)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-md backdrop-blur-md transition-all duration-200 cursor-pointer ${
-              isLoading
-                ? "bg-[#1C1F3A]/95 text-white border-[#FDB91F] shadow-[#FDB91F]/20"
-                : recentLogs.length > 0 && recentLogs[0].state === "error"
-                ? "bg-[#7A1F1F]/95 text-white border-[#E26D6D]"
-                : "bg-white/90 text-[#1C1F3A] border-[#ECE6D8] hover:bg-white"
-            }`}
-          >
-            {isLoading ? (
-              <>
-                <span className="w-2 h-2 rounded-full bg-[#FDB91F] animate-ping" />
-                <span className="font-semibold text-[11px] text-[#FDB91F]">
-                  {currentRequest?.state === "requesting"
-                    ? "REQ SENDING"
-                    : "WAITING RESP"}
-                </span>
-                <span className="font-mono text-[11px] text-gray-300 max-w-[140px] truncate">
-                  {currentRequest?.method} {currentRequest?.shortUrl}
-                </span>
-              </>
-            ) : (
-              <>
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    recentLogs.length > 0 && recentLogs[0].state === "error"
-                      ? "bg-red-500"
-                      : "bg-[#1F7A3A]"
-                  }`}
-                />
-                <span className="font-medium text-[11px] text-[#4A4F66]">
-                  {recentLogs.length > 0
-                    ? `${recentLogs[0].status || "200"} OK (${recentLogs[0].durationMs || 0}ms)`
-                    : "Real-time Telemetry"}
-                </span>
-              </>
-            )}
-            <span className="text-[10px] text-[#727791] font-mono pl-1 border-l border-gray-300">
-              ⚡
-            </span>
-          </button>
-        ) : (
-          <div className="bg-[#1C1F3A] text-white border border-[#2F3356] rounded-xl shadow-2xl p-3 w-80 max-w-[90vw] animate-in fade-in slide-in-from-bottom-2 duration-200">
-            <div className="flex items-center justify-between pb-2 border-b border-[#2F3356] mb-2">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    isLoading ? "bg-[#FDB91F] animate-pulse" : "bg-[#1F7A3A]"
-                  }`}
-                />
-                <span className="font-bold text-[11px] text-white tracking-wide uppercase">
-                  Network Telemetry
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-[#A5A9C0] font-mono">
-                  {activeCount} active
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setIsExpanded(false)}
-                  className="text-gray-400 hover:text-white px-1 font-bold"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {/* Current Request State */}
-            {isLoading && currentRequest ? (
-              <div className="bg-[#24284A] border border-[#FDB91F]/40 rounded-lg p-2 mb-2">
-                <div className="flex items-center justify-between text-[10px] text-[#FDB91F] font-bold">
-                  <span className="flex items-center gap-1">
-                    <span className="animate-spin text-xs">⏳</span>
-                    {currentRequest.state === "requesting"
-                      ? "Transmitting Request..."
-                      : "Awaiting Server Response..."}
+      {showTelemetry && (
+        <div className="fixed bottom-3 right-3 z-50 font-sans text-xs select-none">
+          {!isExpanded ? (
+            <button
+              type="button"
+              onClick={() => setIsExpanded(true)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-md backdrop-blur-md transition-all duration-200 cursor-pointer ${
+                isLoading
+                  ? "bg-[#1C1F3A]/95 text-white border-[#FDB91F] shadow-[#FDB91F]/20"
+                  : isLastError
+                  ? "bg-[#7A1F1F]/95 text-white border-[#E26D6D]"
+                  : "bg-white/90 text-[#1C1F3A] border-[#ECE6D8] hover:bg-white"
+              }`}
+            >
+              {isLoading ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-[#FDB91F] animate-ping" />
+                  <span className="font-semibold text-[11px] text-[#FDB91F]">
+                    {currentRequest?.state === "requesting"
+                      ? "REQ SENDING"
+                      : "WAITING RESP"}
                   </span>
-                  <span className="font-mono text-[9px] uppercase tracking-wider bg-[#FDB91F]/20 px-1.5 py-0.5 rounded">
-                    In Flight
+                  <span className="font-mono text-[11px] text-gray-300 max-w-[140px] truncate">
+                    {currentRequest?.method} {currentRequest?.shortUrl}
                   </span>
-                </div>
-                <div className="font-mono text-[11px] text-gray-200 mt-1 truncate">
-                  <span className="font-bold text-[#FFD066]">{currentRequest.method}</span>{" "}
-                  {currentRequest.shortUrl}
-                </div>
-              </div>
-            ) : (
-              <div className="text-[11px] text-gray-400 py-1 flex items-center justify-between">
-                <span>System Idle</span>
-                <span className="text-[10px] text-[#1F7A3A] font-semibold">● Ready</span>
-              </div>
-            )}
-
-            {/* Recent requests log */}
-            <div className="mt-2 space-y-1 max-h-36 overflow-y-auto pr-1">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">
-                Recent Traffic
-              </div>
-              {recentLogs.length === 0 ? (
-                <div className="text-[10px] text-gray-500 italic">No network calls yet</div>
+                </>
               ) : (
-                recentLogs.map((log) => (
-                  <div
-                    key={log.id}
-                    className="flex items-center justify-between text-[10px] py-1 border-b border-[#24284A] font-mono"
+                <>
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      isLastError ? "bg-red-500" : "bg-[#1F7A3A]"
+                    }`}
+                  />
+                  <span
+                    className={`font-medium text-[11px] ${
+                      isLastError ? "text-white" : "text-[#4A4F66]"
+                    }`}
                   >
-                    <div className="truncate max-w-[170px]">
-                      <span
-                        className={
-                          log.method === "POST"
-                            ? "text-[#FDB91F]"
-                            : log.method === "GET"
-                            ? "text-blue-400"
-                            : "text-purple-400"
-                        }
-                      >
-                        {log.method}
-                      </span>{" "}
-                      <span className="text-gray-300">{log.shortUrl}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-right pl-2">
-                      <span
-                        className={
-                          log.state === "error"
-                            ? "text-red-400 font-bold"
-                            : log.state === "success"
-                            ? "text-emerald-400"
-                            : "text-amber-400"
-                        }
-                      >
-                        {log.status || (log.state === "waiting" ? "..." : "ok")}
-                      </span>
-                      {log.durationMs !== undefined && (
-                        <span className="text-gray-400 text-[9px]">
-                          {log.durationMs}ms
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))
+                    {recentLogs.length > 0
+                      ? isLastError
+                        ? `${lastLog?.status || "Request"} Error (${lastLog?.durationMs || 0}ms)`
+                        : `${lastLog?.status || "200"} OK (${lastLog?.durationMs || 0}ms)`
+                      : "Real-time Telemetry"}
+                  </span>
+                </>
               )}
+              <span className="text-[10px] text-[#727791] font-mono pl-1 border-l border-gray-300">
+                ⚡
+              </span>
+            </button>
+          ) : (
+            <div className="bg-[#1C1F3A] text-white border border-[#2F3356] rounded-xl shadow-2xl p-3 w-80 max-w-[90vw] animate-in fade-in slide-in-from-bottom-2 duration-200">
+              <div className="flex items-center justify-between pb-2 border-b border-[#2F3356] mb-2">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      isLoading ? "bg-[#FDB91F] animate-pulse" : "bg-[#1F7A3A]"
+                    }`}
+                  />
+                  <span className="font-bold text-[11px] text-white tracking-wide uppercase">
+                    Network Telemetry
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-[#A5A9C0] font-mono">
+                    {activeCount} active
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsExpanded(false)}
+                    className="text-gray-400 hover:text-white px-1 font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              {/* Current Request State */}
+              {isLoading && currentRequest ? (
+                <div className="bg-[#24284A] border border-[#FDB91F]/40 rounded-lg p-2 mb-2">
+                  <div className="flex items-center justify-between text-[10px] text-[#FDB91F] font-bold">
+                    <span className="flex items-center gap-1">
+                      <span className="animate-spin text-xs">⏳</span>
+                      {currentRequest.state === "requesting"
+                        ? "Transmitting Request..."
+                        : "Awaiting Server Response..."}
+                    </span>
+                    <span className="font-mono text-[9px] uppercase tracking-wider bg-[#FDB91F]/20 px-1.5 py-0.5 rounded">
+                      In Flight
+                    </span>
+                  </div>
+                  <div className="font-mono text-[11px] text-gray-200 mt-1 truncate">
+                    <span className="font-bold text-[#FFD066]">{currentRequest.method}</span>{" "}
+                    {currentRequest.shortUrl}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-[11px] text-gray-400 py-1 flex items-center justify-between">
+                  <span>System Idle</span>
+                  <span className="text-[10px] text-[#1F7A3A] font-semibold">● Ready</span>
+                </div>
+              )}
+
+              {/* Recent requests log */}
+              <div className="mt-2 space-y-1 max-h-36 overflow-y-auto pr-1">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">
+                  Recent Traffic
+                </div>
+                {recentLogs.length === 0 ? (
+                  <div className="text-[10px] text-gray-500 italic">No network calls yet</div>
+                ) : (
+                  recentLogs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="flex items-center justify-between text-[10px] py-1 border-b border-[#24284A] font-mono"
+                    >
+                      <div className="truncate max-w-[170px]">
+                        <span
+                          className={
+                            log.method === "POST"
+                              ? "text-[#FDB91F]"
+                              : log.method === "GET"
+                              ? "text-blue-400"
+                              : "text-purple-400"
+                          }
+                        >
+                          {log.method}
+                        </span>{" "}
+                        <span className="text-gray-300">{log.shortUrl}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-right pl-2">
+                        <span
+                          className={
+                            log.state === "error"
+                              ? "text-red-400 font-bold"
+                              : log.state === "success"
+                              ? "text-emerald-400"
+                              : "text-amber-400"
+                          }
+                        >
+                          {log.status || (log.state === "waiting" ? "..." : "ok")}
+                        </span>
+                        {log.durationMs !== undefined && (
+                          <span className="text-gray-400 text-[9px]">
+                            {log.durationMs}ms
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </NetworkContext.Provider>
   );
 }
