@@ -58,3 +58,12 @@ begin
   return v_new_version;
 end;
 $$;
+
+-- Lock down the function: only the server (service_role) can call it
+alter function public.save_app_state(text, jsonb, bigint) set search_path = public;
+revoke all on function public.save_app_state(text, jsonb, bigint) from public, anon, authenticated;
+grant execute on function public.save_app_state(text, jsonb, bigint) to service_role;
+
+-- Belt and braces: block direct table access too
+revoke all on table public.app_state from anon, authenticated;
+

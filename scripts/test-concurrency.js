@@ -8,7 +8,43 @@
  *   node scripts/test-concurrency.js [http://localhost:3000]
  */
 
+const fs = require("fs");
+const path = require("path");
+
 const targetUrl = process.argv[2] || process.env.APP_URL || "http://localhost:3000";
+
+async function getDbClients() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (supabaseUrl && supabaseKey) {
+    const { createClient } = require("@supabase/supabase-js");
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data, error } = await supabase
+      .from("app_state")
+      .select("data, version")
+      .eq("key", "db")
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Supabase query error: ${error.message}`);
+    }
+    const clients = data?.data?.clients || [];
+    return { mode: "Supabase (app_state table)", clients, version: data?.version };
+  }
+
+  // Local fallback
+  const dbPath = path.join(process.cwd(), ".data", "db.json");
+  if (!fs.existsSync(dbPath)) {
+    return { mode: "Local file (.data/db.json)", clients: [], version: 0 };
+  }
+  const raw = fs.readFileSync(dbPath, "utf8");
+  const parsed = JSON.parse(raw);
+  const clients = parsed.clients || [];
+  return { mode: "Local file (.data/db.json)", clients, version: 0 };
+}
 
 async function run() {
   console.log("==================================================");
@@ -31,6 +67,12 @@ async function run() {
     process.exit(0);
   }
 
+  // Detect storage backend and initial count
+  const initialDb = await getDbClients();
+  const initialCount = initialDb.clients.length;
+  console.log(`Storage backend detected: ${initialDb.mode}`);
+  console.log(`Initial lead/client count in db: ${initialCount}\n`);
+
   const BATCH_SIZE = 20;
   const timestamp = Date.now();
   console.log(`Sending ${BATCH_SIZE} concurrent lead submissions to /api/lead...`);
@@ -41,7 +83,7 @@ async function run() {
     const phone = `98${suffix.slice(-8)}`;
     const payload = {
       name: `Concurrency Lead ${i + 1}`,
-      businessName: `Test Venture ${i + 1}`,
+      businessName: `Test Venture ${i + 1} (${timestamp})`,
       businessType: "Healthcare / Small Business",
       city: "Mumbai",
       phone: phone,
@@ -57,7 +99,7 @@ async function run() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-forwarded-for": `10.100.1.${i + 1}`,
+          "x-forwarded-for": `10.100.2.${i + 1}`,
         },
         body: JSON.stringify(payload),
       });
@@ -83,7 +125,7 @@ async function run() {
   const succeeded = results.filter((r) => r.ok).length;
   const failed = results.filter((r) => !r.ok);
 
-  console.log(`Results: ${succeeded}/${BATCH_SIZE} requests succeeded.`);
+  console.log(`\nHTTP Results: ${succeeded}/${BATCH_SIZE} requests returned 200 OK.`);
 
   if (failed.length > 0) {
     console.error(`[FAIL] ${failed.length} requests failed:`);
@@ -93,47 +135,28 @@ async function run() {
     process.exit(1);
   }
 
-  console.log(`✓ All ${BATCH_SIZE} parallel requests returned 200 OK.`);
+  // Small delay to allow any pending asynchronous persistence writes to complete
+  await new Promise((r) => setTimeout(r, 1000));
 
-  // If Supabase environment variables are provided, verify the stored count
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Verify stored count in database
+  console.log(`\nVerifying database lead/client count in ${initialDb.mode}...`);
+  const finalDb = await getDbClients();
+  const finalCount = finalDb.clients.length;
+  const testClients = finalDb.clients.filter(
+    (c) => c.name && c.name.includes(`(${timestamp})`)
+  );
 
-  if (supabaseUrl && supabaseKey) {
-    console.log("\nVerifying Supabase persistence and absence of lost updates...");
-    try {
-      const { createClient } = require("@supabase/supabase-js");
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      const { data, error } = await supabase
-        .from("app_state")
-        .select("data, version")
-        .eq("key", "db_data")
-        .single();
+  console.log(`Previous count: ${initialCount}`);
+  console.log(`Current count:  ${finalCount} (Delta: +${finalCount - initialCount})`);
+  console.log(`Test leads matching timestamp (${timestamp}): ${testClients.length}`);
 
-      if (error) {
-        console.error(`[FAIL] Could not query Supabase app_state: ${error.message}`);
-        process.exit(1);
-      }
-
-      const leads = data?.data?.leads || [];
-      const testLeads = leads.filter((l) =>
-        l.notes && l.notes.includes(`at ${timestamp}`)
-      );
-
-      console.log(`Found ${testLeads.length} leads in Supabase matching test timestamp ${timestamp}.`);
-      if (testLeads.length === BATCH_SIZE) {
-        console.log(`✓ Concurrency check PASSED: Exactly ${BATCH_SIZE} leads recorded (version = ${data.version}). No lost updates!`);
-      } else {
-        console.error(`[FAIL] Expected ${BATCH_SIZE} leads, but found ${testLeads.length}. Lost updates detected!`);
-        process.exit(1);
-      }
-    } catch (err) {
-      console.error(`[WARN] Supabase verification threw an error: ${err.message}`);
-    }
-  } else {
-    console.log("\n[INFO] Supabase credentials not set in environment. Skipping direct database assertion.");
-    console.log("Local concurrency simulation passed cleanly.");
+  if (testClients.length !== BATCH_SIZE || finalCount - initialCount !== BATCH_SIZE) {
+    console.error(`\n[FAIL] Lost update detected! Expected exactly +${BATCH_SIZE} leads, but got +${finalCount - initialCount} (matched ${testClients.length}/${BATCH_SIZE}).`);
+    process.exit(1);
   }
+
+  console.log(`\n✓ Concurrency assertion PASSED on ${initialDb.mode}:`);
+  console.log(`  Lead count increased by exactly ${BATCH_SIZE} (${initialCount} -> ${finalCount}). Zero lost updates!`);
 
   console.log("\n==================================================");
   console.log("          CONCURRENCY SUITE COMPLETED             ");

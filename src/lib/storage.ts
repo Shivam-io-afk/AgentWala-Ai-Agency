@@ -113,10 +113,16 @@ export async function saveState(
 
   if (supabase) {
     try {
+      // Ensure p_expected_version is ALWAYS passed as a bigint/number (0 if row didn't exist). Never pass null.
+      const versionToPass =
+        typeof expectedVersion === "number" && !isNaN(expectedVersion)
+          ? expectedVersion
+          : 0;
+
       const { data: rpcRes, error } = await supabase.rpc("save_app_state", {
         p_key: key,
         p_data: data,
-        p_expected_version: expectedVersion != null ? expectedVersion : null,
+        p_expected_version: versionToPass,
       });
 
       if (error) {
