@@ -1,8 +1,8 @@
-# AgentWala Client Service Agreement
+# Agmeta Client Service Agreement
 
 ## How to use this template
 
-This is one master agreement for every AgentWala project: AI agents, WhatsApp bots, websites and apps. The project-specific details (features, price, dates) go in **Annex A: Scope of Work**, so the main terms never change between clients.
+This is one master agreement for every Agmeta project: AI agents, WhatsApp bots, websites and apps. The project-specific details (features, price, dates) go in **Annex A: Scope of Work**, so the main terms never change between clients.
 
 - Fill every `[BRACKETED]` field before sending.
 - The client accepts in the client portal (name + OTP), which records the time, IP address and document version. For projects above ₹1,00,000, also get an Aadhaar eSign through a provider such as Zoho Sign, Leegality or Digio, which carries stronger legal standing under the IT Act.
@@ -12,7 +12,7 @@ This is one master agreement for every AgentWala project: AI agents, WhatsApp bo
 
 This Agreement is made on `[DATE]` between:
 
-- **Service Provider:** `[YOUR FULL NAME]`, trading as **AgentWala**, `[ADDRESS]`, `[GSTIN or "Not registered under GST"]`, `[UDYAM NUMBER if any]` ("AgentWala", "we").
+- **Service Provider:** `[YOUR FULL NAME]`, trading as **Agmeta**, `[ADDRESS]`, `[GSTIN or "Not registered under GST"]`, `[UDYAM NUMBER if any]` ("Agmeta", "we").
 - **Client:** `[CLIENT LEGAL NAME]`, `[BUSINESS NAME]`, `[ADDRESS]`, `[GSTIN if any]`, represented by `[AUTHORISED PERSON, DESIGNATION]` ("Client", "you").
 
 **Project:** `[PROJECT NAME]`, of type `[AI Agent / WhatsApp Bot / Website / App / Combination]`, as described in Annex A. Annex A, and any Change Request approved under clause 4, form part of this Agreement.
@@ -35,11 +35,11 @@ This Agreement is made on `[DATE]` between:
 
 **2.7 Content you approve.** We may prepare text, FAQs, images and your agent's knowledge base using AI tools, from information you give or link to us. You review and approve this content in the portal before it goes live, and you are responsible for the accuracy of facts, prices, offers and any health, legal or financial claims in it. Images we add are your own, licensed, or AI-generated.
 
-**2.8 Team and subcontractors.** We may use vetted team members or freelancers for parts of the work. Each of them is bound by confidentiality and assigns their work to us, sees only what their task needs, and does not contact you directly. AgentWala stays fully responsible for the work and remains your single point of contact.
+**2.8 Team and subcontractors.** We may use vetted team members or freelancers for parts of the work. Each of them is bound by confidentiality and assigns their work to us, sees only what their task needs, and does not contact you directly. Agmeta stays fully responsible for the work and remains your single point of contact.
 
 ## 3. Fees and payments
 
-**3.1 Fees.** The project fee, any monthly fee and the payment schedule are in Annex A. Prices are in Indian rupees. If AgentWala is registered under GST, GST at the applicable rate is added to every invoice; if not, invoices carry no GST.
+**3.1 Fees.** The project fee, any monthly fee and the payment schedule are in Annex A. Prices are in Indian rupees. If Agmeta is registered under GST, GST at the applicable rate is added to every invoice; if not, invoices carry no GST.
 
 **3.2 Payment schedule.** Unless Annex A says otherwise:
 
@@ -53,7 +53,7 @@ This Agreement is made on `[DATE]` between:
 
 **3.4 Due dates.** Each invoice is due within `[7]` days. Mid-project and final invoices are raised when the matching milestone is shared with you, not when you approve it.
 
-**3.5 Late payment.** If an invoice is unpaid 7 days after its due date, we may pause work and hosted services (clause 5.3) until it is paid. Unpaid amounts carry interest at `[1.5]`% per month, or, where AgentWala is a registered micro or small enterprise, the interest set by the MSMED Act, 2006, whichever is higher.
+**3.5 Late payment.** If an invoice is unpaid 7 days after its due date, we may pause work and hosted services (clause 5.3) until it is paid. Unpaid amounts carry interest at `[1.5]`% per month, or, where Agmeta is a registered micro or small enterprise, the interest set by the MSMED Act, 2006, whichever is higher.
 
 **3.6 Monthly fees.** Monthly fees (AI agent retainers, care plans) are billed in advance on the `[1st]` of each month through an automatic payment link or mandate, and can be cancelled with 30 days' written notice.
 
@@ -85,9 +85,9 @@ This Agreement is made on `[DATE]` between:
 
 ## 6. Ownership, handover and third-party costs
 
-**6.1 Ownership passes on full payment.** When every amount under this Agreement is paid, you own the final deliverables made specifically for you: designs, content we wrote for you, the source code of your website or app, and your agent's prompts and knowledge base. Until then, AgentWala owns them and you may only review them on staging.
+**6.1 Ownership passes on full payment.** When every amount under this Agreement is paid, you own the final deliverables made specifically for you: designs, content we wrote for you, the source code of your website or app, and your agent's prompts and knowledge base. Until then, Agmeta owns them and you may only review them on staging.
 
-**6.2 What stays ours.** Our reusable tools, templates, code libraries, agent frameworks and know-how remain AgentWala's. You get a permanent, non-exclusive licence to use them as part of your project. Open-source and third-party components stay under their own licences.
+**6.2 What stays ours.** Our reusable tools, templates, code libraries, agent frameworks and know-how remain Agmeta's. You get a permanent, non-exclusive licence to use them as part of your project. Open-source and third-party components stay under their own licences.
 
 **6.3 Third-party accounts and costs.** Accounts are opened in **your name** wherever possible, and you pay their fees directly or reimburse us at cost. These include: domain, hosting, WhatsApp Business API messages, phone numbers and call minutes, AI model usage above the plan limit, payment gateway fees, email services, Google Play and Apple developer accounts, and paid plugins or themes. Usage included in a monthly plan is listed in Annex A.
 
@@ -126,7 +126,7 @@ This Agreement is made on `[DATE]` between:
 
 **Signed**
 
-|  | AgentWala | Client |
+|  | Agmeta | Client |
 | --- | --- | --- |
 | Name | `[YOUR NAME]` | `[AUTHORISED PERSON]` |
 | Designation | Proprietor | `[DESIGNATION]` |

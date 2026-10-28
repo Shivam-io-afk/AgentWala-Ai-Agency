@@ -34,11 +34,11 @@ function getLocalFilePath(key: string): string {
   if (process.env.VERCEL) {
     if (!warnedVercelTmp) {
       console.warn(
-        "[storage] Running on Vercel without SUPABASE_SERVICE_ROLE_KEY. State stored in /tmp/agentwala (ephemeral)."
+        "[storage] Running on Vercel without SUPABASE_SERVICE_ROLE_KEY. State stored in /tmp/agmeta (ephemeral)."
       );
       warnedVercelTmp = true;
     }
-    return path.join("/tmp/agentwala", `${key}.json`);
+    return path.join("/tmp/agmeta", `${key}.json`);
   }
   return path.join(process.cwd(), ".data", `${key}.json`);
 }

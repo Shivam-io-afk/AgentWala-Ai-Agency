@@ -62,7 +62,7 @@ export async function generateAICompletion(options: AICompletionOptions): Promis
           body: JSON.stringify({
             model: "claude-3-5-sonnet-20241022",
             max_tokens: options.maxTokens || 1000,
-            system: options.systemPrompt || "You are an AI assistant for AgentWala.",
+            system: options.systemPrompt || "You are an AI assistant for Agmeta.",
             messages: [{ role: "user", content: options.userPrompt }],
           }),
         });

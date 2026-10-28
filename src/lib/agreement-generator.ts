@@ -33,7 +33,7 @@ export function generateAgreementHtml(data: AgreementData): { html: string; hash
   });
 
   const founderName = settings?.founder_name || "Shivam";
-  const businessName = "AgentWala";
+  const businessName = "Agmeta";
   const founderAddress = settings?.address || "Rewa, Madhya Pradesh 486001, India";
   const gstStatus = settings?.gst_registered && settings?.gstin
     ? `GSTIN: ${settings.gstin}`
@@ -65,7 +65,7 @@ export function generateAgreementHtml(data: AgreementData): { html: string; hash
     : ["Receptionist Conversation Flow", "Booking Intake Screen", "Admin Calendar View"];
 
   const rawTextForHash = `
-AgentWala Client Service Agreement
+Agmeta Client Service Agreement
 Date: ${dateStr}
 Provider: ${founderName} dba ${businessName}, ${founderAddress}, ${gstStatus}
 Client: ${clientLegalName}, ${clientAddress}, Rep by: ${clientOwner}
@@ -98,12 +98,12 @@ Features: ${features.join("; ")}
 <body>
   <h1>Master Service Agreement &amp; Scope of Work</h1>
   <p><b>Date:</b> ${dateStr}</p>
-  <p><b>Agreement Reference:</b> AW-MSA-${client.id.slice(0, 8).toUpperCase()}</p>
+  <p><b>Agreement Reference:</b> AG-MSA-${client.id.slice(0, 8).toUpperCase()}</p>
 
   <h2>1. Parties and Project</h2>
   <p>This Agreement is entered into between:</p>
   <ul>
-    <li><b>Service Provider:</b> ${founderName}, trading as <b>AgentWala</b>, ${founderAddress}, ${gstStatus} (&quot;AgentWala&quot;, &quot;we&quot;).</li>
+    <li><b>Service Provider:</b> ${founderName}, trading as <b>Agmeta</b>, ${founderAddress}, ${gstStatus} (&quot;Agmeta&quot;, &quot;we&quot;).</li>
     <li><b>Client:</b> ${clientLegalName}, ${clientAddress}, ${clientGstin}, represented by <b>${clientOwner}</b> (&quot;Client&quot;, &quot;you&quot;).</li>
   </ul>
   <p><b>Project:</b> ${projectName}, classified as <b>${serviceType}</b>.</p>
@@ -114,7 +114,7 @@ Features: ${features.join("; ")}
   <p><b>2.2 Delivery Timeline:</b> Estimated target is <b>${requirements?.deadline || "14 business days"}</b> from receipt of advance and client assets.</p>
   <p><b>2.3 Point of Contact:</b> Client designates ${clientOwner} as the sole authorized representative for approvals and change instructions.</p>
   <p><b>2.7 Content You Approve:</b> We may prepare text, FAQs, images and your agent's knowledge base using AI tools, from information you give or link to us. You review and approve this content in the portal before it goes live, and you are responsible for the accuracy of facts, prices, offers and any health, legal or financial claims in it. Images we add are your own, licensed, or AI-generated.</p>
-  <p><b>2.8 Team and Subcontractors:</b> We may use vetted team members or freelancers for parts of the work. Each of them is bound by confidentiality and assigns their work to us, sees only what their task needs, and does not contact you directly. AgentWala stays fully responsible for the work and remains your single point of contact.</p>
+  <p><b>2.8 Team and Subcontractors:</b> We may use vetted team members or freelancers for parts of the work. Each of them is bound by confidentiality and assigns their work to us, sees only what their task needs, and does not contact you directly. Agmeta stays fully responsible for the work and remains your single point of contact.</p>
 
   <h2>3. Fees, Milestones and Invoicing</h2>
   <p><b>3.1 Project Fee:</b> ${formatINR(priceINR)} (plus applicable GST if registered).</p>

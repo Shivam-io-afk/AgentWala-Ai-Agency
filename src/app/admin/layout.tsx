@@ -17,23 +17,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   React.useEffect(() => {
     if (typeof document === "undefined") return;
     if (pathname === "/admin") {
-      document.title = "Pipeline · AgentWala OS";
+      document.title = "Pipeline · Agmeta OS";
     } else if (pathname.startsWith("/admin/clients/")) {
       // client detail page sets its own document.title
     } else if (pathname.startsWith("/admin/automations")) {
-      document.title = "Automations · AgentWala OS";
+      document.title = "Automations · Agmeta OS";
     } else if (pathname.startsWith("/admin/work")) {
-      document.title = "Work Board · AgentWala OS";
+      document.title = "Work Board · Agmeta OS";
     } else if (pathname.startsWith("/admin/invoices")) {
-      document.title = "Invoices · AgentWala OS";
+      document.title = "Invoices · Agmeta OS";
     } else if (pathname.startsWith("/admin/messages")) {
-      document.title = "Messages · AgentWala OS";
+      document.title = "Messages · Agmeta OS";
     } else if (pathname.startsWith("/admin/proposals")) {
-      document.title = "Proposals · AgentWala OS";
+      document.title = "Proposals · Agmeta OS";
     } else if (pathname.startsWith("/admin/settings")) {
-      document.title = "Settings · AgentWala OS";
+      document.title = "Settings · Agmeta OS";
     } else {
-      document.title = "Pipeline · AgentWala OS";
+      document.title = "Pipeline · Agmeta OS";
     }
   }, [pathname]);
 
@@ -68,7 +68,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <RobotIcon className="w-5 h-5 text-[#1B1F3B]" />
               </div>
               <span className="font-display font-bold text-lg tracking-tight">
-                AgentWala OS
+                Agmeta OS
               </span>
             </Link>
 

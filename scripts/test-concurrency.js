@@ -1,5 +1,5 @@
 /**
- * Concurrency & Lost-Update Verification Script for AgentWala OS
+ * Concurrency & Lost-Update Verification Script for Agmeta OS
  *
  * Verifies that parallel writes (such as incoming leads) do not suffer
  * from lost updates under concurrent load.
@@ -64,7 +64,7 @@ async function getDbClients() {
 
 async function run() {
   console.log("==================================================");
-  console.log("  AGENTWALA OS CONCURRENCY VERIFICATION TEST      ");
+  console.log("  AGMETA OS CONCURRENCY VERIFICATION TEST      ");
   console.log("==================================================");
   console.log(`Targeting: ${targetUrl}\n`);
 

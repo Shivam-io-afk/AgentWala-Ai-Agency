@@ -1,4 +1,4 @@
--- AgentWala App State Storage Table for Vercel Serverless
+-- Agmeta App State Storage Table for Vercel Serverless
 -- Stores document-style JSON blobs (e.g. key = 'db', key = 'clock')
 
 create table if not exists public.app_state (

@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 
-const COOKIE_NAME = "agentwala_session";
+const COOKIE_NAME = "agmeta_session";
 
 /**
  * Get the HMAC signing secret.
@@ -14,7 +14,7 @@ export function getAuthSecret(): string {
     if (process.env.NODE_ENV === "production") {
       throw new Error("AUTH_SECRET environment variable is missing in production.");
     }
-    return "agentwala_dev_secret_key_884920492193";
+    return "agmeta_dev_secret_key_884920492193";
   }
   return secret;
 }

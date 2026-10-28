@@ -6,7 +6,7 @@ import { lookupStateFromCity } from "../src/lib/location";
 import { createSessionToken } from "../src/lib/auth";
 
 async function runAcceptanceTests() {
-  console.log("=== STARTING AGENTWALA OS ACCEPTANCE VERIFICATION ===");
+  console.log("=== STARTING AGMETA OS ACCEPTANCE VERIFICATION ===");
   await db.resetDemoData();
 
   // BUG 1: OTP Verification & Security
@@ -189,7 +189,7 @@ async function runAcceptanceTests() {
   await fetch("http://localhost:3000/api/portal/tok_batra_skin_419");
   const founderSession = createSessionToken("shivam.mishra.cuh@gmail.com");
   await fetch("http://localhost:3000/api/admin/clients/c-ex-2", {
-    headers: { cookie: `agentwala_session=${founderSession}` },
+    headers: { cookie: `agmeta_session=${founderSession}` },
   });
   await new Promise((r) => setTimeout(r, 400));
 
@@ -201,7 +201,7 @@ async function runAcceptanceTests() {
 
   const t1 = Date.now();
   const adminClientFetch = await fetch("http://localhost:3000/api/admin/clients/c-ex-2", {
-    headers: { cookie: `agentwala_session=${founderSession}` },
+    headers: { cookie: `agmeta_session=${founderSession}` },
   });
   const tAdmin = Date.now() - t1;
   console.log(`/api/admin/clients/[id] response time: ${tAdmin}ms`);

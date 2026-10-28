@@ -25,7 +25,7 @@ export interface DispatchResult {
 }
 
 /**
- * Centralized, idempotent message dispatcher for AgentWala OS (v2)
+ * Centralized, idempotent message dispatcher for Agmeta OS (v2)
  * Enforces:
  * - Unique idempotency keys (Bug 6)
  * - 3-cap lead message limit -> mark Cold (Bug 6)

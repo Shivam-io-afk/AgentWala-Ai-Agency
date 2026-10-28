@@ -335,7 +335,7 @@ export function NetworkLoadingProvider({ children }: { children: React.ReactNode
  * Reusable full-screen or section loading screen with real-time feedback
  */
 export function RealtimeLoadingScreen({
-  title = "Connecting to AgentWala OS",
+  title = "Connecting to Agmeta OS",
   subtext = "Syncing pipeline records and verifying state...",
   fullScreen = true,
 }: {

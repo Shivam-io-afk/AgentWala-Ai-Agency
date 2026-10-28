@@ -337,7 +337,7 @@ export default function AdminSettingsPage() {
           ))}
         </div>
         <p className="text-[11px] text-[#727791] pt-1">
-          💡 If any external API key is missing from <code>.env.local</code>, AgentWala OS automatically falls back to offline simulation and logs every transaction into the activity table.
+          💡 If any external API key is missing from <code>.env.local</code>, Agmeta OS automatically falls back to offline simulation and logs every transaction into the activity table.
         </p>
       </div>
 

@@ -109,7 +109,7 @@ export default function LoginPage() {
               Founder Command Center
             </h1>
             <p className="text-xs sm:text-sm text-[#4A4F66] mt-1">
-              AgentWala OS · Automated Solo Agency
+              Agmeta OS · Automated Solo Agency
             </p>
           </div>
         </div>

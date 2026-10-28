@@ -1,5 +1,5 @@
 /**
- * Automated Verification Suite for AgentWala OS (v2)
+ * Automated Verification Suite for Agmeta OS (v2)
  * Tests:
  * 1. v2 Pricing & GST on/off switch (AI Agents + Websites & Apps)
  * 2. 10-Stage v2 Pipeline Derivation across 27 keys (l1–h3)
@@ -169,7 +169,7 @@ function testAgreementAndOtp() {
     return crypto.createHash("sha256").update(content).digest("hex");
   }
 
-  const sampleDoc = "AgentWala Master Agreement | Client: Sunrise Dental | Fee: 35000 | Annex A";
+  const sampleDoc = "Agmeta Master Agreement | Client: Sunrise Dental | Fee: 35000 | Annex A";
   const hash1 = computeHash(sampleDoc);
   const hash2 = computeHash(sampleDoc);
   const tamperedHash = computeHash(sampleDoc + " tampered");
@@ -259,7 +259,7 @@ function testSafetyRules() {
 
 function runAll() {
   console.log("==================================================");
-  console.log("      AGENTWALA OS (v2) VERIFICATION SUITE        ");
+  console.log("        AGMETA OS (v2) VERIFICATION SUITE        ");
   console.log("==================================================");
   testPricingV2();
   testPipelineDerivationV2();

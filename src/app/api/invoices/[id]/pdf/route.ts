@@ -102,7 +102,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   <div class="invoice-box">
     <div class="header">
       <div>
-        <div class="logo">${settings.agency_name || "AgentWala"}</div>
+        <div class="logo">${settings.agency_name || "Agmeta"}</div>
         <div class="tagline">${settings.tagline || SITE_CONFIG.LEGAL_NAME}</div>
         <div style="font-size: 12px; color: #585D7A; margin-top: 6px;">
           ${isGst ? `GSTIN: ${settings.gstin} · ` : ""}PAN: ${settings.pan || SITE_CONFIG.PAN}<br>

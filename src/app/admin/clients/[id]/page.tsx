@@ -123,7 +123,7 @@ export default function ClientDetailPage() {
         const active = json.activeProject || json.projects?.[0] || null;
         setActiveProject(active);
         if (typeof document !== "undefined") {
-          document.title = `${json.client.name || active?.name || "Client"} · AgentWala OS`;
+          document.title = `${json.client.name || active?.name || "Client"} · Agmeta OS`;
         }
         setRequirements(json.requirements || null);
         setScopes(json.scopes || []);

@@ -174,7 +174,7 @@ export function DemoForm({
                   </a>
                 )}
                 <a
-                  href={`https://wa.me/${WHATSAPP_NUMBER_RAW}?text=Hi%20AgentWala%2C%20I%20just%20submitted%20an%20enquiry%20for%20${encodeURIComponent(submittedData.businessName)}.`}
+                  href={`https://wa.me/${WHATSAPP_NUMBER_RAW}?text=Hi%20Agmeta%2C%20I%20just%20submitted%20an%20enquiry%20for%20${encodeURIComponent(submittedData.businessName)}.`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl bg-[#1F7A3A] text-white font-bold text-sm hover:bg-[#18632F] transition-colors"

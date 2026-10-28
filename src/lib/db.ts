@@ -740,7 +740,7 @@ function getInitialSeed(): DatabaseSchema {
     invoices,
     proposals,
     messages: [
-      { id: "msg-1", client_id: "c-ex-1", project_id: "proj-1", direction: "outbound", channel: "whatsapp", body: `Hello Dr. Vikram! Welcome to AgentWala. Test our demo receptionist at ${DEMO_NUMBER} or pick a 20-min slot.`, status: "delivered", created_at: yesterday },
+      { id: "msg-1", client_id: "c-ex-1", project_id: "proj-1", direction: "outbound", channel: "whatsapp", body: `Hello Dr. Vikram! Welcome to Agmeta. Test our demo receptionist at ${DEMO_NUMBER} or pick a 20-min slot.`, status: "delivered", created_at: yesterday },
     ],
     agents: [
       {
@@ -760,7 +760,7 @@ function getInitialSeed(): DatabaseSchema {
     automations,
     recommendations,
     settings: {
-      agency_name: "AgentWala",
+      agency_name: "Agmeta",
       tagline: "AI Agents, WhatsApp Bots, Websites & Apps",
       founder_name: FOUNDER_NAME || "Shivam",
       founder_title: "Founder & Lead Engineer",
@@ -775,7 +775,7 @@ function getInitialSeed(): DatabaseSchema {
       pan: "ABCDE1234F",
       sac_code: "998313",
       bank_name: "HDFC Bank",
-      account_name: "AgentWala Solutions",
+      account_name: "Agmeta Technologies",
       account_number: "50200012345678",
       ifsc: "HDFC0001234",
       upi_id: "shivam@upi",

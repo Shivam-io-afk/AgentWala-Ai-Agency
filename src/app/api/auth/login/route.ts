@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     const verifyUrl = `${baseUrl}/api/auth/verify?token=${token}`;
 
     const resendApiKey = process.env.RESEND_API_KEY;
-    const emailFrom = process.env.EMAIL_FROM || "AgentWala <shivam.mishra.cuh@gmail.com>";
+    const emailFrom = process.env.EMAIL_FROM || "Agmeta <shivam.mishra.cuh@gmail.com>";
 
     if (resendApiKey) {
       try {
@@ -55,12 +55,12 @@ export async function POST(req: NextRequest) {
           body: JSON.stringify({
             from: emailFrom,
             to: [normalizedEmail],
-            subject: "AgentWala OS: One-Click Magic Login Link",
+            subject: "Agmeta OS: One-Click Magic Login Link",
             html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;border:1px solid #ECE6D8;border-radius:16px;background:#FBF7EE;">
               <h2 style="color:#1C1F3A;margin-top:0;">Founder Command Center</h2>
-              <p style="color:#4A4F66;font-size:14px;">Namaste! Here is your secure one-click login link for AgentWala OS:</p>
+              <p style="color:#4A4F66;font-size:14px;">Namaste! Here is your secure one-click login link for Agmeta OS:</p>
               <div style="margin:24px 0;">
-                <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#FDB91F;color:#1C1F3A;font-weight:bold;text-decoration:none;border-radius:10px;font-size:14px;">Log In to AgentWala OS →</a>
+                <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#FDB91F;color:#1C1F3A;font-weight:bold;text-decoration:none;border-radius:10px;font-size:14px;">Log In to Agmeta OS →</a>
               </div>
               <p style="color:#727791;font-size:12px;">Or copy this URL into your browser:<br/><span style="word-break:break-all;color:#1C1F3A;">${verifyUrl}</span></p>
               <p style="color:#9A9EA7;font-size:11px;margin-top:24px;border-top:1px solid #ECE6D8;padding-top:12px;">This link expires in 15 minutes. If you did not request this, you can ignore this email.</p>
@@ -81,8 +81,8 @@ export async function POST(req: NextRequest) {
         channel: "email",
         recipient: normalizedEmail,
         template_name: "founder_magic_link",
-        subject: "AgentWala OS: One-Click Magic Login Link",
-        content: `Namaste! Here is your secure one-click login link for AgentWala OS:\n\n${verifyUrl}\n\nThis link expires in 15 minutes. If you did not request this, you can ignore this message.`,
+        subject: "Agmeta OS: One-Click Magic Login Link",
+        content: `Namaste! Here is your secure one-click login link for Agmeta OS:\n\n${verifyUrl}\n\nThis link expires in 15 minutes. If you did not request this, you can ignore this message.`,
       });
     }
 

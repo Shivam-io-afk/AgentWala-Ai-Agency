@@ -1,5 +1,5 @@
 /**
- * Single source of truth for all AgentWala pricing, packages, care plans, and billing calculations (v2).
+ * Single source of truth for all Agmeta pricing, packages, care plans, and billing calculations (v2).
  */
 
 export interface PricingPackage {

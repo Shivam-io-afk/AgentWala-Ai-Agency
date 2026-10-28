@@ -83,13 +83,13 @@ export interface VerticalContent {
 
 export const clinicsContent: VerticalContent = {
   slug: "clinics",
-  seoTitle: "AI Receptionist for Clinics in India | AgentWala",
+  seoTitle: "AI Receptionist for Clinics in India | Agmeta",
   seoDescription:
-    "AgentWala answers your clinic's calls and WhatsApp 24×7, books appointments straight into your calendar and sends reminders in Hindi, English and Hinglish. Live within a week.",
+    "Agmeta answers your clinic's calls and WhatsApp 24×7, books appointments straight into your calendar and sends reminders in Hindi, English and Hinglish. Live within a week.",
   badge: "AI receptionist for clinics",
   heroH1: "Never miss a patient call again.",
   heroSubtitle:
-    "AgentWala answers your clinic's calls and WhatsApp 24×7, books appointments straight into your calendar and sends reminders — in Hindi, English and Hinglish. Live within a week, on your existing number.",
+    "Agmeta answers your clinic's calls and WhatsApp 24×7, books appointments straight into your calendar and sends reminders — in Hindi, English and Hinglish. Live within a week, on your existing number.",
   heroCtaPrimary: "Book a live demo on WhatsApp",
   heroCtaSecondary: "Build a demo for my clinic",
   demoLineText: `Book a live demo on WhatsApp: ${WHATSAPP_NUMBER} · Instant response in Hindi or English`,
@@ -183,7 +183,7 @@ export const clinicsContent: VerticalContent = {
   ],
   crossSell: {
     text: "Run a salon instead?",
-    linkText: "See AgentWala for salons",
+    linkText: "See Agmeta for salons",
     targetVertical: "salons",
   },
   howItWorksH2: "Live in three steps.",
@@ -299,6 +299,6 @@ export const clinicsContent: VerticalContent = {
   formButtonText: "Build my free demo",
   formSuccessMessage: "We've received your clinic's details! We'll WhatsApp you within one working day.",
   formWhatsAppPrefill:
-    "Hi AgentWala team! I just requested a free demo receptionist for my clinic. Can we connect?",
+    "Hi Agmeta team! I just requested a free demo receptionist for my clinic. Can we connect?",
 };
 

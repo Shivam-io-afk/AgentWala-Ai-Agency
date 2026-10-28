@@ -1,5 +1,5 @@
 -- ==============================================================================
--- AGENTWALA PRODUCTION SUPABASE SCHEMA (v2)
+-- AGMETA PRODUCTION SUPABASE SCHEMA (v2)
 -- Supports PostgreSQL, Row Level Security (RLS), multi-projects, agreements,
 -- revisions, time logs, usage costs, and GST on/off switch.
 -- ==============================================================================

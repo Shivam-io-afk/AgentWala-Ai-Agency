@@ -3,13 +3,13 @@ import { VerticalContent } from "./clinics";
 
 export const salonsContent: VerticalContent = {
   slug: "salons",
-  seoTitle: "AI Receptionist & Appointment Booking for Salons | AgentWala",
+  seoTitle: "AI Receptionist & Appointment Booking for Salons | Agmeta",
   seoDescription:
-    "AgentWala answers your salon & spa calls and WhatsApp 24×7, books appointments for stylists and sends reminders in Hindi and English.",
+    "Agmeta answers your salon & spa calls and WhatsApp 24×7, books appointments for stylists and sends reminders in Hindi and English.",
   badge: "AI receptionist for salons & spas",
   heroH1: "Never miss a salon booking again.",
   heroSubtitle:
-    "AgentWala answers client calls and WhatsApp 24×7, books stylists directly into your calendar, and sends reminders — in Hindi, English and Hinglish.",
+    "Agmeta answers client calls and WhatsApp 24×7, books stylists directly into your calendar, and sends reminders — in Hindi, English and Hinglish.",
   heroCtaPrimary: "Book a live demo on WhatsApp",
   heroCtaSecondary: "Build a demo for my salon",
   demoLineText: `Book a live demo on WhatsApp: ${WHATSAPP_NUMBER} · Instant response in Hindi or English`,
@@ -93,7 +93,7 @@ export const salonsContent: VerticalContent = {
   ],
   crossSell: {
     text: "Run a clinic instead?",
-    linkText: "See AgentWala for clinics",
+    linkText: "See Agmeta for clinics",
     targetVertical: "clinics",
   },
   howItWorksH2: "Live in three steps.",
@@ -190,6 +190,6 @@ export const salonsContent: VerticalContent = {
   formBusinessLabel: "Salon name and location",
   formButtonText: "Build my free demo",
   formSuccessMessage: "We've received your salon details! We'll WhatsApp you within one working day.",
-  formWhatsAppPrefill: "Hi AgentWala! I want to try the salon receptionist demo.",
+  formWhatsAppPrefill: "Hi Agmeta! I want to try the salon receptionist demo.",
 };
 

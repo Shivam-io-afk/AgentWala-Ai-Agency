@@ -3,8 +3,8 @@ import { RobotIcon } from "@/components/icons";
 import { CITY, EMAIL, WHATSAPP_NUMBER } from "@/content/site";
 
 export const metadata = {
-  title: "Privacy Policy | AgentWala",
-  description: "AgentWala DPDP Act compliant privacy policy and patient data security guidelines.",
+  title: "Privacy Policy | Agmeta",
+  description: "Agmeta DPDP Act compliant privacy policy and patient data security guidelines.",
 };
 
 export default function PrivacyPage() {
@@ -16,7 +16,7 @@ export default function PrivacyPage() {
             <div className="w-8 h-8 rounded-lg bg-[#FDB91F] flex items-center justify-center text-[#1C1F3A]">
               <RobotIcon className="w-5 h-5 text-[#1C1F3A]" />
             </div>
-            <span className="font-display font-bold text-xl text-[#1C1F3A]">AgentWala</span>
+            <span className="font-display font-bold text-xl text-[#1C1F3A]">Agmeta</span>
           </Link>
           <Link href="/" className="text-sm font-semibold text-[#4A4F66] hover:text-[#1C1F3A]">
             Back to Home
@@ -37,7 +37,7 @@ export default function PrivacyPage() {
         <section className="space-y-3">
           <h2 className="font-display font-bold text-xl text-[#1C1F3A]">1. Data We Collect &amp; Why</h2>
           <p>
-            AgentWala acts as a Data Processor on behalf of clinics, salons, and businesses (the Data Fiduciaries). We collect and process only the minimal information strictly necessary to facilitate appointment bookings and customer queries:
+            Agmeta acts as a Data Processor on behalf of clinics, salons, and businesses (the Data Fiduciaries). We collect and process only the minimal information strictly necessary to facilitate appointment bookings and customer queries:
           </p>
           <ul className="list-disc pl-5 space-y-1 text-sm">
             <li>Caller name and telephone/WhatsApp number.</li>
@@ -49,7 +49,7 @@ export default function PrivacyPage() {
         <section className="space-y-3">
           <h2 className="font-display font-bold text-xl text-[#1C1F3A]">2. No Medical Advice &amp; Protected Health Data</h2>
           <p>
-            AgentWala receptionists are programmed strictly for administrative tasks (timings, appointments, fee transparency, clinic directions). The AI is explicitly barred from offering diagnostic opinions, prescriptions, or clinical triage. Sensitive health details are never requested or stored.
+            Agmeta receptionists are programmed strictly for administrative tasks (timings, appointments, fee transparency, clinic directions). The AI is explicitly barred from offering diagnostic opinions, prescriptions, or clinical triage. Sensitive health details are never requested or stored.
           </p>
         </section>
 
@@ -73,7 +73,7 @@ export default function PrivacyPage() {
 
         <section className="space-y-3 border-t border-[#ECE6D8] pt-6 text-sm text-[#727791]">
           <p>
-            AgentWala Technologies Private Limited · {CITY}, India · Phone/WhatsApp: {WHATSAPP_NUMBER}
+            Agmeta Technologies Private Limited · {CITY}, India · Phone/WhatsApp: {WHATSAPP_NUMBER}
           </p>
         </section>
       </main>

@@ -25,7 +25,7 @@ if (!resendKey) {
 console.log('✓ Found RESEND_API_KEY in .env.local (length: ' + resendKey.length + ')');
 
 // 2. Append EMAIL_FROM to .env.local if not present
-const emailFromVal = 'AgentWala <onboarding@resend.dev>';
+const emailFromVal = 'Agmeta <onboarding@resend.dev>';
 if (!envContent.includes('EMAIL_FROM=')) {
   const lineToAdd = (envContent.endsWith('\n') ? '' : '\n') + `EMAIL_FROM=${emailFromVal}\n`;
   fs.appendFileSync(envPath, lineToAdd);

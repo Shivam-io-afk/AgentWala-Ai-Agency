@@ -3,8 +3,8 @@ import { RobotIcon } from "@/components/icons";
 import { CITY, STATE, EMAIL, WHATSAPP_NUMBER } from "@/config/site";
 
 export const metadata = {
-  title: "Terms of Service | AgentWala",
-  description: "Terms and conditions of service for AgentWala AI receptionists and client pipeline.",
+  title: "Terms of Service | Agmeta",
+  description: "Terms and conditions of service for Agmeta AI receptionists and client pipeline.",
 };
 
 export default function TermsPage() {
@@ -16,7 +16,7 @@ export default function TermsPage() {
             <div className="w-8 h-8 rounded-lg bg-[#FDB91F] flex items-center justify-center text-[#1C1F3A]">
               <RobotIcon className="w-5 h-5 text-[#1C1F3A]" />
             </div>
-            <span className="font-display font-bold text-xl text-[#1C1F3A]">AgentWala</span>
+            <span className="font-display font-bold text-xl text-[#1C1F3A]">Agmeta</span>
           </Link>
           <Link href="/" className="text-sm font-semibold text-[#4A4F66] hover:text-[#1C1F3A]">
             Back to Home
@@ -30,14 +30,14 @@ export default function TermsPage() {
             Terms of Service
           </h1>
           <p className="text-sm text-[#727791]">
-            Effective Date: October 2026 · AgentWala Technologies Private Limited
+            Effective Date: October 2026 · Agmeta Technologies Private Limited
           </p>
         </div>
 
         <section className="space-y-3">
           <h2 className="font-display font-bold text-xl text-[#1C1F3A]">1. Scope of Service</h2>
           <p>
-            AgentWala provides autonomous voice reception and WhatsApp AI messaging software for clinics and small businesses in India. Services include inbound telephone handling, multilingual appointment booking, calendar synchronization, and automated reminders.
+            Agmeta provides autonomous voice reception and WhatsApp AI messaging software for clinics and small businesses in India. Services include inbound telephone handling, multilingual appointment booking, calendar synchronization, and automated reminders.
           </p>
         </section>
 
@@ -64,7 +64,7 @@ export default function TermsPage() {
 
         <section className="space-y-3 border-t border-[#ECE6D8] pt-6 text-sm text-[#727791]">
           <p>
-            Questions? Contact {EMAIL} or write to: AgentWala, {CITY}, {STATE}, India.
+            Questions? Contact {EMAIL} or write to: Agmeta, {CITY}, {STATE}, India.
           </p>
         </section>
       </main>

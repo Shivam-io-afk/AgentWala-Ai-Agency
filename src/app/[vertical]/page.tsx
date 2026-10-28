@@ -18,7 +18,7 @@ export async function generateMetadata({
   const { vertical } = await params;
   if (vertical !== "clinics" && !verticalExists(vertical)) {
     return {
-      title: "Page Not Found · AgentWala",
+      title: "Page Not Found · Agmeta",
     };
   }
   const content = getVerticalContent(vertical);

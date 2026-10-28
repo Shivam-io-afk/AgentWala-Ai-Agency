@@ -4,7 +4,7 @@ import { getClientStageIndex, ALL_STAGES } from "./pipeline-constants";
 import { calculateBill, formatINR } from "./pricing";
 
 /**
- * AI Copilot Engine for AgentWala OS (Section 7b)
+ * AI Copilot Engine for Agmeta OS (Section 7b)
  * Generates plain Hinglish (or English) recommendations for the founder.
  */
 export async function runCopilotAudit(): Promise<Recommendation[]> {
@@ -247,7 +247,7 @@ export async function runCopilotAudit(): Promise<Recommendation[]> {
         ? `Kaise Karein: Demo meeting mein "Mehenga hai" objection handle karna`
         : `How-To: Handling the "Too expensive" objection on demo calls`,
       reason: isHinglish
-        ? `Clinic owner ko samjhao ki ₹14-18k front-desk hire sirf 1 shift karta hai, jabki AgentWala 24x7 dono lines par Hindi aur English answer karta hai.`
+        ? `Clinic owner ko samjhao ki ₹14-18k front-desk hire sirf 1 shift karta hai, jabki Agmeta 24x7 dono lines par Hindi aur English answer karta hai.`
         : `Anchor against the ₹14-18k monthly cost of a single front desk shift that handles only one call at a time.`,
       why_rule: "Rule 8: Early-stage agency coaching tip for first 5 client pitches.",
       action_label: isHinglish ? "Read Sales Script" : "Read Script",

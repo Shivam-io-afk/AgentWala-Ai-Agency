@@ -1,6 +1,6 @@
-# AgentWala: AI Receptionist Agency & Client Pipeline OS
+# Agmeta: AI Receptionist Agency & Client Pipeline OS
 
-Production web app and automated agency OS for **AgentWala**, an Indian AI-agent agency setting up autonomous receptionists for clinics, salons, coaching centres, and small businesses.
+Production web app and automated agency OS for **Agmeta**, an Indian AI-agent agency setting up autonomous receptionists for clinics, salons, coaching centres, and small businesses.
 
 Built with **Next.js 15 (App Router)**, **TypeScript**, and **Tailwind CSS**. Designed to run 100% locally out of the box with zero external API keys via intelligent mock drivers, or deployed directly to **Vercel + Supabase**.
 
@@ -9,7 +9,7 @@ Built with **Next.js 15 (App Router)**, **TypeScript**, and **Tailwind CSS**. De
 ## Features
 
 1. **Approved Landing Page Website (`/` & `/[vertical]`)**
-   - Matches the approved design in `design/agentwala-landing.html` and screenshots.
+   - Matches the approved design in `design/agmeta-landing.html` and screenshots.
    - Dynamic vertical system: `/` defaults to `/content/clinics.ts`. Dynamically supports any niche (e.g. `/salons`, `/coaching`) just by adding a content file.
    - Prices pulled directly from single source of truth `lib/pricing.ts`.
    - Hinglish animated WhatsApp chat mockup (respects `prefers-reduced-motion`).
@@ -19,9 +19,9 @@ Built with **Next.js 15 (App Router)**, **TypeScript**, and **Tailwind CSS**. De
    - DPDP-compliant `/privacy` and `/terms` pages.
    - Mobile-first, WCAG AA contrast, custom Google fonts (*Bricolage Grotesque*, *Inter*, *IBM Plex Mono*).
 
-2. **AgentWala OS Admin Panel (`/admin`)**
+2. **Agmeta OS Admin Panel (`/admin`)**
    - **Dashboard (`/admin`)**: 5-step conversion funnel (Leads → Meetings done → Won → Live → Paid), money breakdown (Collected, Still to collect, MRR, Open deals), today's focus items (overdue steps, meetings), and live activity feed.
-   - **Pipeline (`/admin/pipeline`)**: Dual view — Kanban board (10 columns) and List view matching `AgentWala Client Pipeline.html` with 10-segment progress tracks, overdue badges, phase filter chips, and live checkbox updates.
+   - **Pipeline (`/admin/pipeline`)**: Dual view — Kanban board (10 columns) and List view matching `Agmeta Client Pipeline.html` with 10-segment progress tracks, overdue badges, phase filter chips, and live checkbox updates.
    - **Client Detail (`/admin/clients/[id]`)**: Full 10-stage checklist (25 items) with Auto/Human badges and auto-derived stages, Bill Box, Tabs (Timeline, Messages, Proposal, Invoices, Agent Build/QA, Notes), and human approval triggers (H1 Meeting Notes, H2 Send Proposal, H3 Approve Go-Live).
    - **Invoices (`/admin/invoices`)**: Sequential financial year GST tax invoices (`AW/2026-27/XXXX`), Razorpay payment links, and HTML/PDF preview.
    - **Automations (`/admin/automations`)**: Controls for all 20 automations (A1–A20), toggles, execution logs, and one-click retry.
@@ -129,11 +129,11 @@ import { DEMO_NUMBER, CITY } from "./site";
 
 export const coachingContent: VerticalContent = {
   slug: "coaching",
-  seoTitle: "AI Receptionist for Coaching Classes & Tuition Centres | AgentWala",
-  seoDescription: "AgentWala answers admission queries, fees and timing questions for coaching centres.",
+  seoTitle: "AI Receptionist for Coaching Classes & Tuition Centres | Agmeta",
+  seoDescription: "Agmeta answers admission queries, fees and timing questions for coaching centres.",
   badge: "AI receptionist for coaching centres",
   heroH1: "Never miss a student admission enquiry.",
-  heroSubtitle: "AgentWala answers parent calls and WhatsApp 24×7, books demo classes into your schedule, and sends batch updates.",
+  heroSubtitle: "Agmeta answers parent calls and WhatsApp 24×7, books demo classes into your schedule, and sends batch updates.",
   heroCtaPrimary: "Book a live demo on WhatsApp",
   heroCtaSecondary: "Build a demo for my institute",
   demoLineText: `Book a live demo on WhatsApp: ${WHATSAPP_NUMBER} · Ask about course fees and batch timings.`,
@@ -159,7 +159,7 @@ export const coachingContent: VerticalContent = {
   formBusinessLabel: "Institute name and courses",
   formButtonText: "Build my free demo",
   formSuccessMessage: "We've received your institute details!",
-  formWhatsAppPrefill: "Hi AgentWala! I want to test the coaching demo receptionist.",
+  formWhatsAppPrefill: "Hi Agmeta! I want to test the coaching demo receptionist.",
 };
 ```
 
@@ -185,7 +185,7 @@ export const VERTICALS: Record<string, VerticalContent> = {
 3. In Project Settings → API, copy your **Project URL**, **Anon Key**, and **Service Role Key**.
 
 ### 2. Deploy to Vercel
-1. Push code to your GitHub repository (e.g. `https://github.com/Shivam-io-afk/AgentWala-Ai-Agency-`).
+1. Push code to your GitHub repository (e.g. `https://github.com/Shivam-io-afk/Agmeta-Ai-Agency-`).
 2. In [Vercel](https://vercel.com), import the repository.
 3. In **Settings → Environment Variables**, add:
    - `NEXT_PUBLIC_SITE_URL`: Your Vercel production URL (e.g. `https://agent-wala-ai-agency.vercel.app`)
@@ -213,7 +213,7 @@ export const VERTICALS: Record<string, VerticalContent> = {
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role secret (bypasses RLS to manage `app_state`) | Recommended for persistence on Vercel |
 | `LEAD_WEBHOOK_URL` | Webhook URL for Google Apps Script / Sheet sync | Optional |
 | `RESEND_API_KEY` | Resend Email API Key (for live magic link dispatch) | Optional |
-| `EMAIL_FROM` | Sender email address for Resend | Optional (default: `AgentWala <shivam.mishra.cuh@gmail.com>`) |
+| `EMAIL_FROM` | Sender email address for Resend | Optional (default: `Agmeta <shivam.mishra.cuh@gmail.com>`) |
 | `RAZORPAY_KEY_ID` | Razorpay Key ID | Optional (uses mock payment URLs if absent) |
 | `RAZORPAY_KEY_SECRET` | Razorpay Secret | Optional |
 | `RAZORPAY_WEBHOOK_SECRET` | Razorpay Webhook verification secret | Optional |
@@ -223,4 +223,4 @@ export const VERTICALS: Record<string, VerticalContent> = {
 | `AI_PROVIDER` | `gemini` or `anthropic` | Optional (default: `gemini`) |
 
 
-# AgentWala-Ai-Agency-
+# Agmeta-Ai-Agency-

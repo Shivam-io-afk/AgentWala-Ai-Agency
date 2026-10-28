@@ -89,8 +89,8 @@ export async function middleware(request: NextRequest) {
       );
     }
 
-    const secret = authSecret || "agentwala_dev_secret_key_884920492193";
-    const sessionCookie = request.cookies.get("agentwala_session")?.value;
+    const secret = authSecret || "agmeta_dev_secret_key_884920492193";
+    const sessionCookie = request.cookies.get("agmeta_session")?.value;
     const isAuthenticated = await verifySessionCookie(sessionCookie, secret);
 
     if (!isAuthenticated) {

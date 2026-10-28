@@ -1,5 +1,5 @@
 /**
- * Core type definitions for AgentWala OS (v2) & Client Pipeline
+ * Core type definitions for Agmeta OS (v2) & Client Pipeline
  */
 
 export type StageKey =

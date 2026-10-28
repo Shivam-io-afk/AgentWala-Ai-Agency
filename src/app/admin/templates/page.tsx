@@ -19,9 +19,9 @@ const DEFAULT_TEMPLATES: Template[] = [
     trigger: "Sent within 2 minutes of website lead form submission",
     body: `Namaste {{owner_name}} ji!
 
-Thank you for your interest in AgentWala for {{business_name}}.
+Thank you for your interest in Agmeta for {{business_name}}.
 
-I'm ${FOUNDER_NAME}, founder of AgentWala. You can test our demo receptionist right now by calling:
+I'm ${FOUNDER_NAME}, founder of Agmeta. You can test our demo receptionist right now by calling:
 📞 {{demo_number}}
 
 Want to see how it works for {{business_name}} specifically? Pick a convenient 20-min walkthrough slot here:
@@ -36,7 +36,7 @@ Feel free to reply directly to this chat if you have any questions!`,
     trigger: "Sent automatically 24 hours prior to scheduled Cal.com demo",
     body: `Namaste {{owner_name}} ji!
 
-Quick reminder: Our 20-minute AgentWala demo for {{business_name}} is tomorrow at {{meeting_time}}.
+Quick reminder: Our 20-minute Agmeta demo for {{business_name}} is tomorrow at {{meeting_time}}.
 
 We will have a customized voice demo ready for you to call live. Looking forward to our chat!`,
   },

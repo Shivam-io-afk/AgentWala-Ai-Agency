@@ -71,7 +71,7 @@ export function LandingPage({ content, initialSettings }: LandingPageProps) {
               <RobotIcon className="w-6 h-6 text-[#1C1F3A]" />
             </div>
             <span className="font-display font-extrabold text-2xl tracking-tight text-[#1C1F3A]">
-              AgentWala
+              Agmeta
             </span>
           </Link>
 
@@ -688,7 +688,7 @@ export function LandingPage({ content, initialSettings }: LandingPageProps) {
               &ldquo;{content.founderQuote}&rdquo;
             </blockquote>
             <p className="text-xs sm:text-sm font-bold text-[#727791] uppercase tracking-wider">
-              — {FOUNDER_NAME}, founder of AgentWala ({CITY}, {STATE})
+              — {FOUNDER_NAME}, founder of Agmeta ({CITY}, {STATE})
             </p>
           </div>
         </div>
@@ -721,7 +721,7 @@ export function LandingPage({ content, initialSettings }: LandingPageProps) {
               <RobotIcon className="w-5 h-5 text-[#1C1F3A]" />
             </div>
             <span className="font-display font-bold text-white text-lg">
-              AgentWala
+              Agmeta
             </span>
           </div>
 
@@ -749,7 +749,7 @@ export function LandingPage({ content, initialSettings }: LandingPageProps) {
             <Link href="/terms" className="hover:text-white transition-colors">
               Terms
             </Link>
-            <span>© 2026 AgentWala</span>
+            <span>© 2026 Agmeta</span>
           </div>
         </div>
       </footer>

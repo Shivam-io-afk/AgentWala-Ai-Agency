@@ -31,9 +31,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "AI Receptionist for Clinics in India | AgentWala",
+  title: "AI Receptionist for Clinics in India | Agmeta",
   description:
-    "AgentWala answers your clinic's calls and WhatsApp 24×7, books appointments straight into your calendar and sends reminders in Hindi, English and Hinglish. Live within a week.",
+    "Agmeta answers your clinic's calls and WhatsApp 24×7, books appointments straight into your calendar and sends reminders in Hindi, English and Hinglish. Live within a week.",
   keywords: [
     "AI receptionist for clinics",
     "clinic appointment booking AI",
@@ -42,14 +42,14 @@ export const metadata: Metadata = {
     "multilingual phone answering agent",
   ],
   authors: [{ name: "Shivam" }],
-  creator: "AgentWala",
+  creator: "Agmeta",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://agent-wala-ai-agency.vercel.app"),
   openGraph: {
-    title: "AI Receptionist for Clinics in India | AgentWala",
+    title: "AI Receptionist for Clinics in India | Agmeta",
     description:
-      "Never miss a patient call again. AgentWala answers calls and WhatsApp 24×7, books appointments into your calendar and sends reminders in Hindi, English & Hinglish.",
+      "Never miss a patient call again. Agmeta answers calls and WhatsApp 24×7, books appointments into your calendar and sends reminders in Hindi, English & Hinglish.",
     url: process.env.NEXT_PUBLIC_SITE_URL || "https://agent-wala-ai-agency.vercel.app",
-    siteName: "AgentWala",
+    siteName: "Agmeta",
     locale: "en_IN",
     type: "website",
     images: [
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "AgentWala - AI Receptionist for Clinics",
+        alt: "Agmeta - AI Receptionist for Clinics",
       },
     ],
   },

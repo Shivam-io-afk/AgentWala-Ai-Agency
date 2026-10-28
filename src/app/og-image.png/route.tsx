@@ -34,7 +34,7 @@ export async function GET() {
               color: "#1C1F3A",
             }}
           >
-            AW
+            AG
           </div>
           <div
             style={{
@@ -44,7 +44,7 @@ export async function GET() {
               letterSpacing: "-0.02em",
             }}
           >
-            AgentWala
+            Agmeta
           </div>
         </div>
 
@@ -102,7 +102,7 @@ export async function GET() {
             fontWeight: 600,
           }}
         >
-          <span>AgentWala</span>
+          <span>Agmeta</span>
           <span>Rewa · Madhya Pradesh · Pan-India</span>
         </div>
       </div>

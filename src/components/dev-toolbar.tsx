@@ -306,7 +306,7 @@ export function DevToolbar() {
               <span className="text-base">🛠️</span>
               <div>
                 <h3 className="font-display font-bold text-sm text-white flex items-center gap-2">
-                  AgentWala OS · Local QA Control Deck
+                  Agmeta OS · Local QA Control Deck
                   <span className="text-[9px] font-mono bg-[#FDB91F] text-[#1C1F3A] px-1.5 py-0.2 rounded font-bold uppercase">
                     Dev Mode
                   </span>

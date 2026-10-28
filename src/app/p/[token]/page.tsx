@@ -190,7 +190,7 @@ export default function ClientPortalPage() {
         <div className="bg-white p-8 rounded-2xl border border-[#ECE6D8] max-w-md text-center space-y-3 shadow-md">
           <h2 className="font-display font-bold text-xl text-[#1C1F3A]">Link Invalid or Expired</h2>
           <p className="text-xs text-[#4A4F66]">
-            This client portal link is no longer valid. Please check the URL sent to your WhatsApp or contact AgentWala support.
+            This client portal link is no longer valid. Please check the URL sent to your WhatsApp or contact Agmeta support.
           </p>
         </div>
       </div>
@@ -221,7 +221,7 @@ export default function ClientPortalPage() {
             </div>
             <div>
               <span className="font-display font-bold text-lg text-[#1C1F3A] block leading-tight">
-                AgentWala Portal
+                Agmeta Portal
               </span>
               <span className="text-[11px] text-[#727791]">
                 Prepared for {client.name}
@@ -551,7 +551,7 @@ export default function ClientPortalPage() {
                   All included revision rounds have been completed. Any additional modifications or new features are billed under Annex A Clause 4.2 at ₹1,000/hr.
                 </p>
                 <a
-                  href={`${WHATSAPP_LINK}?text=${encodeURIComponent("Hi AgentWala, I'd like to request a paid change request for my project.")}`}
+                  href={`${WHATSAPP_LINK}?text=${encodeURIComponent("Hi Agmeta, I'd like to request a paid change request for my project.")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block px-5 py-2.5 bg-[#1C1F3A] hover:bg-[#14172C] text-white text-xs font-bold rounded-xl transition-colors"
@@ -656,8 +656,8 @@ export default function ClientPortalPage() {
 
                 {revealedVault ? (
                   <div className="space-y-2 p-3 bg-white rounded-lg font-mono text-[11px] border">
-                    <div><b>GitHub Repository:</b> github.com/agentwala-clients/{client.id}</div>
-                    <div><b>DNS Nameservers:</b> ns1.agentwala.net, ns2.agentwala.net</div>
+                    <div><b>GitHub Repository:</b> github.com/agmeta-clients/{client.id}</div>
+                    <div><b>DNS Nameservers:</b> ns1.agmeta.net, ns2.agmeta.net</div>
                     <div><b>Production Token:</b> aw_live_sec_{client.id.slice(0, 12)}</div>
                     <div><b>Admin Dashboard:</b> agent-wala-ai-agency.vercel.app/admin</div>
                   </div>

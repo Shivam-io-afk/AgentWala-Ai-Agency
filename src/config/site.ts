@@ -1,10 +1,11 @@
 /**
- * Global site & business configuration for AgentWala.
+ * Global site & business configuration for Agmeta.
  * Single source of truth for business contact details, locations, and founder information.
  */
 
 export const SITE_CONFIG = {
-  name: "AgentWala",
+  name: "Agmeta",
+  siteName: "Agmeta",
   tagline: "AI receptionists & autonomous agents for Indian businesses",
   founder_name: "Shivam",
   founder_title: "Founder & Lead Engineer",
@@ -21,12 +22,12 @@ export const SITE_CONFIG = {
   whatsapp_link: "https://wa.me/919101010101",
   tel_link: "tel:+919101010101",
   email: "shivam.mishra.cuh@gmail.com",
-  legal_name: "AgentWala Technologies",
+  legal_name: "Agmeta Technologies",
   gstin: "",
   pan: "",
   booking_link: "https://wa.me/919101010101",
   bank_name: "State Bank of India",
-  account_name: "AgentWala Technologies",
+  account_name: "Agmeta Technologies",
   account_number: "",
   ifsc_code: "",
   upi_id: "shivam@upi",
@@ -42,7 +43,7 @@ export const SITE_CONFIG = {
   FOUNDER_NAME: "Shivam",
   FOUNDER_PHOTO: "/founder.jpg",
   GSTIN: "",
-  LEGAL_NAME: "AgentWala Technologies",
+  LEGAL_NAME: "Agmeta Technologies",
   PAN: "",
   ADDRESS: "Rewa, Madhya Pradesh 486001, India",
   BOOKING_LINK: "https://wa.me/919101010101",
@@ -52,6 +53,7 @@ export const SITE_CONFIG = {
   UPI_ID: "shivam@upi",
 };
 
+export const SITE_NAME = SITE_CONFIG.siteName;
 export const FOUNDER_NAME = SITE_CONFIG.FOUNDER_NAME;
 export const FOUNDER_PHOTO = SITE_CONFIG.FOUNDER_PHOTO;
 export const FOUNDER_TITLE = SITE_CONFIG.founder_title;
@@ -77,4 +79,3 @@ export const BANK_NAME = SITE_CONFIG.BANK_NAME;
 export const ACCOUNT_NUMBER = SITE_CONFIG.ACCOUNT_NUMBER;
 export const IFSC_CODE = SITE_CONFIG.IFSC_CODE;
 export const UPI_ID = SITE_CONFIG.UPI_ID;
-
