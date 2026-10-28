@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
     const newClient = await db.createClient({
       name: body.name,
       owner_name: body.owner_name,
-      phone: body.phone || "+91 98200 00000",
+      phone: body.phone || "+91 91010 10101",
       niche: body.niche || "Local business",
       package: body.package || "growth",
       founding_offer: Boolean(body.founding_offer),

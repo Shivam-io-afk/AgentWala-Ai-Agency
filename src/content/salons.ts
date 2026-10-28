@@ -10,9 +10,9 @@ export const salonsContent: VerticalContent = {
   heroH1: "Never miss a salon booking again.",
   heroSubtitle:
     "AgentWala answers client calls and WhatsApp 24×7, books stylists directly into your calendar, and sends reminders — in Hindi, English and Hinglish.",
-  heroCtaPrimary: "Call our demo receptionist",
+  heroCtaPrimary: "Book a live demo on WhatsApp",
   heroCtaSecondary: "Build a demo for my salon",
-  demoLineText: `Demo line: ${DEMO_NUMBER} · Ask for a hair spa or haircut appointment — takes 30 seconds.`,
+  demoLineText: `Book a live demo on WhatsApp: ${WHATSAPP_NUMBER} · Instant response in Hindi or English`,
   chatMockup: {
     avatarTitle: "Glam Studio & Spa",
     avatarInitials: "GS",
@@ -65,7 +65,7 @@ export const salonsContent: VerticalContent = {
       title: "After 9 pm bookings",
       description:
         "Clients decide to get treatments late at night when salons are shut. Never lose night bookings.",
-      statBadge: "₹14–18k",
+      statBadge: "Impact",
     },
     {
       title: "Zero no-shows",
@@ -164,7 +164,7 @@ export const salonsContent: VerticalContent = {
       ctaText: "Talk to us",
     },
   ],
-  founderQuote: `We're a small team in ${CITY}. You'll talk to me, not a support queue — and if the agent gets something wrong, I fix it that week.`,
+  founderQuote: "We're a small team in Rewa, MP. You'll talk to me, not a support queue — and if the agent gets something wrong, I fix it that week.",
   faqs: [
     {
       question: "Can it recommend specific stylists?",

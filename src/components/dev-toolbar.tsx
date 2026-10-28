@@ -70,7 +70,7 @@ export function DevToolbar() {
   const [rzpSendTwice, setRzpSendTwice] = useState(false);
 
   const [waProject, setWaProject] = useState("");
-  const [waMessage, setWaMessage] = useState("Namaste Samar ji! We need an appointment receptionist for our clinic.");
+  const [waMessage, setWaMessage] = useState("Namaste Shivam ji! We need an appointment receptionist for our clinic.");
 
   // Dev settings (chaos & integrations)
   const [integrations, setIntegrations] = useState<Record<string, string>>({

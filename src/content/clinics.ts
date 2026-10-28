@@ -90,9 +90,9 @@ export const clinicsContent: VerticalContent = {
   heroH1: "Never miss a patient call again.",
   heroSubtitle:
     "AgentWala answers your clinic's calls and WhatsApp 24×7, books appointments straight into your calendar and sends reminders — in Hindi, English and Hinglish. Live within a week, on your existing number.",
-  heroCtaPrimary: "Call our demo receptionist",
+  heroCtaPrimary: "Book a live demo on WhatsApp",
   heroCtaSecondary: "Build a demo for my clinic",
-  demoLineText: `Demo line: ${DEMO_NUMBER} · Ask for an appointment in Hindi or English — it takes 30 seconds.`,
+  demoLineText: `Book a live demo on WhatsApp: ${WHATSAPP_NUMBER} · Instant response in Hindi or English`,
   chatMockup: {
     avatarTitle: "Sunrise Dental Clinic",
     avatarInitials: "SC",
@@ -145,7 +145,7 @@ export const clinicsContent: VerticalContent = {
       title: "2 calls at once",
       description:
         "A receptionist handles one call at a time. The AI answers every line in parallel, so no one hears a busy tone.",
-      statBadge: "₹14–18k",
+      statBadge: "Impact",
     },
     {
       title: "Fewer no-shows",
@@ -262,7 +262,7 @@ export const clinicsContent: VerticalContent = {
       ctaText: "Talk to us",
     },
   ],
-  founderQuote: `We're a small team in ${CITY}. You'll talk to me, not a support queue — and if the agent gets something wrong, I fix it that week.`,
+  founderQuote: "We're a small team in Rewa, MP. You'll talk to me, not a support queue — and if the agent gets something wrong, I fix it that week.",
   faqs: [
     {
       question: "Which languages can the agent speak?",

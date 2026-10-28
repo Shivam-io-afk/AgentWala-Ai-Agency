@@ -41,14 +41,14 @@ export const metadata: Metadata = {
     "healthcare AI receptionist India",
     "multilingual phone answering agent",
   ],
-  authors: [{ name: "AgentWala" }],
+  authors: [{ name: "Shivam" }],
   creator: "AgentWala",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://agentwala.in"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://agent-wala-ai-agency.vercel.app"),
   openGraph: {
     title: "AI Receptionist for Clinics in India | AgentWala",
     description:
       "Never miss a patient call again. AgentWala answers calls and WhatsApp 24×7, books appointments into your calendar and sends reminders in Hindi, English & Hinglish.",
-    url: "https://agentwala.in",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://agent-wala-ai-agency.vercel.app",
     siteName: "AgentWala",
     locale: "en_IN",
     type: "website",

@@ -32,9 +32,9 @@ export function generateAgreementHtml(data: AgreementData): { html: string; hash
     year: "numeric",
   });
 
-  const founderName = settings?.founder_name || "Sanket M.";
+  const founderName = settings?.founder_name || "Shivam";
   const businessName = "AgentWala";
-  const founderAddress = settings?.address || "Connaught Place, New Delhi 110001";
+  const founderAddress = settings?.address || "Rewa, Madhya Pradesh 486001, India";
   const gstStatus = settings?.gst_registered && settings?.gstin
     ? `GSTIN: ${settings.gstin}`
     : "Not registered under GST";

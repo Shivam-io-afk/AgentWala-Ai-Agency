@@ -767,7 +767,7 @@ export default function AdminDashboardPage() {
             </label>
             <input
               type="text"
-              placeholder="e.g. Dr. Roy, 9820011122"
+              placeholder="e.g. Dr. Roy, 98XXXXXXXX"
               value={newOwner}
               onChange={(e) => setNewOwner(e.target.value)}
               className="w-full h-10 px-3 rounded-lg border border-[#E2E0EE] dark:border-[#2F3356] bg-[#F6F5FB] dark:bg-[#12142A] text-sm text-[#1B1F3B] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#FDB91F]"

@@ -78,7 +78,7 @@ async function runAcceptanceTests() {
   console.log("\n--- Testing Bug 6: Messaging Idempotency & 3-Cap ---");
   const msg1 = await dispatchMessage({
     channel: "whatsapp",
-    recipient: "+91 98200 45678",
+    recipient: "+91 91010 10101",
     templateName: "test_nurture",
     stepKey: "step1",
     fullText: "Test message 1",
@@ -89,7 +89,7 @@ async function runAcceptanceTests() {
 
   const msgDuplicate = await dispatchMessage({
     channel: "whatsapp",
-    recipient: "+91 98200 45678",
+    recipient: "+91 91010 10101",
     templateName: "test_nurture",
     stepKey: "step1",
     fullText: "Test message 1",
@@ -106,7 +106,7 @@ async function runAcceptanceTests() {
   await db.toggleGlobalKillSwitch(true);
   const queuedMsg = await dispatchMessage({
     channel: "whatsapp",
-    recipient: "+91 98200 45678",
+    recipient: "+91 91010 10101",
     templateName: "test_kill_switch",
     stepKey: "step2",
     fullText: "Queued during kill switch",
@@ -174,19 +174,20 @@ async function runAcceptanceTests() {
 
   // BUG 22: City to State Mapper
   console.log("\n--- Testing Bug 22: Indian City to State Mapping ---");
-  const stateMumbai = lookupStateFromCity("Mumbai");
+  const statePune = lookupStateFromCity("Pune");
   const stateDelhi = lookupStateFromCity("Delhi");
+  const stateRewa = lookupStateFromCity("Rewa");
   const stateUnknown = lookupStateFromCity("Atlantis");
-  if (stateMumbai !== "Maharashtra" || stateDelhi !== "Delhi" || stateUnknown !== "") {
-    throw new Error(`Bug 22 Failed: Mumbai -> ${stateMumbai}, Delhi -> ${stateDelhi}, Unknown -> ${stateUnknown}`);
+  if (statePune !== "Maharashtra" || stateDelhi !== "Delhi" || stateRewa !== "Madhya Pradesh" || stateUnknown !== "") {
+    throw new Error(`Bug 22 Failed: Pune -> ${statePune}, Delhi -> ${stateDelhi}, Rewa -> ${stateRewa}, Unknown -> ${stateUnknown}`);
   }
-  console.log("✓ Mumbai -> Maharashtra, Delhi -> Delhi, Unknown -> '' (not Karnataka)");
+  console.log("✓ Pune -> Maharashtra, Delhi -> Delhi, Rewa -> Madhya Pradesh, Unknown -> '' (not Karnataka)");
 
   // BUG 24: Response Speed Optimization (< 1000ms)
   console.log("\n--- Testing Bug 24: Speed Optimization (< 1s) ---");
   // Warm up dev server compilation
   await fetch("http://localhost:3000/api/portal/tok_batra_skin_419");
-  const founderSession = createSessionToken("founder@agentwala.in");
+  const founderSession = createSessionToken("shivam.mishra.cuh@gmail.com");
   await fetch("http://localhost:3000/api/admin/clients/c-ex-2", {
     headers: { cookie: `agentwala_session=${founderSession}` },
   });

@@ -134,9 +134,9 @@ export const coachingContent: VerticalContent = {
   badge: "AI receptionist for coaching centres",
   heroH1: "Never miss a student admission enquiry.",
   heroSubtitle: "AgentWala answers parent calls and WhatsApp 24×7, books demo classes into your schedule, and sends batch updates.",
-  heroCtaPrimary: "Call our demo receptionist",
+  heroCtaPrimary: "Book a live demo on WhatsApp",
   heroCtaSecondary: "Build a demo for my institute",
-  demoLineText: `Demo line: ${DEMO_NUMBER} · Ask about course fees and batch timings.`,
+  demoLineText: `Book a live demo on WhatsApp: ${WHATSAPP_NUMBER} · Ask about course fees and batch timings.`,
   chatMockup: { ... },
   builtForTitle: "Built for",
   builtForItems: ["JEE / NEET coaching", "UPSC institutes", "Commerce academies", "Language schools"],
@@ -150,7 +150,7 @@ export const coachingContent: VerticalContent = {
   pricingSubtext: "Prices exclude 18% GST.",
   foundingBanner: "Founding offer: 50% off setup for first 5 institutes.",
   plans: [ ... ],
-  founderQuote: `We're a small team in ${CITY}. You'll talk to me, not a support queue.`,
+  founderQuote: `We're a small team in Rewa, MP. You'll talk to me, not a support queue.`,
   faqs: [ ... ],
   formH2: "Hear it answer your institute's calls.",
   formSubtitle: "Send us a few details and we will build a free demo agent in 48 hours.",
@@ -190,7 +190,7 @@ export const VERTICALS: Record<string, VerticalContent> = {
 3. In **Settings → Environment Variables**, add:
    - `NEXT_PUBLIC_SITE_URL`: Your Vercel production URL (e.g. `https://agent-wala-ai-agency.vercel.app`)
    - `AUTH_SECRET`: A secure random string with 32+ characters (e.g. generated via `openssl rand -hex 32`)
-   - `FOUNDER_EMAILS`: Comma-separated allowlist of authorized founder emails (e.g. `founder@agentwala.in`)
+   - `FOUNDER_EMAILS`: Comma-separated allowlist of authorized founder emails (e.g. `shivam.mishra.cuh@gmail.com`)
    - `FOUNDER_LOGIN_CODE`: Direct login fallback code (32+ chars) allowing instant founder login without waiting for Resend
    - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase Project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon key
@@ -213,7 +213,7 @@ export const VERTICALS: Record<string, VerticalContent> = {
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role secret (bypasses RLS to manage `app_state`) | Recommended for persistence on Vercel |
 | `LEAD_WEBHOOK_URL` | Webhook URL for Google Apps Script / Sheet sync | Optional |
 | `RESEND_API_KEY` | Resend Email API Key (for live magic link dispatch) | Optional |
-| `EMAIL_FROM` | Sender email address for Resend | Optional (default: `AgentWala <hello@agentwala.in>`) |
+| `EMAIL_FROM` | Sender email address for Resend | Optional (default: `AgentWala <shivam.mishra.cuh@gmail.com>`) |
 | `RAZORPAY_KEY_ID` | Razorpay Key ID | Optional (uses mock payment URLs if absent) |
 | `RAZORPAY_KEY_SECRET` | Razorpay Secret | Optional |
 | `RAZORPAY_WEBHOOK_SECRET` | Razorpay Webhook verification secret | Optional |

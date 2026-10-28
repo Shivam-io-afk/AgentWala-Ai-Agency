@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       // 4. Record WhatsApp confirmation in Outbox
       await db.recordOutbox({
         channel: "whatsapp",
-        recipient: client?.phone || "+91 98200 45678",
+        recipient: client?.phone || "+91 91010 10101",
         template_name: "cal_booking_confirmed",
         content: `Namaste ${client?.owner_name || "there"}! Your Discovery Call with AgentWala is confirmed for ${bookingDate} at ${bookingTime} IST. Meet link: https://meet.google.com/aw-demo-call`,
         full_text: `Namaste ${client?.owner_name || "there"}! Your Discovery Call with AgentWala is confirmed for ${bookingDate} at ${bookingTime} IST. Meet link: https://meet.google.com/aw-demo-call`,
@@ -103,12 +103,13 @@ export async function POST(req: NextRequest) {
 
         // Dispatch payment receipt to Mock Outbox
         const amountINR = formatRupees(inv.total_paise / 100);
+        const invoicePdfBase = process.env.NEXT_PUBLIC_SITE_URL || "https://agent-wala-ai-agency.vercel.app";
         await db.recordOutbox({
           channel: "whatsapp",
-          recipient: client?.phone || "+91 98200 45678",
+          recipient: client?.phone || "+91 91010 10101",
           template_name: "payment_receipt_instant",
-          content: `Payment Received! Thank you for paying invoice ${inv.invoice_number} (${amountINR}). Receipt & Tax Invoice: https://agentwala.in/api/invoices/${inv.id}/pdf`,
-          full_text: `Payment Received! Thank you for paying invoice ${inv.invoice_number} (${amountINR}). Receipt & Tax Invoice: https://agentwala.in/api/invoices/${inv.id}/pdf`,
+          content: `Payment Received! Thank you for paying invoice ${inv.invoice_number} (${amountINR}). Receipt & Tax Invoice: ${invoicePdfBase}/api/invoices/${inv.id}/pdf`,
+          full_text: `Payment Received! Thank you for paying invoice ${inv.invoice_number} (${amountINR}). Receipt & Tax Invoice: ${invoicePdfBase}/api/invoices/${inv.id}/pdf`,
           project_id: inv.project_id,
           project_name: project?.name,
           client_id: client?.id,
@@ -142,7 +143,7 @@ export async function POST(req: NextRequest) {
 
         await db.recordOutbox({
           channel: "whatsapp",
-          recipient: client?.phone || "+91 98200 45678",
+          recipient: client?.phone || "+91 91010 10101",
           template_name: "payment_failed_retry",
           content: `Payment Attempt Failed: Your payment for invoice ${inv.invoice_number} could not be completed. Please retry using this secure Razorpay link: ${retryLink}`,
           full_text: `Payment Attempt Failed: Your payment for invoice ${inv.invoice_number} could not be completed. Please retry using this secure Razorpay link: ${retryLink}`,

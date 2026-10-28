@@ -1,11 +1,12 @@
 // Comprehensive Indian City-to-State Mapper (Bug 22)
 export const CITY_TO_STATE: Record<string, string> = {
-  mumbai: "Maharashtra",
+  rewa: "Madhya Pradesh",
+  satna: "Madhya Pradesh",
+  jabalpur: "Madhya Pradesh",
   pune: "Maharashtra",
   nagpur: "Maharashtra",
   nashik: "Maharashtra",
   thane: "Maharashtra",
-  "navi mumbai": "Maharashtra",
   aurangabad: "Maharashtra",
   bengaluru: "Karnataka",
   bangalore: "Karnataka",

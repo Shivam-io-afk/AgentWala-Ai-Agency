@@ -21,10 +21,12 @@ import {
   DEMO_NUMBER_RAW,
   WHATSAPP_NUMBER,
   WHATSAPP_NUMBER_RAW,
+  WHATSAPP_LINK,
   EMAIL,
   CITY,
+  STATE,
   FOUNDER_NAME,
-} from "@/content/site";
+} from "@/config/site";
 import { verticalExists } from "@/content";
 
 interface LandingPageProps {
@@ -128,11 +130,13 @@ export function LandingPage({ content, initialSettings }: LandingPageProps) {
             {/* CTAs */}
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5">
               <a
-                href={`tel:${DEMO_NUMBER_RAW}`}
+                href={WHATSAPP_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="bg-[#FDB91F] hover:bg-[#E5A413] active:scale-[0.98] text-[#1C1F3A] font-bold text-base px-6 py-3.5 rounded-xl transition-all shadow-sm min-h-[48px] flex items-center justify-center gap-2.5 cursor-pointer text-center"
               >
-                <PhoneIcon className="w-5 h-5 text-[#1C1F3A]" />
-                <span>Call demo receptionist</span>
+                <WhatsAppIcon className="w-5 h-5 text-[#1C1F3A]" />
+                <span>Book a live demo on WhatsApp</span>
               </a>
 
               <button
@@ -147,7 +151,7 @@ export function LandingPage({ content, initialSettings }: LandingPageProps) {
             <div className="pt-1 flex items-center gap-2 text-xs sm:text-[13px] text-[#727791]">
               <span className="w-2 h-2 rounded-full bg-[#1F7A3A] animate-pulse"></span>
               <span>
-                Demo line: <b>{DEMO_NUMBER}</b> · Ask for an appointment in Hindi or English (30 sec demo)
+                Book a live demo on WhatsApp: <b>{WHATSAPP_NUMBER}</b> · Ask for an appointment in Hindi or English (30 sec demo)
               </span>
             </div>
           </div>
@@ -684,7 +688,7 @@ export function LandingPage({ content, initialSettings }: LandingPageProps) {
               &ldquo;{content.founderQuote}&rdquo;
             </blockquote>
             <p className="text-xs sm:text-sm font-bold text-[#727791] uppercase tracking-wider">
-              — {FOUNDER_NAME}, founder of AgentWala ({CITY}, India)
+              — {FOUNDER_NAME}, founder of AgentWala ({CITY}, {STATE})
             </p>
           </div>
         </div>
@@ -698,7 +702,7 @@ export function LandingPage({ content, initialSettings }: LandingPageProps) {
               Frequently Asked Questions
             </h2>
             <p className="text-[#4A4F66] text-sm sm:text-base">
-              Everything you need to know about our scope, revision engine, payment milestones, and deliverables.
+              Everything clinics ask us about languages, setup, pricing and patient data.
             </p>
           </div>
 
@@ -722,14 +726,16 @@ export function LandingPage({ content, initialSettings }: LandingPageProps) {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4 text-center text-[#A6ABC8]">
-            <span>{CITY}, India</span>
+            <span>{CITY}, {STATE}, India</span>
             <span>·</span>
             <a href={`mailto:${EMAIL}`} className="hover:text-white transition-colors">
               {EMAIL}
             </a>
             <span>·</span>
             <a
-              href={`https://wa.me/${WHATSAPP_NUMBER_RAW.replace(/\+/g, "")}`}
+              href={WHATSAPP_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
               className="hover:text-white transition-colors"
             >
               WhatsApp {WHATSAPP_NUMBER}

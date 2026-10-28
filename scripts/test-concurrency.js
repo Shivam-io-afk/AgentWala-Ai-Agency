@@ -101,7 +101,7 @@ async function run() {
       name: `Concurrency Lead ${i + 1}`,
       businessName: `Test Venture ${i + 1} (${timestamp})`,
       businessType: "Healthcare / Small Business",
-      city: "Mumbai",
+      city: "Rewa",
       phone: phone,
       need: "whatsapp_bot",
       budgetRange: "₹25k–₹60k",

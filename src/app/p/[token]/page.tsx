@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { Client, Project, Invoice, DeliveryRecord, RevisionRoundRecord, HandoverRecord } from "@/lib/types";
 import { calculateBill, formatINR } from "@/lib/pricing";
 import { RobotIcon, CheckIcon, ShieldCheckIcon, PhoneIcon } from "@/components/icons";
-import { DEMO_NUMBER, CITY } from "@/content/site";
+import { DEMO_NUMBER, CITY, STATE, FOUNDER_NAME, WHATSAPP_NUMBER, WHATSAPP_LINK } from "@/config/site";
 import { RealtimeLoadingScreen } from "@/components/network-loading-indicator";
 
 export default function ClientPortalPage() {
@@ -551,7 +551,7 @@ export default function ClientPortalPage() {
                   All included revision rounds have been completed. Any additional modifications or new features are billed under Annex A Clause 4.2 at ₹1,000/hr.
                 </p>
                 <a
-                  href={`https://wa.me/919820012345?text=${encodeURIComponent("Hi AgentWala, I'd like to request a paid change request for my project.")}`}
+                  href={`${WHATSAPP_LINK}?text=${encodeURIComponent("Hi AgentWala, I'd like to request a paid change request for my project.")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block px-5 py-2.5 bg-[#1C1F3A] hover:bg-[#14172C] text-white text-xs font-bold rounded-xl transition-colors"
@@ -659,7 +659,7 @@ export default function ClientPortalPage() {
                     <div><b>GitHub Repository:</b> github.com/agentwala-clients/{client.id}</div>
                     <div><b>DNS Nameservers:</b> ns1.agentwala.net, ns2.agentwala.net</div>
                     <div><b>Production Token:</b> aw_live_sec_{client.id.slice(0, 12)}</div>
-                    <div><b>Admin Dashboard:</b> app.agentwala.in/c/{client.id}</div>
+                    <div><b>Admin Dashboard:</b> agent-wala-ai-agency.vercel.app/admin</div>
                   </div>
                 ) : (
                   <p className="text-[#727791]">
@@ -688,7 +688,7 @@ export default function ClientPortalPage() {
         <div className="text-center text-xs text-[#727791] space-y-1">
           <p>Need assistance or have questions regarding your project?</p>
           <p>
-            Contact founder Sanket M. on WhatsApp at <b>+91 98200 12345</b> ({CITY}, India).
+            Contact founder {FOUNDER_NAME} on WhatsApp at <b>{WHATSAPP_NUMBER}</b> ({CITY}, {STATE}, India).
           </p>
         </div>
       </main>

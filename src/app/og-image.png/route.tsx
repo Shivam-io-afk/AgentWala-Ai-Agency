@@ -102,8 +102,8 @@ export async function GET() {
             fontWeight: 600,
           }}
         >
-          <span>agentwala.in</span>
-          <span>Mumbai · Bengaluru · Delhi NCR</span>
+          <span>AgentWala</span>
+          <span>Rewa · Madhya Pradesh · Pan-India</span>
         </div>
       </div>
     ),

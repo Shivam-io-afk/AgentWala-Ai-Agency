@@ -1320,7 +1320,7 @@ export default function ClientDetailPage() {
                   </select>
                   <input
                     type="text"
-                    placeholder="https://preview.agentwala.in/sunrise..."
+                    placeholder="https://agent-wala-ai-agency.vercel.app/p/..."
                     value={deliveryUrl}
                     onChange={(e) => setDeliveryUrl(e.target.value)}
                     className="px-3 py-2 rounded-xl border border-[#E2E0EE] dark:border-[#2F3356] bg-white dark:bg-[#1C1F3A]"

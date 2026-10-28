@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { WhatsAppIcon, ArrowRightIcon, ShieldCheckIcon } from "./icons";
-import { WHATSAPP_NUMBER_RAW, CITY } from "@/content/site";
+import { WHATSAPP_NUMBER_RAW } from "@/config/site";
 
 interface DemoFormProps {
   h2?: string;
@@ -20,8 +20,8 @@ export function DemoForm({
 }: DemoFormProps) {
   const [name, setName] = useState("");
   const [businessName, setBusinessName] = useState("");
-  const [businessType, setBusinessType] = useState("Clinic / Small Business");
-  const [city, setCity] = useState(CITY || "Bengaluru");
+  const [businessType, setBusinessType] = useState("");
+  const [city, setCity] = useState("");
   const [phone, setPhone] = useState("");
   const [need, setNeed] = useState(defaultNeed);
   const [budgetRange, setBudgetRange] = useState("₹25k–₹60k");
@@ -285,7 +285,7 @@ export function DemoForm({
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Dental Clinic, Salon, E-commerce, Startup"
+                      placeholder="e.g. Clinic, Salon, Small Business"
                       value={businessType}
                       onChange={(e) => setBusinessType(e.target.value)}
                       className="w-full h-11 px-3.5 rounded-xl border border-[#ECE6D8] bg-[#FBF7EE] text-[#1C1F3A] focus:outline-none focus:ring-2 focus:ring-[#FDB91F]"
@@ -298,7 +298,7 @@ export function DemoForm({
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Mumbai, Bengaluru, Delhi NCR"
+                      placeholder="e.g. Rewa, Indore, Bhopal"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       className="w-full h-11 px-3.5 rounded-xl border border-[#ECE6D8] bg-[#FBF7EE] text-[#1C1F3A] focus:outline-none focus:ring-2 focus:ring-[#FDB91F]"
@@ -318,7 +318,7 @@ export function DemoForm({
                     <input
                       type="tel"
                       required
-                      placeholder="98200 45678"
+                      placeholder="98XXX XXXXX"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       className="flex-1 h-11 px-3.5 rounded-r-xl border border-[#ECE6D8] bg-[#FBF7EE] text-[#1C1F3A] focus:outline-none focus:ring-2 focus:ring-[#FDB91F]"

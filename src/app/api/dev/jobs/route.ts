@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     const todayStr = getAppTimeISO().slice(0, 10);
     const istHour = getAppISTHour();
     const settings = await db.getSettings();
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://agent-wala-ai-agency.vercel.app";
 
     // 1. Process explicit queued jobs
     const allJobs = await db.getJobs();
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
             recipient: client.phone,
             templateName: "lead_nurture_24h",
             stepKey: "24h",
-            fullText: `Hi ${client.owner_name || "there"}, Samar here from AgentWala! Would you like to schedule a quick 10-min live demo call? Link: https://cal.com/agentwala/demo`,
+            fullText: `Hi ${client.owner_name || "there"}, Shivam here from AgentWala! Would you like to schedule a quick 10-min live demo call? Link: https://wa.me/919101010101`,
             projectId: proj.id,
             clientId: client.id,
             projectName: proj.name,
@@ -149,7 +150,7 @@ export async function POST(req: NextRequest) {
               recipient: client.phone,
               templateName: "review_reminder_day3",
               stepKey: `del_3d_${lastDelivery.id}`,
-              fullText: `Namaste ${client.owner_name}! Friendly reminder to test your build deliverables. 4 days remaining before deemed acceptance under Clause 4.4: https://agentwala.in/p/${client.portal_token}`,
+              fullText: `Namaste ${client.owner_name}! Friendly reminder to test your build deliverables. 4 days remaining before deemed acceptance under Clause 4.4: ${siteUrl}/p/${client.portal_token}`,
               projectId: proj.id,
               clientId: client.id,
             });
@@ -165,7 +166,7 @@ export async function POST(req: NextRequest) {
               recipient: client.phone,
               templateName: "review_reminder_day6",
               stepKey: `del_6d_${lastDelivery.id}`,
-              fullText: `Namaste ${client.owner_name}! Final notice: 24 hours remaining in your 7-day review window. Deliverables will be deemed accepted tomorrow: https://agentwala.in/p/${client.portal_token}`,
+              fullText: `Namaste ${client.owner_name}! Final notice: 24 hours remaining in your 7-day review window. Deliverables will be deemed accepted tomorrow: ${siteUrl}/p/${client.portal_token}`,
               projectId: proj.id,
               clientId: client.id,
             });
@@ -206,7 +207,7 @@ export async function POST(req: NextRequest) {
               recipient: client.phone,
               templateName: "deemed_acceptance_final_bill",
               stepKey: `del_7d_${lastDelivery.id}`,
-              fullText: `Namaste ${client.owner_name}! 7-day review window completed. Deliverables are marked accepted (v3). Your final handover invoice of ${formatINR((finalInv?.total_paise || 0) / 100)} is ready: https://agentwala.in/p/${client.portal_token}`,
+              fullText: `Namaste ${client.owner_name}! 7-day review window completed. Deliverables are marked accepted (v3). Your final handover invoice of ${formatINR((finalInv?.total_paise || 0) / 100)} is ready: ${siteUrl}/p/${client.portal_token}`,
               projectId: proj.id,
               clientId: client.id,
             });
@@ -243,7 +244,7 @@ export async function POST(req: NextRequest) {
               recipient: client.phone,
               templateName: "monthly_care_invoice",
               stepKey: monthKey,
-              fullText: `Namaste ${client.owner_name}! Your monthly AgentWala Care Plan invoice for ${monthKey} (${formatINR(monthlyRupees)}) has been issued: https://agentwala.in/p/${client.portal_token}`,
+              fullText: `Namaste ${client.owner_name}! Your monthly AgentWala Care Plan invoice for ${monthKey} (${formatINR(monthlyRupees)}) has been issued: ${siteUrl}/p/${client.portal_token}`,
               projectId: proj.id,
               clientId: client.id,
             });

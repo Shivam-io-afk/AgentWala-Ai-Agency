@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     const verifyUrl = `${baseUrl}/api/auth/verify?token=${token}`;
 
     const resendApiKey = process.env.RESEND_API_KEY;
-    const emailFrom = process.env.EMAIL_FROM || "AgentWala <hello@agentwala.in>";
+    const emailFrom = process.env.EMAIL_FROM || "AgentWala <shivam.mishra.cuh@gmail.com>";
 
     if (resendApiKey) {
       try {

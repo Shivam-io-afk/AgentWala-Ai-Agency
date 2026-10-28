@@ -33,7 +33,7 @@ function isFounderEmail(email: string): boolean {
   if (configured.length > 0) {
     return configured.includes(normalized);
   }
-  return normalized === "founder@agentwala.in";
+  return normalized === "shivam.mishra.cuh@gmail.com";
 }
 
 interface LoginAttemptsData {
@@ -140,7 +140,7 @@ export async function GET(req: NextRequest) {
   // Allow bypass for dev instant login only in non-production
   let email: string | null = null;
   if (token === "dev_bypass_token" && process.env.NODE_ENV !== "production") {
-    email = "founder@agentwala.in";
+    email = "shivam.mishra.cuh@gmail.com";
   } else {
     email = verifyMagicToken(token);
   }
@@ -236,7 +236,7 @@ export async function POST(req: NextRequest) {
     // Branch 2: Login with dev bypass or magic token
     let authEmail: string | null = null;
     if (token === "dev_bypass_token" && process.env.NODE_ENV !== "production") {
-      authEmail = "founder@agentwala.in";
+      authEmail = "shivam.mishra.cuh@gmail.com";
     } else if (token) {
       authEmail = verifyMagicToken(token);
     }

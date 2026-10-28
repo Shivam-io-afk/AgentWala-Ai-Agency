@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { RobotIcon } from "@/components/icons";
-import { CITY, EMAIL, WHATSAPP_NUMBER } from "@/content/site";
+import { CITY, STATE, EMAIL, WHATSAPP_NUMBER } from "@/config/site";
 
 export const metadata = {
   title: "Terms of Service | AgentWala",
@@ -64,7 +64,7 @@ export default function TermsPage() {
 
         <section className="space-y-3 border-t border-[#ECE6D8] pt-6 text-sm text-[#727791]">
           <p>
-            Questions? Contact legal@agentwala.in or write to: AgentWala, {CITY}, Maharashtra, India.
+            Questions? Contact {EMAIL} or write to: AgentWala, {CITY}, {STATE}, India.
           </p>
         </section>
       </main>

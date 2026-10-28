@@ -7,7 +7,7 @@ import { RobotIcon } from "@/components/icons";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("founder@agentwala.in");
+  const [email, setEmail] = useState("shivam.mishra.cuh@gmail.com");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [sentMessage, setSentMessage] = useState<string | null>(null);
@@ -168,7 +168,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="founder@agentwala.in"
+                placeholder="shivam.mishra.cuh@gmail.com"
                 className="w-full h-11 px-3.5 rounded-xl border border-[#ECE6D8] bg-[#FBF7EE] text-sm text-[#1C1F3A] focus:outline-none focus:ring-2 focus:ring-[#FDB91F]"
               />
             </div>
